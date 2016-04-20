@@ -12,7 +12,7 @@ import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 
-public class BoundedDepthSearchPlayer extends SampleGamer {
+public class MobilityHeuristicBoundedDepthSearchPlayer extends SampleGamer {
 
     @Override
     public Move stateMachineSelectMove(long timeout)
@@ -46,7 +46,7 @@ public class BoundedDepthSearchPlayer extends SampleGamer {
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	StateMachine game = getStateMachine();
     	if (game.findTerminalp(state)) return game.findReward(role, state);
-    	if (level >= limit) return 0;
+    	if (level >= limit) return mobility(role, state);
     	List<Move> actions = game.findLegals(role, state);
     	for (int i = 0; i < actions.size(); i++) {
     		int result = minscore(role, actions.get(i), state, alpha, beta, level);
@@ -56,7 +56,15 @@ public class BoundedDepthSearchPlayer extends SampleGamer {
     	return alpha;
     }
 
-    private int minscore(Role role, Move action, MachineState state, int alpha, int beta, int level) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+    private int mobility(Role role, MachineState state) throws MoveDefinitionException {
+    	System.out.println("Checking Mobility!");
+    	StateMachine game = getStateMachine();
+    	List<Move> actions = game.findLegals(role, state);
+    	List<Move> feasibles = game.findActions(role);
+    	return (actions.size() / feasibles.size() * 100);
+	}
+
+	private int minscore(Role role, Move action, MachineState state, int alpha, int beta, int level) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	StateMachine game = getStateMachine();
     	for (List<Move> jointMove : game.getLegalJointMoves(state, role, action)) {
     		MachineState newstate = game.getNextState(state, jointMove);
