@@ -70,6 +70,6 @@ public class GoalProximityPlayer extends SampleGamer {
     	return beta;
     }
 
-    private static final int limit = 10;
+    private static final int limit = 4;
 }
 

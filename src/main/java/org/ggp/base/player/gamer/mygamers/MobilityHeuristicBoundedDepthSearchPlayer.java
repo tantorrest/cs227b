@@ -75,6 +75,6 @@ public class MobilityHeuristicBoundedDepthSearchPlayer extends SampleGamer {
     	return beta;
     }
 
-    private static final int limit = 12;
+    private static final int limit = 6;
 }
 
