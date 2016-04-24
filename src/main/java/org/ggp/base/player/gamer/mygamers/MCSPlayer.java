@@ -27,11 +27,9 @@ public class MCSPlayer extends SampleGamer {
     	StateMachine game = getStateMachine();
         List<Move> actions = game.findLegals(role, state);
         Move action = actions.get(0);
-        double alpha = 0;
-        double beta = 100;
         double score = 0;
         for (int i = 0; i < actions.size(); i++) {
-        	double result = minscore(role, actions.get(i), state, alpha, beta, 0);
+        	double result = minscore(role, actions.get(i), state, 0);
         	if (result == 100) return actions.get(i);
         	if (result > score) {
         		score = result;
@@ -44,49 +42,52 @@ public class MCSPlayer extends SampleGamer {
         return action;
     }
 
-    private double maxscore(Role role, MachineState state, double alpha, double beta, int level)
+    private double maxscore(Role role, MachineState state, int level)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	StateMachine game = getStateMachine();
-    	if (game.findTerminalp(state)) return game.findReward(role, state);
-    	if (level >= limit || System.currentTimeMillis() > finishBy) { return monteCarlo(role, state, 4); }
+    	if (game.findTerminalp(state)) {  return game.findReward(role, state); }
+    	if (level >= limit || System.currentTimeMillis() > finishBy) { return monteCarlo(role, state, 10); }
     	List<Move> actions = game.findLegals(role, state);
+    	double score = 0;
     	for (int i = 0; i < actions.size(); i++) {
-    		double result = minscore(role, actions.get(i), state, alpha, beta, level);
-    		alpha = Math.max(alpha, result);
-    		if (alpha >= beta) return beta;
+    		double result = minscore(role, actions.get(i), state, level);
+    		if (result == 100) return 100;
+    		if (result > score) { score = result; }
     	}
-    	return alpha;
+    	return score;
     }
 
     private double monteCarlo(Role role, MachineState state, int count) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
-    	double total = 0;
+    	double total = 0.0;
     	for (int i = 0; i < count; i++) {
     		total += depthCharge(role, state);
     	}
+    	System.out.println("monteCarlo: " + total / count);
     	return total/count;
     }
 
     private double depthCharge(Role role, MachineState state)
     		throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
     	StateMachine game = getStateMachine();
-    	if (game.findTerminalp(state)) return game.findReward(role, state);
+    	if (game.findTerminalp(state)) { System.out.println("terminal: " + game.findReward(role, state)); return game.findReward(role, state); }
     	List<Move> moves = game.getRandomJointMove(state);
     	return depthCharge(role, game.getNextState(state, moves));
     }
 
-	private double minscore(Role role, Move action, MachineState state, double alpha, double beta, int level)
+	private double minscore(Role role, Move action, MachineState state, int level)
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	StateMachine game = getStateMachine();
+    	double score = 100;
     	for (List<Move> jointMove : game.getLegalJointMoves(state, role, action)) {
     		MachineState newstate = game.getNextState(state, jointMove);
-    		double result = maxscore(role, newstate, alpha, beta, level + 1);
-    		beta = Math.min(beta, result);
-    		if (beta <= alpha) return alpha;
+    		double result = maxscore(role, newstate, level + 1);
+	        if (result == 0) { return 0; }
+	        if (result < score) { score = result; }
     	}
-    	return beta;
+    	return score;
     }
 
-    private static final int limit = 4;
+    private static final int limit = 7;
     private long finishBy;
 }
 
