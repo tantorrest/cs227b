@@ -18,7 +18,6 @@ public class OpponentMobilityHeuristicBoundedDepthSearchPlayer extends SampleGam
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	finishBy = timeout - 3000;
-    	System.out.println(finishBy);
     	return bestMove(getRole(), getCurrentState());
     }
 
@@ -34,13 +33,13 @@ public class OpponentMobilityHeuristicBoundedDepthSearchPlayer extends SampleGam
         double beta = 100;
         double score = 0;
         for (int i = 0; i < actions.size(); i++) {
+        	// break early
+        	if (System.currentTimeMillis() > finishBy) return action;
         	double result = minscore(role, actions.get(i), state, alpha, beta, 0);
         	if (result == 100) return actions.get(i);
         	if (result > score) {
         		score = result;
         		action = actions.get(i);
-        		// break early
-        		if (System.currentTimeMillis() > finishBy) return action;
         	}
         }
         long stop = System.currentTimeMillis();
@@ -52,11 +51,6 @@ public class OpponentMobilityHeuristicBoundedDepthSearchPlayer extends SampleGam
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	StateMachine game = getStateMachine();
     	if (game.findTerminalp(state)) return game.findReward(role, state);
-
-    	// break if time is up
-    	if (level >= limit || System.currentTimeMillis() > finishBy) {
-    		return opponentMobility(role, state);
-    	}
     	List<Move> actions = game.findLegals(role, state);
     	for (int i = 0; i < actions.size(); i++) {
     		double result = minscore(role, actions.get(i), state, alpha, beta, level);
@@ -70,37 +64,35 @@ public class OpponentMobilityHeuristicBoundedDepthSearchPlayer extends SampleGam
     // 100 means limits opponent mobility the most (good for us)
     // 0   means limits opponent mobility the least (bad for us)
     // extremely conservative heuristic
-    private double opponentMobility(Role role, MachineState state) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
-    	System.out.println("Checking Opponent Mobility!");
+    // wishes to reduce the average moves of players
+    private double opponentMobility(Role role, Move action, MachineState state) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
+//    	System.out.println("Checking Opponent Mobility!");
     	StateMachine game = getStateMachine();
-    	double maxOpponentMobility = 0;
+    	double legalOpponentsMoves = game.getLegalJointMoves(state, role, action).size();
+    	double allPossibleMoves = getAllOpponentPossibleMoves(state, role) + getStateMachine().findRoles().size() - 1;
+    	double maxOpponentMobility = (legalOpponentsMoves / allPossibleMoves) * 100;
 
-    	// assume opponent plays noop in current state
-    	// hence, find mobility at next state
-    	for (Role opponent : game.findRoles()) {
-    		if (!opponent.equals(role)) {
-	    		double opponentMobility = 0;
-	    		for (List<Move> jointMove : game.getLegalJointMoves(state)) {
-	        		MachineState newstate = game.getNextState(state, jointMove);
-	        		opponentMobility = Math.max(opponentMobility, mobility(opponent, newstate));
-	        	}
-    			System.out.println(opponentMobility);
-    			maxOpponentMobility = (opponentMobility > maxOpponentMobility) ? opponentMobility: maxOpponentMobility;
+    	return 100 - maxOpponentMobility;
+	}
+
+    private double getAllOpponentPossibleMoves(MachineState state, Role role)
+    		throws MoveDefinitionException {
+    	double numMoves = 1;
+    	for (Role opponent : getStateMachine().findRoles()) {
+    		if (!role.equals(opponent)) {
+    			numMoves *= (getStateMachine().findActions(opponent).size() + 1);
     		}
     	}
-    	return - maxOpponentMobility; // kind of adding a weight to the function
-	}
-
-    private double mobility(Role role, MachineState state) throws MoveDefinitionException {
-    	StateMachine game = getStateMachine();
-    	List<Move> actions = game.findLegals(role, state);
-    	List<Move> feasibles = game.findActions(role);
-    	return ((double) actions.size() / feasibles.size()) * 100;
-	}
+    	return numMoves;
+    }
 
 	private double minscore(Role role, Move action, MachineState state, double alpha, double beta, int level)
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	StateMachine game = getStateMachine();
+    	// break if time is up
+    	if (level >= limit || System.currentTimeMillis() > finishBy) {
+    		return opponentMobility(role, action, state);
+    	}
     	for (List<Move> jointMove : game.getLegalJointMoves(state, role, action)) {
     		MachineState newstate = game.getNextState(state, jointMove);
     		double result = maxscore(role, newstate, alpha, beta, level + 1);

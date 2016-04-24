@@ -17,6 +17,7 @@ public class MobilityHeuristicBoundedDepthSearchPlayer extends SampleGamer {
     @Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+    	finishBy = timeout - 3000;
     	return bestMove(getRole(), getCurrentState());
     }
 
@@ -26,15 +27,16 @@ public class MobilityHeuristicBoundedDepthSearchPlayer extends SampleGamer {
     	StateMachine game = getStateMachine();
         List<Move> actions = game.findLegals(role, state);
         Move action = actions.get(0);
-        int alpha = 0;
-        int beta = 100;
-        int score = 0;
+        double alpha = 0;
+        double beta = 100;
+        double score = 0;
         for (int i = 0; i < actions.size(); i++) {
-        	int result = minscore(role, actions.get(i), state, alpha, beta, 0);
+        	double result = minscore(role, actions.get(i), state, alpha, beta, 0);
         	if (result == 100) return actions.get(i);
         	if (result > score) {
         		score = result;
         		action = actions.get(i);
+        		if (System.currentTimeMillis() > finishBy) return action;
         	}
         }
         long stop = System.currentTimeMillis();
@@ -42,33 +44,33 @@ public class MobilityHeuristicBoundedDepthSearchPlayer extends SampleGamer {
         return action;
     }
 
-    private int maxscore(Role role, MachineState state, int alpha, int beta, int level)
+    private double maxscore(Role role, MachineState state, double alpha, double beta, int level)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	StateMachine game = getStateMachine();
     	if (game.findTerminalp(state)) return game.findReward(role, state);
-    	if (level >= limit) return mobility(role, state);
+    	if (level >= limit || System.currentTimeMillis() > finishBy) return mobility(role, state);
     	List<Move> actions = game.findLegals(role, state);
     	for (int i = 0; i < actions.size(); i++) {
-    		int result = minscore(role, actions.get(i), state, alpha, beta, level);
+    		double result = minscore(role, actions.get(i), state, alpha, beta, level);
     		alpha = Math.max(alpha, result);
     		if (alpha >= beta) return beta;
     	}
     	return alpha;
     }
 
-    private int mobility(Role role, MachineState state) throws MoveDefinitionException {
-    	System.out.println("Checking Mobility!");
+    private double mobility(Role role, MachineState state) throws MoveDefinitionException {
     	StateMachine game = getStateMachine();
     	List<Move> actions = game.findLegals(role, state);
     	List<Move> feasibles = game.findActions(role);
-    	return (actions.size() / feasibles.size() * 100);
+    	return ((double) actions.size() / feasibles.size() * 100);
 	}
 
-	private int minscore(Role role, Move action, MachineState state, int alpha, int beta, int level) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+	private double minscore(Role role, Move action, MachineState state, double alpha, double beta, int level)
+			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	StateMachine game = getStateMachine();
     	for (List<Move> jointMove : game.getLegalJointMoves(state, role, action)) {
     		MachineState newstate = game.getNextState(state, jointMove);
-    		int result = maxscore(role, newstate, alpha, beta, level + 1);
+    		double result = maxscore(role, newstate, alpha, beta, level + 1);
     		beta = Math.min(beta, result);
     		if (beta <= alpha) return alpha;
     	}
@@ -76,5 +78,6 @@ public class MobilityHeuristicBoundedDepthSearchPlayer extends SampleGamer {
     }
 
     private static final int limit = 12;
+    private long finishBy;
 }
 
