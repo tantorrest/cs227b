@@ -14,9 +14,14 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 public class MCSPlayer extends SampleGamer {
 
     @Override
-    public void stateMachineMetaGame(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
-    {
-        // play game
+    public void stateMachineMetaGame(long timeout)
+    		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+        finishBy = 0;
+        depthChargeFromRootTime = 100;
+        stateExpansionTime = 200;
+        numDepthChargesPerNode = 4;
+        expansionDepth = 4;
+    	printData();
     }
 
     @Override
@@ -50,7 +55,7 @@ public class MCSPlayer extends SampleGamer {
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	StateMachine game = getStateMachine();
     	if (game.findTerminalp(state)) {  return game.findReward(role, state); }
-    	if (level >= limit || System.currentTimeMillis() > finishBy) { return monteCarlo(role, state, 10); }
+    	if (level >= expansionDepth || System.currentTimeMillis() > finishBy) { return monteCarlo(role, state); }
     	List<Move> actions = game.findLegals(role, state);
     	for (int i = 0; i < actions.size(); i++) {
     		double result = minscore(role, actions.get(i), state, alpha, beta, level);
@@ -72,14 +77,13 @@ public class MCSPlayer extends SampleGamer {
     	return beta;
     }
 
-
-    private double monteCarlo(Role role, MachineState state, int count) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
+    private double monteCarlo(Role role, MachineState state) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
     	double total = 0.0;
-    	for (int i = 0; i < count; i++) {
+    	for (int i = 0; i < numDepthChargesPerNode; i++) {
     		total += depthCharge(role, state);
     	}
-    	System.out.println("monteCarlo: " + total / count);
-    	return total/count;
+    	System.out.println("monteCarlo: " + total / numDepthChargesPerNode);
+    	return total / numDepthChargesPerNode;
     }
 
     private double depthCharge(Role role, MachineState state)
@@ -90,7 +94,19 @@ public class MCSPlayer extends SampleGamer {
     	return depthCharge(role, game.getNextState(state, moves));
     }
 
-    private static final int limit = 7;
+    private void printData() {
+    	System.out.println("Expansion depth--------------------" + expansionDepth);
+    	System.out.println("Time for Depth Charge from Root----" + depthChargeFromRootTime + "ms");
+    	System.out.println("Time for State Expanson------------" + stateExpansionTime + "ms");
+    	System.out.println("Num Depth Charges per Node---------" + numDepthChargesPerNode);
+    	System.out.println("");
+    	System.out.println();
+    }
+
+    private long expansionDepth;
     private long finishBy;
+    private long depthChargeFromRootTime;
+    private long stateExpansionTime;
+    private long numDepthChargesPerNode;
 }
 
