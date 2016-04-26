@@ -45,7 +45,7 @@ public class MCSPlayer extends SampleGamer {
     	if (firstMove) {
         	long start = System.currentTimeMillis();
         	expansionDepth = (long) Math.floor((Math.log(finishBy - start) / Math.log(branchingFactor))) - 1;
-        	numDepthChargesPerNode = (long) Math.ceil((finishBy - start) / Math.pow(branchingFactor, expansionDepth - 2));
+        	numDepthChargesPerNode = (long) ((finishBy - start) / depthChargeFromRootTime);
         	System.out.println("Expansion Depth---" + expansionDepth);
         	System.out.println("Charges per Node--" + numDepthChargesPerNode);
         	firstMove = false;
