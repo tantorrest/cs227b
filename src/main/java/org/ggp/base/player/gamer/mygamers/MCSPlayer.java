@@ -17,19 +17,23 @@ public class MCSPlayer extends SampleGamer {
     public void stateMachineMetaGame(long timeout)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
         finishBy = timeout - 1000;
+        /* defaults */
         stateExpansionTime = 1;
-        numDepthChargesPerNode = 10;
-        expansionDepth = 4;	// default
-        /******************************************/
-        branchingFactor = getBranchingFactor(getRole(), getCurrentState(), 0, 0);
-        System.out.println("Timing: " + System.currentTimeMillis() + ", " + finishBy);
+        numDepthChargesPerNode = 100;
+        expansionDepth = 4;
+        firstMove = false;
+
+        /* calculate above values based on game */
+        StateMachine game = getStateMachine();
         long start = System.currentTimeMillis();
+        game.getNextStates(getCurrentState());
+        branchingFactor = getBranchingFactor(getRole(), getCurrentState(), 0, 0);
+        start = System.currentTimeMillis();
         long count = 0;
         while (System.currentTimeMillis() < finishBy) {
     		depthCharge(getRole(), getCurrentState());
     		count++;
         }
-        System.out.println(System.currentTimeMillis() - start + " " + count);
         depthChargeFromRootTime = ((double) System.currentTimeMillis() - start) / count;
     	printData();
     }
@@ -37,9 +41,16 @@ public class MCSPlayer extends SampleGamer {
     @Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-    	finishBy = timeout - 1000;
-    	expansionDepth = (long) Math.floor((Math.log(finishBy - System.currentTimeMillis()) / Math.log(branchingFactor))) - 1;
-    	System.out.println("Expansion Depth: " + expansionDepth);
+    	if (firstMove) {
+    		finishBy = timeout - 2000;
+        	long start = System.currentTimeMillis();
+        	expansionDepth = (long) Math.floor((Math.log(finishBy - start) / Math.log(branchingFactor))) - 1;
+        	numDepthChargesPerNode = (long) Math.ceil((finishBy - start) / Math.pow(branchingFactor, expansionDepth - 1));
+        	System.out.println("Expansion Depth---" + expansionDepth);
+        	System.out.println("Charges per Node--" + numDepthChargesPerNode);
+        	firstMove = true;
+    	}
+
     	return bestMove(getRole(), getCurrentState());
     }
 
@@ -94,11 +105,14 @@ public class MCSPlayer extends SampleGamer {
 
     private double monteCarlo(Role role, MachineState state) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
     	double total = 0.0;
+    	int count = 0;
     	for (int i = 0; i < numDepthChargesPerNode; i++) {
+    		if (System.currentTimeMillis() > finishBy) { return total / count; } // or heuristic
     		total += depthCharge(role, state);
+    		count++;
     	}
     	System.out.println("monteCarlo: " + total / numDepthChargesPerNode);
-    	return total / numDepthChargesPerNode;
+    	return total / count;
     }
 
     private long getBranchingFactor(Role role, MachineState state, long factor, long depth)
@@ -126,7 +140,6 @@ public class MCSPlayer extends SampleGamer {
     	System.out.println("Time for State Expanson------------" + stateExpansionTime + "ms");
     	System.out.println("Num Depth Charges per Node---------" + numDepthChargesPerNode);
     	System.out.println("Branching Factor-------------------" + branchingFactor);
-    	System.out.println("");
     }
 
     private long expansionDepth;
@@ -135,5 +148,6 @@ public class MCSPlayer extends SampleGamer {
     private double stateExpansionTime;
     private long numDepthChargesPerNode;
     private long branchingFactor;
+    private boolean firstMove;
 }
 
