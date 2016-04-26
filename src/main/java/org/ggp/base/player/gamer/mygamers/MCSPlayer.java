@@ -16,18 +16,30 @@ public class MCSPlayer extends SampleGamer {
     @Override
     public void stateMachineMetaGame(long timeout)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-        finishBy = 0;
-        depthChargeFromRootTime = 100;
-        stateExpansionTime = 200;
-        numDepthChargesPerNode = 4;
-        expansionDepth = 4;
+        finishBy = timeout - 1000;
+        stateExpansionTime = 1;
+        numDepthChargesPerNode = 10;
+        expansionDepth = 4;	// default
+        /******************************************/
+        branchingFactor = getBranchingFactor(getRole(), getCurrentState(), 0, 0);
+        System.out.println("Timing: " + System.currentTimeMillis() + ", " + finishBy);
+        long start = System.currentTimeMillis();
+        long count = 0;
+        while (System.currentTimeMillis() < finishBy) {
+    		depthCharge(getRole(), getCurrentState());
+    		count++;
+        }
+        System.out.println(System.currentTimeMillis() - start + " " + count);
+        depthChargeFromRootTime = ((double) System.currentTimeMillis() - start) / count;
     	printData();
     }
 
     @Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-    	finishBy = timeout - 1500;
+    	finishBy = timeout - 1000;
+    	expansionDepth = (long) Math.floor((Math.log(finishBy - System.currentTimeMillis()) / Math.log(branchingFactor))) - 1;
+    	System.out.println("Expansion Depth: " + expansionDepth);
     	return bestMove(getRole(), getCurrentState());
     }
 
@@ -77,6 +89,9 @@ public class MCSPlayer extends SampleGamer {
     	return beta;
     }
 
+
+	/********** helper functions ************/
+
     private double monteCarlo(Role role, MachineState state) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
     	double total = 0.0;
     	for (int i = 0; i < numDepthChargesPerNode; i++) {
@@ -86,10 +101,21 @@ public class MCSPlayer extends SampleGamer {
     	return total / numDepthChargesPerNode;
     }
 
+    private long getBranchingFactor(Role role, MachineState state, long factor, long depth)
+    		throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
+    	StateMachine game = getStateMachine();
+    	if (game.findTerminalp(state)) { return (long) Math.ceil(factor / depth); }
+    	List<Move> moves = game.getRandomJointMove(state);
+    	return getBranchingFactor(role, game.getNextState(state, moves), factor + game.getLegalJointMoves(state).size(), depth + 1);
+    }
+
     private double depthCharge(Role role, MachineState state)
     		throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
     	StateMachine game = getStateMachine();
-    	if (game.findTerminalp(state)) { System.out.println("terminal: " + game.findReward(role, state)); return game.findReward(role, state); }
+    	if (game.findTerminalp(state)) {
+//    		System.out.println("terminal: " + game.findReward(role, state));
+    		return game.findReward(role, state);
+    	}
     	List<Move> moves = game.getRandomJointMove(state);
     	return depthCharge(role, game.getNextState(state, moves));
     }
@@ -99,14 +125,15 @@ public class MCSPlayer extends SampleGamer {
     	System.out.println("Time for Depth Charge from Root----" + depthChargeFromRootTime + "ms");
     	System.out.println("Time for State Expanson------------" + stateExpansionTime + "ms");
     	System.out.println("Num Depth Charges per Node---------" + numDepthChargesPerNode);
+    	System.out.println("Branching Factor-------------------" + branchingFactor);
     	System.out.println("");
-    	System.out.println();
     }
 
     private long expansionDepth;
     private long finishBy;
-    private long depthChargeFromRootTime;
-    private long stateExpansionTime;
+    private double depthChargeFromRootTime;
+    private double stateExpansionTime;
     private long numDepthChargesPerNode;
+    private long branchingFactor;
 }
 
