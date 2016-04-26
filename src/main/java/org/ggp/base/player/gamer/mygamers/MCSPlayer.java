@@ -41,11 +41,11 @@ public class MCSPlayer extends SampleGamer {
     @Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-    	finishBy = timeout - 3000;
+    	finishBy = timeout - 1000;
     	if (firstMove) {
         	long start = System.currentTimeMillis();
         	expansionDepth = (long) Math.floor((Math.log(finishBy - start) / Math.log(branchingFactor))) - 1;
-        	numDepthChargesPerNode = (long) Math.ceil((finishBy - start) / Math.pow(branchingFactor, expansionDepth));
+        	numDepthChargesPerNode = (long) Math.ceil((finishBy - start) / Math.pow(branchingFactor, expansionDepth - 2));
         	System.out.println("Expansion Depth---" + expansionDepth);
         	System.out.println("Charges per Node--" + numDepthChargesPerNode);
         	firstMove = false;
@@ -101,7 +101,8 @@ public class MCSPlayer extends SampleGamer {
     }
 
 	/********** helper functions ************/
-    private double monteCarlo(Role role, MachineState state) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
+    private double monteCarlo(Role role, MachineState state)
+    		throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
     	double total = 0.0;
     	int count = 0;
     	for (int i = 0; i < numDepthChargesPerNode; i++) {
@@ -161,8 +162,6 @@ public class MCSPlayer extends SampleGamer {
     }
 
 	private double mobility(Role role, MachineState state) throws MoveDefinitionException {
-    	System.out.println("Checking Mobility!");
-    	System.out.println(finishBy);
     	StateMachine game = getStateMachine();
     	List<Move> actions = game.findLegals(role, state);
     	List<Move> feasibles = game.findActions(role);
@@ -175,8 +174,6 @@ public class MCSPlayer extends SampleGamer {
     // extremely conservative heuristic
     private double opponentMobility(Role role, MachineState state)
     		throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
-    	System.out.println("Checking Opponent Mobility!");
-    	System.out.println(finishBy);
     	StateMachine game = getStateMachine();
     	double maxOpponentMobility = 0;
 
@@ -189,11 +186,10 @@ public class MCSPlayer extends SampleGamer {
 	        		MachineState newstate = game.getNextState(state, jointMove);
 	        		opponentMobility = Math.max(opponentMobility, mobility(opponent, newstate));
 	        	}
-    			System.out.println(opponentMobility);
-    			maxOpponentMobility = (opponentMobility > maxOpponentMobility) ? opponentMobility: maxOpponentMobility;
+    			maxOpponentMobility = (opponentMobility > maxOpponentMobility) ? opponentMobility : maxOpponentMobility;
     		}
     	}
-    	return - maxOpponentMobility; // kind of adding a weight to the function
+    	return 100 - maxOpponentMobility; // kind of adding a weight to the function
 	}
 
 
