@@ -41,7 +41,7 @@ public class MCSPlayer extends SampleGamer {
     @Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-    	finishBy = timeout - 1000;
+    	finishBy = timeout - 2000;
     	if (firstMove) {
         	long start = System.currentTimeMillis();
         	expansionDepth = (long) Math.floor((Math.log(finishBy - start) / Math.log(branchingFactor))) - 1;
@@ -191,7 +191,6 @@ public class MCSPlayer extends SampleGamer {
     	}
     	return 100 - maxOpponentMobility; // kind of adding a weight to the function
 	}
-
 
     private long expansionDepth;
     private long finishBy;
