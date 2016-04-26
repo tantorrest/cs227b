@@ -21,7 +21,7 @@ public class MCSPlayer extends SampleGamer {
         stateExpansionTime = 1;
         numDepthChargesPerNode = 100;
         expansionDepth = 4;
-        firstMove = false;
+        firstMove = true;
 
         /* calculate above values based on game */
         StateMachine game = getStateMachine();
@@ -41,14 +41,14 @@ public class MCSPlayer extends SampleGamer {
     @Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+    	finishBy = timeout - 3000;
     	if (firstMove) {
-    		finishBy = timeout - 2000;
         	long start = System.currentTimeMillis();
         	expansionDepth = (long) Math.floor((Math.log(finishBy - start) / Math.log(branchingFactor))) - 1;
-        	numDepthChargesPerNode = (long) Math.ceil((finishBy - start) / Math.pow(branchingFactor, expansionDepth - 1));
+        	numDepthChargesPerNode = (long) Math.ceil((finishBy - start) / Math.pow(branchingFactor, expansionDepth));
         	System.out.println("Expansion Depth---" + expansionDepth);
         	System.out.println("Charges per Node--" + numDepthChargesPerNode);
-        	firstMove = true;
+        	firstMove = false;
     	}
 
     	return bestMove(getRole(), getCurrentState());
@@ -100,18 +100,25 @@ public class MCSPlayer extends SampleGamer {
     	return beta;
     }
 
-
 	/********** helper functions ************/
-
     private double monteCarlo(Role role, MachineState state) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
     	double total = 0.0;
     	int count = 0;
     	for (int i = 0; i < numDepthChargesPerNode; i++) {
-    		if (System.currentTimeMillis() > finishBy) { return total / count; } // or heuristic
+    		// in case we are close to time out
+    		if (System.currentTimeMillis() > finishBy) {
+    			if (total == 0) {
+    				System.out.println("heuristic: " + multiHeuristics(role, state));
+    				return multiHeuristics(role, state);
+    			}
+				System.out.println("breakEarly: " + total / (count + 1));
+				return total / (count + 1);
+			}
     		total += depthCharge(role, state);
     		count++;
+
     	}
-    	System.out.println("monteCarlo: " + total / numDepthChargesPerNode);
+    	System.out.println("runToCompletion: " + total / numDepthChargesPerNode);
     	return total / count;
     }
 
@@ -127,7 +134,6 @@ public class MCSPlayer extends SampleGamer {
     		throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
     	StateMachine game = getStateMachine();
     	if (game.findTerminalp(state)) {
-//    		System.out.println("terminal: " + game.findReward(role, state));
     		return game.findReward(role, state);
     	}
     	List<Move> moves = game.getRandomJointMove(state);
@@ -141,6 +147,55 @@ public class MCSPlayer extends SampleGamer {
     	System.out.println("Num Depth Charges per Node---------" + numDepthChargesPerNode);
     	System.out.println("Branching Factor-------------------" + branchingFactor);
     }
+
+    private double multiHeuristics(Role role, MachineState state)
+    		throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException{
+    	double mobGuess = 0;
+    	double goalGuess = 0;
+    	double oppMobGuess = 0;
+		mobGuess = mobility(role, state);
+		goalGuess = (double) (getStateMachine().findReward(role, state));
+		oppMobGuess = opponentMobility(role, state);
+
+    	return ((.5 * mobGuess) + (.333 * goalGuess) + (.167 * oppMobGuess));
+    }
+
+	private double mobility(Role role, MachineState state) throws MoveDefinitionException {
+    	System.out.println("Checking Mobility!");
+    	System.out.println(finishBy);
+    	StateMachine game = getStateMachine();
+    	List<Move> actions = game.findLegals(role, state);
+    	List<Move> feasibles = game.findActions(role);
+    	return (double) (actions.size() / feasibles.size() * 100);
+	}
+
+    // Opponent Mobility
+    // 100 means limits opponent mobility the most (good for us)
+    // 0   means limits opponent mobility the least (bad for us)
+    // extremely conservative heuristic
+    private double opponentMobility(Role role, MachineState state)
+    		throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
+    	System.out.println("Checking Opponent Mobility!");
+    	System.out.println(finishBy);
+    	StateMachine game = getStateMachine();
+    	double maxOpponentMobility = 0;
+
+    	// assume opponent plays noop in current state
+    	// hence, find mobility at next state
+    	for (Role opponent : game.findRoles()) {
+    		if (!opponent.equals(role)) {
+	    		double opponentMobility = 0;
+	    		for (List<Move> jointMove : game.getLegalJointMoves(state)) {
+	        		MachineState newstate = game.getNextState(state, jointMove);
+	        		opponentMobility = Math.max(opponentMobility, mobility(opponent, newstate));
+	        	}
+    			System.out.println(opponentMobility);
+    			maxOpponentMobility = (opponentMobility > maxOpponentMobility) ? opponentMobility: maxOpponentMobility;
+    		}
+    	}
+    	return - maxOpponentMobility; // kind of adding a weight to the function
+	}
+
 
     private long expansionDepth;
     private long finishBy;
