@@ -1,6 +1,7 @@
 package org.ggp.base.player.gamer.mygamers;
 
 import java.util.List;
+import java.util.Random;
 
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
 import org.ggp.base.util.statemachine.MachineState;
@@ -49,7 +50,7 @@ public class MCSPlayer extends SampleGamer {
             averageExploredStates = (long) (Math.pow(branchingFactor, expansionDepth));
             exploreEarlyStatesTime = averageExploredStates * getNextStateTime;
             completeChargesTime = ((depthChargeFromCutoffTime * averageExploredStates) + exploreEarlyStatesTime);
-            numDepthChargesPerNode = (long) Math.ceil(((double) finishBy - start) / completeChargesTime) + 1;
+            numDepthChargesPerNode = (long) Math.max(((double) finishBy - start) / completeChargesTime, 2);
             firstMove = false;
             printMoveData();
     	}
@@ -66,14 +67,16 @@ public class MCSPlayer extends SampleGamer {
         double alpha = 0;
         double beta = 100;
         double score = 0;
-        for (int i = 0; i < actions.size(); i++) {
-        	double result = minscore(role, actions.get(i), state, alpha, beta, 0);
-        	if (result == 100) return actions.get(i);
+        Random rgen = new Random();
+        int i = rgen.nextInt(actions.size());
+        for (; i < 2 * actions.size(); i++) {
+        	double result = minscore(role, actions.get(i % actions.size()), state, alpha, beta, 0);
+        	if (result == 100) return actions.get(i % actions.size());
         	if (result > score) {
         		score = result;
         		action = actions.get(i);
         		if (System.currentTimeMillis() > finishBy) {
-        			System.out.println("Main Cutoff after " + i + " nodes out of " + actions.size()+ " nodes");
+        			System.out.println("Main Cutoff after " + i%actions.size() + " nodes out of " + actions.size()+ " nodes");
         			return action;
         		}
         	}
@@ -89,8 +92,10 @@ public class MCSPlayer extends SampleGamer {
     		return monteCarlo(role, state);
     	}
     	List<Move> actions = game.findLegals(role, state);
-    	for (int i = 0; i < actions.size(); i++) {
-    		double result = minscore(role, actions.get(i), state, alpha, beta, level);
+    	Random rgen = new Random();
+        int i = rgen.nextInt(actions.size());
+    	for (; i < 2 * actions.size(); i++) {
+    		double result = minscore(role, actions.get(i % actions.size()), state, alpha, beta, level);
     		alpha = Math.max(alpha, result);
     		if (alpha >= beta) return beta;
     	}
@@ -118,7 +123,6 @@ public class MCSPlayer extends SampleGamer {
     		// in case we are close to time out
     		if (System.currentTimeMillis() > finishBy) {
     			if (total == 0) {
-    				System.out.println("Cutoff at charge " + i + " versus " + numDepthChargesPerNode);
     				return multiHeuristics(role, state);
     			}
     			System.out.println("Cutoff at charge " + i + " versus " + numDepthChargesPerNode);
@@ -131,7 +135,7 @@ public class MCSPlayer extends SampleGamer {
     		count++;
 
     	}
-    	System.out.println("runToCompletion: " + total / numDepthChargesPerNode);
+//    	System.out.println("runToCompletion: " + total / numDepthChargesPerNode);
     	return total / count;
     }
 
@@ -145,23 +149,18 @@ public class MCSPlayer extends SampleGamer {
 
     /* game data */
     private void printMetaGameData() {
-
     	System.out.println("Time for Depth Charge from Root----" + depthChargeFromRootTime + "ms");
-
     	System.out.println("Branching Factor-------------------" + branchingFactor);
     	System.out.println("Average Depth----------------------" + averageDepth);
     	System.out.println("Time to Get Next State-------------" + getNextStateTime);
     }
 
     private void printMoveData() {
-//    	System.out.println("Time for State Expanson------------" + stateExpansionTime + "ms");
     	System.out.println("Expansion depth--------------------" + expansionDepth);
     	System.out.println("Num Depth Charges per Node---------" + numDepthChargesPerNode);
     	System.out.println("Time of Depth Charge from Cutoff---" + depthChargeFromCutoffTime + "ms");
     	System.out.println("Average Explored States------------" + averageExploredStates);
     	System.out.println("Average Explore Early States Time--" + exploreEarlyStatesTime + "ms");
-    	System.out.println("Expansion Depth--------------------" + expansionDepth);
-    	System.out.println("Min Depth Charges Per Node---------" + minDepthChargesPerNode);
     	System.out.println("Complete Charges Time--------------" + completeChargesTime + "ms");
     }
 
@@ -216,7 +215,7 @@ public class MCSPlayer extends SampleGamer {
     private double exploreEarlyStatesTime = 1;
     private double getNextStateTime = 1000;
     private double depthChargeFromCutoffTime = 1;
-    private long minDepthChargesPerNode = 0;
+//    private long minDepthChargesPerNode = 0;
     private double completeChargesTime = 0;
 }
 
