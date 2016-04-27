@@ -155,7 +155,7 @@ public class MCSPlayer extends SampleGamer {
     	double goalGuess = 0;
     	double oppMobGuess = 0;
 		mobGuess = mobility(role, state);
-		goalGuess = (double) (getStateMachine().findReward(role, state));
+		goalGuess = getStateMachine().findReward(role, state);
 		oppMobGuess = opponentMobility(role, state);
 
     	return ((.5 * mobGuess) + (.333 * goalGuess) + (.167 * oppMobGuess));
@@ -165,7 +165,7 @@ public class MCSPlayer extends SampleGamer {
     	StateMachine game = getStateMachine();
     	List<Move> actions = game.findLegals(role, state);
     	List<Move> feasibles = game.findActions(role);
-    	return (double) (actions.size() / feasibles.size() * 100);
+    	return (((double)actions.size()) / ((double)feasibles.size())) * 100.0;
 	}
 
     // Opponent Mobility
