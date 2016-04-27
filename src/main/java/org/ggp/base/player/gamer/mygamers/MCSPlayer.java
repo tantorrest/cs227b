@@ -36,20 +36,21 @@ public class MCSPlayer extends SampleGamer {
         depthChargeFromRootTime = ((double) System.currentTimeMillis() - start) / count;
         averageDepth /= count;
         getNextStateTime = Math.max(1, depthChargeFromRootTime / averageDepth);
+        firstMove = true;
         printMetaGameData();
     }
 
     @Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-    	finishBy = timeout - 2000;
+    	finishBy = timeout - 500;
     	if (firstMove) {
         	long start = System.currentTimeMillis();
-        	expansionDepth = (long) Math.floor((Math.log(finishBy - start) / Math.log(branchingFactor * getNextStateTime))); // -1
+        	expansionDepth = (long) Math.floor((Math.log(finishBy - start) / Math.log(branchingFactor * getNextStateTime))) - 1; // -1
             depthChargeFromCutoffTime = (((double) (averageDepth - expansionDepth) / averageDepth) * depthChargeFromRootTime);
-            averageExploredStates = (long) (Math.pow(branchingFactor, expansionDepth));
+            averageExploredStates = (long) (Math.pow(branchingFactor, expansionDepth - 1));
             exploreEarlyStatesTime = averageExploredStates * getNextStateTime;
-            completeChargesTime = ((depthChargeFromCutoffTime * averageExploredStates) + exploreEarlyStatesTime);
+            completeChargesTime = (depthChargeFromRootTime + exploreEarlyStatesTime);
             numDepthChargesPerNode = (long) Math.max(((double) finishBy - start) / completeChargesTime, 2);
             firstMove = false;
             printMoveData();
@@ -74,9 +75,9 @@ public class MCSPlayer extends SampleGamer {
         	if (result == 100) return actions.get(i % actions.size());
         	if (result > score) {
         		score = result;
-        		action = actions.get(i);
+        		action = actions.get(i % actions.size());
         		if (System.currentTimeMillis() > finishBy) {
-        			System.out.println("Main Cutoff after " + i%actions.size() + " nodes out of " + actions.size()+ " nodes");
+//        			System.out.println("Main Cutoff after " + i % actions.size() + " nodes out of " + actions.size()+ " nodes");
         			return action;
         		}
         	}
@@ -88,7 +89,7 @@ public class MCSPlayer extends SampleGamer {
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	StateMachine game = getStateMachine();
     	if (game.findTerminalp(state)) {  return game.findReward(role, state); }
-    	if (level >= expansionDepth || System.currentTimeMillis() > finishBy) {
+    	if (level >= expansionDepth) {
     		return monteCarlo(role, state);
     	}
     	List<Move> actions = game.findLegals(role, state);
@@ -123,9 +124,12 @@ public class MCSPlayer extends SampleGamer {
     		// in case we are close to time out
     		if (System.currentTimeMillis() > finishBy) {
     			if (total == 0) {
-    				return multiHeuristics(role, state);
+//    				System.out.println("Heu at charge " + i + " versus " + numDepthChargesPerNode);
+//    				System.out.println(multiHeuristics(role, state));
+//    				return multiHeuristics(role, state);
+    				return getStateMachine().findReward(role, state);
     			}
-    			System.out.println("Cutoff at charge " + i + " versus " + numDepthChargesPerNode);
+//    			System.out.println("Cutoff at charge " + i + " versus " + numDepthChargesPerNode);
 				return total / count;
 			}
     		MachineState stateForCharge = state.clone();
@@ -133,9 +137,8 @@ public class MCSPlayer extends SampleGamer {
     		MachineState finalState = getStateMachine().performDepthCharge(stateForCharge, theDepth);
     		total += getStateMachine().getGoal(finalState, role);
     		count++;
-
     	}
-//    	System.out.println("runToCompletion: " + total / numDepthChargesPerNode);
+    	System.out.println("runToCompletion: " + total / numDepthChargesPerNode);
     	return total / count;
     }
 
@@ -169,11 +172,9 @@ public class MCSPlayer extends SampleGamer {
     		throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException{
     	double mobGuess = 0;
     	double goalGuess = 0;
-    	double oppMobGuess = 0;
 		mobGuess = mobility(role, state);
 		goalGuess = (double) (getStateMachine().findReward(role, state));
-		oppMobGuess = opponentMobility(role, getStateMachine().getNextState(state, getStateMachine().getRandomJointMove(state))); // state
-		return ((.5 * mobGuess) + (.4 * goalGuess) + (.1 * oppMobGuess));
+		return ((.1 * mobGuess) + (.9 * goalGuess));
     }
 
 	private double mobility(Role role, MachineState state) throws MoveDefinitionException {
@@ -181,26 +182,6 @@ public class MCSPlayer extends SampleGamer {
     	List<Move> actions = game.findLegals(role, state);
     	List<Move> feasibles = game.findActions(role);
     	return  (((double) actions.size() / feasibles.size()) * 100);
-	}
-
-    private double opponentMobility(Role role, MachineState state)
-    		throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
-    	StateMachine game = getStateMachine();
-    	double maxOpponentMobility = 0;
-
-    	// assume opponent plays noop in current state
-    	// hence, find mobility at next state
-    	for (Role opponent : game.findRoles()) {
-    		if (!opponent.equals(role)) {
-	    		double opponentMobility = 0;
-	    		for (List<Move> jointMove : game.getLegalJointMoves(state)) {
-	        		MachineState newstate = game.getNextState(state, jointMove);
-	        		opponentMobility = Math.max(opponentMobility, mobility(opponent, newstate));
-	        	}
-    			maxOpponentMobility = (opponentMobility > maxOpponentMobility) ? opponentMobility : maxOpponentMobility;
-    		}
-    	}
-    	return 100 - maxOpponentMobility; // kind of adding a weight to the function
 	}
 
     /* private variables */
@@ -215,7 +196,6 @@ public class MCSPlayer extends SampleGamer {
     private double exploreEarlyStatesTime = 1;
     private double getNextStateTime = 1000;
     private double depthChargeFromCutoffTime = 1;
-//    private long minDepthChargesPerNode = 0;
     private double completeChargesTime = 0;
 }
 
