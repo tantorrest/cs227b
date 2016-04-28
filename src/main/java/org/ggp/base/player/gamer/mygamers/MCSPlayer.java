@@ -36,7 +36,6 @@ public class MCSPlayer extends SampleGamer {
         depthChargeFromRootTime = ((double) System.currentTimeMillis() - start) / count;
         averageDepth /= count;
         getNextStateTime = Math.max(1, depthChargeFromRootTime / averageDepth);
-        firstMove = true;
         printMetaGameData();
     }
 
@@ -44,17 +43,16 @@ public class MCSPlayer extends SampleGamer {
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	finishBy = timeout - 500;
-    	if (firstMove) {
-        	long start = System.currentTimeMillis();
-        	expansionDepth = (long) Math.floor((Math.log(finishBy - start) / Math.log(branchingFactor * getNextStateTime))) - 1; // -1
-            depthChargeFromCutoffTime = (((double) (averageDepth - expansionDepth) / averageDepth) * depthChargeFromRootTime);
-            averageExploredStates = (long) (Math.pow(branchingFactor, expansionDepth - 1));
-            exploreEarlyStatesTime = averageExploredStates * getNextStateTime;
-            completeChargesTime = (depthChargeFromRootTime + exploreEarlyStatesTime);
-            numDepthChargesPerNode = (long) Math.max(((double) finishBy - start) / completeChargesTime, 2);
-            firstMove = false;
-            printMoveData();
-    	}
+    	long start = System.currentTimeMillis();
+    	expansionDepth = 2;
+    	branchingFactor = getStateMachine().getLegalMoves(getCurrentState(), getRole()).size();
+    	expansionDepth = (long) Math.floor((Math.log(finishBy - start) / Math.log(branchingFactor * getNextStateTime))) - 2; // -1
+        depthChargeFromCutoffTime = (((double) (averageDepth - expansionDepth) / averageDepth) * depthChargeFromRootTime);
+        averageExploredStates = (long) (Math.pow(branchingFactor, expansionDepth - 1));
+        exploreEarlyStatesTime = averageExploredStates * getNextStateTime;
+        completeChargesTime = (depthChargeFromRootTime + exploreEarlyStatesTime);
+        numDepthChargesPerNode = (long) Math.min(((double) finishBy - start) / completeChargesTime, 2);
+        printMoveData();
 
     	return bestMove(getRole(), getCurrentState());
     }
@@ -77,7 +75,7 @@ public class MCSPlayer extends SampleGamer {
         		score = result;
         		action = actions.get(i % actions.size());
         		if (System.currentTimeMillis() > finishBy) {
-//        			System.out.println("Main Cutoff after " + i % actions.size() + " nodes out of " + actions.size()+ " nodes");
+        			System.out.println("Main Cutoff after " + i % actions.size() + " nodes out of " + actions.size()+ " nodes");
         			return action;
         		}
         	}
@@ -167,30 +165,12 @@ public class MCSPlayer extends SampleGamer {
     	System.out.println("Complete Charges Time--------------" + completeChargesTime + "ms");
     }
 
-    /* heuristics functions */
-    private double multiHeuristics(Role role, MachineState state)
-    		throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException{
-    	double mobGuess = 0;
-    	double goalGuess = 0;
-		mobGuess = mobility(role, state);
-		goalGuess = (double) (getStateMachine().findReward(role, state));
-		return ((.1 * mobGuess) + (.9 * goalGuess));
-    }
-
-	private double mobility(Role role, MachineState state) throws MoveDefinitionException {
-    	StateMachine game = getStateMachine();
-    	List<Move> actions = game.findLegals(role, state);
-    	List<Move> feasibles = game.findActions(role);
-    	return  (((double) actions.size() / feasibles.size()) * 100);
-	}
-
     /* private variables */
     private long expansionDepth = 4;
     private long finishBy = 1;
     private double depthChargeFromRootTime = 40;
     private long numDepthChargesPerNode = 100;
     private long branchingFactor = 5;
-    private boolean firstMove = true;
     private long averageDepth = 1;
     private long averageExploredStates = 1;
     private double exploreEarlyStatesTime = 1;
