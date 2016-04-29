@@ -21,6 +21,8 @@ public class MCSPlayer extends SampleGamer {
 
         /* calculate game parameter based on game */
         StateMachine game = getStateMachine();
+
+
         branchingFactor = getBranchingFactor(getRole(), getCurrentState(), 0, 0);
 
         long start = System.currentTimeMillis();
