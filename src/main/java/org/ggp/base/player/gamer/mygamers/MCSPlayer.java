@@ -1,9 +1,12 @@
 package org.ggp.base.player.gamer.mygamers;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
+import org.ggp.base.util.gdl.grammar.GdlSentence;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
@@ -14,15 +17,21 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 
 public class MCSPlayer extends SampleGamer {
 
+
     @Override
     public void stateMachineMetaGame(long timeout)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
         finishBy = timeout - 2000;
 
-        /* calculate game parameter based on game */
+
         StateMachine game = getStateMachine();
 
+        singlePlayer = false;
+        if (game.getRoles().size() == 1){
+        	singlePlayer = true;
+        }
 
+        /* calculate game parameter based on game */
         branchingFactor = getBranchingFactor(getRole(), getCurrentState(), 0, 0);
 
         long start = System.currentTimeMillis();
@@ -55,8 +64,13 @@ public class MCSPlayer extends SampleGamer {
         completeChargesTime = (depthChargeFromRootTime + exploreEarlyStatesTime);
         numDepthChargesPerNode = (long) Math.min(((double) finishBy - start) / completeChargesTime, 2);
         printMoveData();
-
-    	return bestMove(getRole(), getCurrentState());
+        StateMachine sm = getStateMachine();
+        MachineState ms = getCurrentState();
+		seenStates.add(ms.getContents());
+    	Move bm = bestMove(getRole(), getCurrentState());
+    	long stop = System.currentTimeMillis();
+    	//notifyObservers(new GamerSelectedMoveEvent(sm.findLegals(getRole(), ms), bm, stop - start));
+    	return bm;
     }
 
     private Move bestMove(Role role, MachineState state)
@@ -65,22 +79,42 @@ public class MCSPlayer extends SampleGamer {
         List<Move> actions = game.findLegals(role, state);
         if (actions.size() == 1) return actions.get(0);
         Move action = actions.get(0);
-        double alpha = 0;
-        double beta = 100;
-        double score = 0;
-        Random rgen = new Random();
-        int i = rgen.nextInt(actions.size());
-        for (; i < 2 * actions.size(); i++) {
-        	double result = minscore(role, actions.get(i % actions.size()), state, alpha, beta, 0);
-        	if (result == 100) return actions.get(i % actions.size());
-        	if (result > score) {
-        		score = result;
-        		action = actions.get(i % actions.size());
-        		if (System.currentTimeMillis() > finishBy) {
+        for (int j = 0; j < 3; j++){
+	        double alpha = 0;
+	        double beta = 100;
+	        double score = 0;
+	        Random rgen = new Random();
+	        int i = rgen.nextInt(actions.size());
+	        for (; i < 2 * actions.size(); i++) {
+	        	if (System.currentTimeMillis() > finishBy) {
         			System.out.println("Main Cutoff after " + i % actions.size() + " nodes out of " + actions.size()+ " nodes");
         			return action;
         		}
-        	}
+	        	else{
+	        		System.out.println("Not time yet");
+	        	}
+	        	double result = minscore(role, actions.get(i % actions.size()), state, alpha, beta, 0);
+	        	if (result == 100) return actions.get(i % actions.size());
+	        	if (result > score) {
+	        		score = result;
+	        		if (singlePlayer){
+		        		boolean seen = checkIfSeen(action);
+		        		if (!seen){
+		        			action = actions.get(i % actions.size());
+		        		}
+	        		}
+	        		else{
+	        			action = actions.get(i % actions.size());
+	        		}
+	        		if (System.currentTimeMillis() > finishBy) {
+	        			System.out.println("Main Cutoff after " + i % actions.size() + " nodes out of " + actions.size()+ " nodes");
+	        			return action;
+	        		}
+		        	else{
+		        		System.out.println("Not time yet");
+		        	}
+	        	}
+	        }
         }
         return action;
     }
@@ -167,7 +201,55 @@ public class MCSPlayer extends SampleGamer {
     	System.out.println("Complete Charges Time--------------" + completeChargesTime + "ms");
     }
 
+    private boolean checkIfSeen(Move move) throws TransitionDefinitionException{
+    	List<Move> moves = new ArrayList<Move>();
+		moves.add(move);
+		StateMachine sm = getStateMachine();
+		MachineState ms = getCurrentState();
+		MachineState nextState = sm.getNextState(ms, moves);
+		List<GdlSentence> nextContents = new ArrayList<GdlSentence>(nextState.getContents());
+		Set<GdlSentence> nextContentsSet = nextState.getContents();
+		boolean seen = true;
+		for (int j=0; j < seenStates.size(); j++){
+			seen = true;
+			int differentCount = 0;
+			Set<GdlSentence> seenContents = seenStates.get(j);
+			List<GdlSentence> seenContentsList = new ArrayList<GdlSentence>(seenStates.get(j));
+			for (int k=0; k < nextContents.size(); k++){
+				if (!seenContents.contains(nextContents.get(k))){
+					differentCount++;
+					if (differentCount > 1){
+						seen = false;
+						System.out.println("unseen");
+						break;
+					}
+				}
+			}
+			if (seen){
+				differentCount = 0;
+				for (int g=0; g < seenContentsList.size(); g++){
+					if (!nextContentsSet.contains(seenContentsList.get(g))){
+						differentCount++;
+						if (differentCount > 1){
+							seen = false;
+							System.out.println("unseen");
+							break;
+						}
+					}
+				}
+			}
+
+			System.out.println(differentCount + " " + seen);
+			if (seen){
+				return seen;
+			}
+		}
+		return seen;
+    }
+
     /* private variables */
+    private boolean singlePlayer = false;
+	private List<Set<GdlSentence>> seenStates = new ArrayList<Set<GdlSentence>>();
     private long expansionDepth = 4;
     private long finishBy = 1;
     private double depthChargeFromRootTime = 40;
