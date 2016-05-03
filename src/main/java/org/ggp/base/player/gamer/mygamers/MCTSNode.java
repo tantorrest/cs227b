@@ -44,7 +44,6 @@ public class MCTSNode {
     }
 
     public void updateUtilityAndVisits(double score) {
-//    	this.utility = ((this.utility * this.visits) + score) / (this.visits + 1);
     	this.utility += score;
     	this.visits++;
     }
@@ -61,7 +60,7 @@ public class MCTSNode {
     	return this.move;
     }
 
-    public double getAveReward() {
+    public double getAveUtility() {
     	return (this.visits != 0) ? this.utility / this.visits : 0;
     }
 }

@@ -43,9 +43,9 @@ public class MCTSPlayer extends SampleGamer {
 
     	double bestUtility = Double.NEGATIVE_INFINITY;
     	for (MCTSNode child : root.getChildren()) {
-    		if (child.getAveReward() > bestUtility) {
+    		if (child.getAveUtility() > bestUtility) {
     			p("Updating child utility: " + selectfn(child) + " move: " + child.getMove());
-    			bestUtility = child.getAveReward();
+    			bestUtility = child.getAveUtility();
     			bestMove = child.getMove();
     		}
     	}
@@ -100,7 +100,7 @@ public class MCTSPlayer extends SampleGamer {
     }
 
     private double selectfn(MCTSNode node) {
-    	return (node.getAveReward()) + explorationFactor * Math.sqrt(2 * Math.log(node.getParent().getVisits()) / node.getVisits());
+    	return (node.getAveUtility()) + explorationFactor * Math.sqrt(2 * Math.log(node.getParent().getVisits()) / node.getVisits());
     }
 
     private void expand(MCTSNode node)
@@ -109,7 +109,7 @@ public class MCTSPlayer extends SampleGamer {
     	for (int i = 0; i < actions.size(); i++) {
     		List<Move> jointMove = new ArrayList<Move>();
     		jointMove.add(actions.get(i));
-    		MachineState newstate = game.getNextState(getCurrentState(), jointMove); // todo for multiplayer
+    		MachineState newstate = game.getNextState(node.getState(), jointMove); // changed from getCurrentState to state
     		MCTSNode newnode = new MCTSNode(newstate, actions.get(i), 0, 0); // index of our move
     		node.addChild(newnode);
     	}
