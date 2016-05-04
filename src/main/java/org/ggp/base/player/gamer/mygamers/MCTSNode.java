@@ -7,12 +7,12 @@ import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 
 public class MCTSNode {
-    private List<MCTSNode> children = new ArrayList<MCTSNode>();
-    private MCTSNode parent = null;
-    private int visits = 0;
-    private MachineState state = null;
-    private double utility = 0;
-    private Move move = null;
+    public List<MCTSNode> children = new ArrayList<MCTSNode>();
+    public MCTSNode parent = null;
+    public int visits = 0;
+    public MachineState state = null;
+    public double utility = 0;
+    public Move move = null;
 
     public MCTSNode(MachineState state, Move move, int visits, double utility) {
     	this.visits = visits;

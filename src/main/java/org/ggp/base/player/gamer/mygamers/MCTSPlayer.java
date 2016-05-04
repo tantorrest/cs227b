@@ -1,6 +1,7 @@
 package org.ggp.base.player.gamer.mygamers;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
@@ -19,41 +20,124 @@ public class MCTSPlayer extends SampleGamer {
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	game = getStateMachine();
     	role = getRole();
-    	explorationFactor = Math.sqrt(2);
     	p("Doing metagaming");
     }
 
 	@Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-		root = new MCTSNode(getCurrentState(), null, 0, 0);
-    	bestMove = game.getRandomMove(getCurrentState(), role);
+		root = new MCTSNode(getCurrentState(), null, 1, 0);
+		explorationFactor = Math.sqrt(2);
+		bestMove = game.getRandomMove(getCurrentState(), role);
 
     	while (System.currentTimeMillis() < timeout - 1000) {
-    		MCTSNode selected = select2(root);
-    		expand(selected);
-    		MachineState terminal = game.performDepthCharge(selected.getState(), null);
-    		double score = (game.findReward(role, terminal) - 50) / 50.0; // range between -1 and 1
+    		double score = 0;
+    		MachineState terminal = null;
+    		MCTSNode selected = null;
+    		if (!game.findTerminalp(root.state)) {
+    			expand(root);
+    			selected = select(root);
+//        		if (root.children.contains(selected)) p("Chosen Child");
+        		terminal = game.performDepthCharge(selected.state, null);
+    		} else {
+    			terminal = root.state;
+    			selected = root;
+    		}
+    		score = game.findReward(role, terminal) / 100.0;
     		backPropagate(selected, score);
+
+//    		for (MCTSNode s : root.children) {
+//    			p("move " + s.move + " has value " + s.getAveUtility());
+//    		}
     	}
 
-		for (MCTSNode s : root.getChildren()) {
-			p("move " + s.getMove() + " has value " + selectfn(s));
+    	// extra information
+		for (MCTSNode s : root.children) {
+			p("move " + s.move + " has value " + s.getAveUtility());
 		}
 
-    	double bestUtility = Double.NEGATIVE_INFINITY;
-    	for (MCTSNode child : root.getChildren()) {
+    	// return the best value
+		double bestUtility = 0;
+		for (MCTSNode child : root.children) {
     		if (child.getAveUtility() > bestUtility) {
-    			p("Updating child utility: " + selectfn(child) + " move: " + child.getMove());
+    			System.out.println("Updating to " + child.getAveUtility());
     			bestUtility = child.getAveUtility();
-    			bestMove = child.getMove();
+    			bestMove = child.move;
     		}
     	}
 
-    	p(bestMove.toString());
+    	p("Chosen Move: " + bestMove.toString());
 		return bestMove;
     }
 
+	private MCTSNode select2(MCTSNode node)
+			throws MoveDefinitionException, TransitionDefinitionException {
+		while (!game.findTerminalp(node.state)) {
+			int numLegals = game.findLegals(role, node.state).size();
+			int numChildren = node.children.size();
+
+			if (numChildren < numLegals) {
+				return expand2(node);
+			} else {
+				double score = 0;
+		    	for (int i = 0; i < node.children.size(); i++) {
+		    		double newscore = selectfn(node.children.get(i));
+		    		if (newscore > score) {
+		    			score = newscore;
+		    			node = node.children.get(i);
+		    		}
+		    	}
+			}
+		}
+		return node;
+	}
+
+	// another online algorithm
+	private MCTSNode expand2(MCTSNode node)
+			throws MoveDefinitionException, TransitionDefinitionException {
+
+		HashSet<Move> moves = new HashSet<Move>();
+		for (MCTSNode child : node.children) { moves.add(child.move); }
+		for (Move move : game.findLegals(role, node.state)) {
+			if (!moves.contains(move)) {
+				List<Move> actions = new ArrayList<Move>();
+				actions.add(move);
+				MCTSNode child = new MCTSNode(game.getNextState(node.state, actions), move, 0, 0);
+				node.addChild(child);
+				return child;
+			}
+		}
+		return null;
+	}
+
+	// works as far as I know
+    private double selectfn(MCTSNode node) {
+    	return (node.getAveUtility()) + explorationFactor * Math.sqrt(2 * Math.log(node.parent.visits) / node.visits);
+    }
+
+    // pretty sure this function does what it's meant to do
+    private void backPropagate(MCTSNode node, double score) {
+//    	p("in bp");
+    	node.updateUtilityAndVisits(score);
+    	if (node.parent != null) {
+    		backPropagate(node.parent, score);
+    	}
+    }
+
+    // shortcut function for printing
+    private void p(String message) {
+    	System.out.println(message);
+    }
+
+    /* private variables */
+    private Move bestMove;
+    private StateMachine game;
+    private Role role;
+    private MCTSNode root;
+    private double explorationFactor;
+
+
+    /* minimax */
     private double maxscore(Role role, MachineState state, double alpha, double beta)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	StateMachine game = getStateMachine();
@@ -79,56 +163,39 @@ public class MCTSPlayer extends SampleGamer {
     	return beta;
     }
 
-    // optimized version
-    private MCTSNode select2(MCTSNode node) {
-    	if (node.getVisits() == 0) return node;
-
-    	while (node.getVisits() != 0) {
-        	double score = Double.NEGATIVE_INFINITY;
-        	MCTSNode result = node; // is this okay?
-        	for (int i = 0; i < node.getChildren().size(); i++) {
-        		if (node.getChildren().get(i).getVisits() == 0) return node.getChildren().get(i);
-        		double newscore = selectfn(node.getChildren().get(i));
-        		if (newscore > score) {
-        			score = newscore;
-        			result = node.getChildren().get(i);
-        		}
-        	}
-        	node = result;
-    	}
-    	return node;
-    }
-
-    private double selectfn(MCTSNode node) {
-    	return (node.getAveUtility()) + explorationFactor * Math.sqrt(2 * Math.log(node.getParent().getVisits()) / node.getVisits());
-    }
 
     private void expand(MCTSNode node)
     		throws MoveDefinitionException, TransitionDefinitionException {
-    	List<Move> actions = game.getLegalMoves(node.getState(), role);
+
+//    	p("in expand");
+    	List<Move> actions = game.getLegalMoves(node.state, role);
     	for (int i = 0; i < actions.size(); i++) {
     		List<Move> jointMove = new ArrayList<Move>();
     		jointMove.add(actions.get(i));
-    		MachineState newstate = game.getNextState(node.getState(), jointMove); // changed from getCurrentState to state
-    		MCTSNode newnode = new MCTSNode(newstate, actions.get(i), 0, 0); // index of our move
+    		MachineState newstate = game.getNextState(node.state, jointMove); // changed from getCurrentState to state
+    		MCTSNode newnode = new MCTSNode(newstate, actions.get(i), 0, 0);
     		node.addChild(newnode);
     	}
+//    	p("out expand");
     }
 
-    private void backPropagate(MCTSNode node, double score) {
-    	node.updateUtilityAndVisits(score);
-    	if (node.getParent() != null) {
-    		backPropagate(node.getParent(), score);
+    // find an expandable node
+    private MCTSNode select(MCTSNode node) {
+//    	p("in select");
+    	if (node.visits == 0) return node;
+    	for (int i = 0; i < node.children.size(); i++) {
+    		if (node.children.get(i).visits == 0) return node.children.get(i);
     	}
+    	double score = 0;
+    	MCTSNode result = node;
+    	for (int i = 0; i < node.children.size(); i++) {
+    		double newscore = selectfn(node.children.get(i));
+    		if (newscore > score) {
+    			score = newscore;
+    			result = node.children.get(i);
+    		}
+    	}
+    	return select(result);
     }
 
-    private void p(String message) {
-    	System.out.println(message);
-    }
-    /* private variables */
-    private Move bestMove;
-    private StateMachine game;
-    private Role role;
-    private MCTSNode root;
-    private double explorationFactor;
 }
