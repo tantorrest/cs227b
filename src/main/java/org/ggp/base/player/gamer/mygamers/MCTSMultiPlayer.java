@@ -1,6 +1,5 @@
 package org.ggp.base.player.gamer.mygamers;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
@@ -12,7 +11,7 @@ import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 
-public class MCTSPlayer extends SampleGamer {
+public class MCTSMultiPlayer extends SampleGamer {
 
     @Override
     public void stateMachineMetaGame(long timeout)
@@ -25,7 +24,7 @@ public class MCTSPlayer extends SampleGamer {
 	@Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-		root = new MCTSNode(getCurrentState(), null, 1, 0);
+		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
 		explorationFactor = Math.sqrt(2);
 		bestMove = game.getRandomMove(getCurrentState(), role);
 		expand(root);
@@ -33,40 +32,49 @@ public class MCTSPlayer extends SampleGamer {
     	while (System.currentTimeMillis() < timeout - 1000) {
     		double score = 0;
     		MachineState terminal = null;
-    		MCTSNode selected = select(root);
+    		MultiNode selected = select(root);
     		if (!game.findTerminalp(selected.state)) {
     			expand(selected);
-    			if (selected.equals(root)) p("equals root");
         		terminal = game.performDepthCharge(selected.state, null);
     		} else {
     			terminal = selected.state;
     		}
     		score = game.findReward(role, terminal) / 100.0;
     		backPropagate(selected, score);
+    		for (MultiNode child : root.children) {
+    			p("Child " + child.move + " value: " + child.getAveUtility());
+        	}
     	}
 
     	// return the best value
-		double bestUtility = 0;
-		for (MCTSNode child : root.children) {
-    		if (child.getAveUtility() > bestUtility) {
+		double bestUtility = Double.POSITIVE_INFINITY;
+		p(root.children.size() + "");
+		for (MultiNode child : root.children) {
+			System.out.println("Child " + child.move + " value: " + child.getAveUtility());
+    		if (child.getAveUtility() < bestUtility) {
     			bestUtility = child.getAveUtility();
     			bestMove = child.move;
     		}
     	}
 
-    	p("Chosen Move: " + bestMove.toString() + " has value: " + bestUtility);
+    	p("Chosen Move: " + bestMove.toString());
 		return bestMove;
     }
 
 
 	// works as far as I know
-    private double selectfn(MCTSNode node) {
+    private double selectfn(MultiNode node) {
     	return (node.getAveUtility()) + explorationFactor * Math.sqrt(2 * Math.log(node.parent.visits) / node.visits);
     }
 
     // pretty sure this function does what it's meant to do
-    private void backPropagate(MCTSNode node, double score) {
-    	node.updateUtilityAndVisits(score);
+    private void backPropagate(MultiNode node, double score) {
+    	if (node.isMax) {
+    		node.utility += score;
+    	} else {
+    		node.utility -= score;
+    	}
+    	node.visits++;
     	if (node.parent != null) {
     		backPropagate(node.parent, score);
     	}
@@ -80,57 +88,36 @@ public class MCTSPlayer extends SampleGamer {
     private Move bestMove;
     private StateMachine game;
     private Role role;
-    private MCTSNode root;
+    private MultiNode root;
     private double explorationFactor;
 
 
-    /* minimax */
-    private double maxscore(Role role, MachineState state, double alpha, double beta)
-    		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-    	StateMachine game = getStateMachine();
-    	if (game.findTerminalp(state)) return game.findReward(role, state);
-    	List<Move> actions = game.findLegals(role, state);
-    	for (int i = 0; i < actions.size(); i++) {
-    		double result = minscore(role, actions.get(i), state, alpha, beta);
-    		alpha = Math.max(alpha, result);
-    		if (alpha >= beta) return beta;
-    	}
-    	return alpha;
-    }
-
-    private double minscore(Role role, Move action, MachineState state, double alpha, double beta)
-    		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-    	StateMachine game = getStateMachine();
-    	for (List<Move> jointMove : game.getLegalJointMoves(state, role, action)) {
-    		MachineState newstate = game.getNextState(state, jointMove);
-    		double result = maxscore(role, newstate, alpha, beta);
-    		beta = Math.min(beta, result);
-    		if (beta <= alpha) return alpha;
-    	}
-    	return beta;
-    }
-
-    private void expand(MCTSNode node)
+    private void expand(MultiNode node)
     		throws MoveDefinitionException, TransitionDefinitionException {
-
-    	List<Move> actions = game.getLegalMoves(node.state, role);
-    	for (int i = 0; i < actions.size(); i++) {
-    		List<Move> jointMove = new ArrayList<Move>();
-    		jointMove.add(actions.get(i));
-    		MachineState newstate = game.getNextState(node.state, jointMove); // changed from getCurrentState to state
-    		MCTSNode newnode = new MCTSNode(newstate, actions.get(i), 0, 0);
-    		node.addChild(newnode);
+    	if (node.isMax) {
+    		List<Move> moves = game.getLegalMoves(node.state, role);
+    		for (Move move : moves) {
+        		MultiNode newnode = new MultiNode(node.state, move, null, 0, 0, !node.isMax); // alternate state
+        		node.addChild(newnode);
+    		}
+    	} else {
+    		List<List<Move>> jointMoves = game.getLegalJointMoves(node.state, role, node.move);
+    		for (List<Move> jointMove : jointMoves) {
+    			MachineState nextState = game.getNextState(node.state, jointMove);
+    			MultiNode newnode = new MultiNode(nextState, null, jointMove, 0, 0, !node.isMax);
+    			node.addChild(newnode);
+    		}
     	}
     }
 
     // find an expandable node
-    private MCTSNode select(MCTSNode node) {
+    private MultiNode select(MultiNode node) {
     	if (node.visits == 0 || game.findTerminalp(node.state)) return node;
     	for (int i = 0; i < node.children.size(); i++) {
     		if (node.children.get(i).visits == 0) return node.children.get(i);
     	}
-    	double score = 0;
-    	MCTSNode result = node;
+    	double score = Double.NEGATIVE_INFINITY;
+    	MultiNode result = node;
     	for (int i = 0; i < node.children.size(); i++) {
     		double newscore = selectfn(node.children.get(i));
     		if (newscore > score) {
@@ -140,5 +127,4 @@ public class MCTSPlayer extends SampleGamer {
     	}
     	return select(result);
     }
-
 }
