@@ -45,8 +45,8 @@ public class MCTSMultiPlayer extends SampleGamer {
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
-		explorationFactor = Math.sqrt(2);
-		bestMove = game.getRandomMove(getCurrentState(), role);
+		explorationFactor = Math.sqrt(1);
+//		bestMove = game.getRandomMove(getCurrentState(), role);
 		expand(root);
 
     	while (System.currentTimeMillis() < timeout - 1000) {
@@ -70,7 +70,6 @@ public class MCTSMultiPlayer extends SampleGamer {
 		double bestUtility = Double.POSITIVE_INFINITY;
 		p(root.children.size() + "");
 		for (MultiNode child : root.children) {
-			System.out.println("Child " + child.move + " value: " + child.getAveUtility());
     		if (child.getAveUtility() < bestUtility) {
     			bestUtility = child.getAveUtility();
     			bestMove = child.move;
@@ -78,13 +77,32 @@ public class MCTSMultiPlayer extends SampleGamer {
     	}
 
     	p("Chosen Move: " + bestMove.toString());
-		return bestMove;
+		return (bestUtility != 0) ? bestMove : game.getRandomMove(getCurrentState(), role);
     }
 
 
 	// works as far as I know
     private double selectfn(MultiNode node) {
     	return (node.getAveUtility()) + explorationFactor * Math.sqrt(2 * Math.log(node.parent.visits) / node.visits);
+    }
+
+    private double selectfn2(MultiNode node) {
+    	return (node.getAveUtility()) + explorationFactor * Math.sqrt(tunedFunction(node));
+    }
+
+    private double tunedFunction(MultiNode node) {
+    	double result = Math.log(node.parent.visits) / node.visits;
+    	double factor = Math.min(0.25, adjustedVariance(node));
+//    	p("tunedFunction: " + Math.sqrt(result * factor));
+    	return Math.sqrt(result * factor);
+    }
+
+    private double adjustedVariance(MultiNode node) {
+    	double result = 0;
+    	for (double utility : node.utilities) {
+    		result += Math.pow(utility, 2);
+    	}
+    	return (0.5 * result) - (Math.pow(node.getAveUtility(), 2)) + (Math.sqrt(2 * Math.log(node.parent.visits) / node.visits));
     }
 
     // pretty sure this function does what it's meant to do
@@ -94,6 +112,7 @@ public class MCTSMultiPlayer extends SampleGamer {
     	} else {
     		node.utility -= score;
     	}
+    	node.utilities.add(node.utility);
     	node.visits++;
     	if (node.parent != null) {
     		backPropagate(node.parent, score);
@@ -130,7 +149,8 @@ public class MCTSMultiPlayer extends SampleGamer {
     	double score = Double.NEGATIVE_INFINITY;
     	MultiNode result = node;
     	for (int i = 0; i < node.children.size(); i++) {
-    		double newscore = selectfn(node.children.get(i));
+//    		double newscore = selectfn(node.children.get(i));
+    		double newscore = selectfn2(node.children.get(i));
     		if (newscore > score) {
     			score = newscore;
     			result = node.children.get(i);

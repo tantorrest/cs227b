@@ -14,6 +14,7 @@ public class MultiNode {
     public double utility = 0;
     public Move move = null;
     public boolean isMax = true;
+    public ArrayList<Double> utilities = new ArrayList<Double>();
 
     public MultiNode(MachineState state, Move move, List<Move> jointMoves, int visits, double utility, boolean isMax) {
     	this.visits = visits;
