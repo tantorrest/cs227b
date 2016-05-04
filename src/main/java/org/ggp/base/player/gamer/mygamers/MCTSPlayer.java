@@ -16,6 +16,7 @@ public class MCTSPlayer extends SampleGamer {
 	private List<Role> gameRoles;
 	private int numRoles;
 	private int myRoleNum;
+
     @Override
     public void stateMachineMetaGame(long timeout)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
@@ -31,7 +32,6 @@ public class MCTSPlayer extends SampleGamer {
 	@Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-
 		root = new MCTSNode(getCurrentState(), null, 1, 0);
 		explorationFactor = Math.sqrt(2);
 		bestMove = game.getRandomMove(getCurrentState(), role);
@@ -144,14 +144,14 @@ public class MCTSPlayer extends SampleGamer {
     		//jointMove.add(actions.get(i));
     		//System.out.println("node state " + node.state +", jointMove = " + jointMove);
     		MachineState newstate = game.getNextState(node.state, jointMove); // changed from getCurrentState to state
-    		MCTSNode newnode = new MCTSNode(newstate, jointMove.get(0), 0, 0);
+    		MCTSNode newnode = new MCTSNode(newstate, jointMove.get(myRoleNum), 0, 0);
     		node.addChild(newnode);
     		count++;
     		//System.out.println("Count = " + count);
     	}
 //    	p("out expand");
     }
-
+    //test
     // find an expandable node
     private MCTSNode select(MCTSNode node) {
 //    	p("in select");
