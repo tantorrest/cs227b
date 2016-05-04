@@ -28,32 +28,21 @@ public class MCTSPlayer extends SampleGamer {
 		root = new MCTSNode(getCurrentState(), null, 1, 0);
 		explorationFactor = Math.sqrt(2);
 		bestMove = game.getRandomMove(getCurrentState(), role);
-
+		expand(root);
     	while (System.currentTimeMillis() < timeout - 1000) {
     		double score = 0;
     		MachineState terminal = null;
-    		MCTSNode selected = null;
-    		if (!game.findTerminalp(root.state)) {
-    			expand(root);
-    			selected = select(root);
+    		MCTSNode selected = select(root);
+    		if (!game.findTerminalp(selected.state)) {
+    			expand(selected);
+    			if (selected.equals(root)) p("equals root");
         		terminal = game.performDepthCharge(selected.state, null);
     		} else {
-    			terminal = root.state;
-    			selected = root;
+    			terminal = selected.state;
     		}
     		score = game.findReward(role, terminal) / 100.0;
-//    		p("" + score);
     		backPropagate(selected, score);
-
-//    		for (MCTSNode s : root.children) {
-//    			p("move " + s.move + " has value " + s.getAveUtility());
-//    		}
     	}
-
-    	// extra information
-		for (MCTSNode s : root.children) {
-//			p("move " + s.move + " has value " + s.getAveUtility());
-		}
 
     	// return the best value
 		double bestUtility = 0;
@@ -122,11 +111,9 @@ public class MCTSPlayer extends SampleGamer {
     	return beta;
     }
 
-
     private void expand(MCTSNode node)
     		throws MoveDefinitionException, TransitionDefinitionException {
 
-//    	p("in expand");
     	List<Move> actions = game.getLegalMoves(node.state, role);
     	for (int i = 0; i < actions.size(); i++) {
     		List<Move> jointMove = new ArrayList<Move>();
@@ -135,13 +122,11 @@ public class MCTSPlayer extends SampleGamer {
     		MCTSNode newnode = new MCTSNode(newstate, actions.get(i), 0, 0);
     		node.addChild(newnode);
     	}
-//    	p("out expand");
     }
 
     // find an expandable node
     private MCTSNode select(MCTSNode node) {
-//    	p("in select");
-    	if (node.visits == 0) return node;
+    	if (node.visits == 0 || game.findTerminalp(node.state)) return node;
     	for (int i = 0; i < node.children.size(); i++) {
     		if (node.children.get(i).visits == 0) return node.children.get(i);
     	}
