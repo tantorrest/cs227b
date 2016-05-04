@@ -45,8 +45,7 @@ public class MCTSMultiPlayer extends SampleGamer {
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
-		explorationFactor = Math.sqrt(1);
-//		bestMove = game.getRandomMove(getCurrentState(), role);
+		explorationFactor = Math.sqrt(2);
 		expand(root);
 
     	while (System.currentTimeMillis() < timeout - 1000) {
@@ -149,8 +148,8 @@ public class MCTSMultiPlayer extends SampleGamer {
     	double score = Double.NEGATIVE_INFINITY;
     	MultiNode result = node;
     	for (int i = 0; i < node.children.size(); i++) {
-//    		double newscore = selectfn(node.children.get(i));
-    		double newscore = selectfn2(node.children.get(i));
+    		double newscore = selectfn(node.children.get(i));
+//    		double newscore = selectfn2(node.children.get(i));
     		if (newscore > score) {
     			score = newscore;
     			result = node.children.get(i);
