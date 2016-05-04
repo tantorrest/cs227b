@@ -19,6 +19,26 @@ public class MCTSMultiPlayer extends SampleGamer {
     	game = getStateMachine();
     	role = getRole();
     	p("Doing metagaming");
+
+        finishBy = timeout - 2000;
+
+        /* calculate game parameters based on game */
+        branchingFactor = getBranchingFactor(getRole(), getCurrentState(), 0, 0);
+
+        long start = System.currentTimeMillis();
+        MachineState state  = getCurrentState();
+        final int[] theDepth = { 0 };
+        long count = 0;
+        while (System.currentTimeMillis() < finishBy) {
+        	MachineState stateForCharge = state.clone();
+    		game.performDepthCharge(stateForCharge, theDepth);
+    		averageDepth += theDepth[0];
+    		count++;
+        }
+        depthChargeFromRootTime = ((double) System.currentTimeMillis() - start) / count;
+        averageDepth /= count;
+        getNextStateTime = Math.max(1, depthChargeFromRootTime / averageDepth);
+        printMetaGameData();
     }
 
 	@Override
@@ -84,14 +104,6 @@ public class MCTSMultiPlayer extends SampleGamer {
     	System.out.println(message);
     }
 
-    /* private variables */
-    private Move bestMove;
-    private StateMachine game;
-    private Role role;
-    private MultiNode root;
-    private double explorationFactor;
-
-
     private void expand(MultiNode node)
     		throws MoveDefinitionException, TransitionDefinitionException {
     	if (node.isMax) {
@@ -110,7 +122,6 @@ public class MCTSMultiPlayer extends SampleGamer {
     	}
     }
 
-    // find an expandable node
     private MultiNode select(MultiNode node) {
     	if (node.visits == 0 || game.findTerminalp(node.state)) return node;
     	for (int i = 0; i < node.children.size(); i++) {
@@ -127,4 +138,43 @@ public class MCTSMultiPlayer extends SampleGamer {
     	}
     	return select(result);
     }
+
+    private long getBranchingFactor(Role role, MachineState state, long factor, long depth)
+    		throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
+    	StateMachine game = getStateMachine();
+    	if (game.findTerminalp(state)) { return (long) Math.ceil(factor / depth); }
+    	List<Move> moves = game.getRandomJointMove(state);
+    	return getBranchingFactor(role, game.getNextState(state, moves), factor + game.getLegalJointMoves(state).size(), depth + 1);
+    }
+
+    /* game data */
+    private void printMetaGameData() {
+    	System.out.println("Time for Depth Charge from Root----" + depthChargeFromRootTime + "ms");
+    	System.out.println("Branching Factor-------------------" + branchingFactor);
+    	System.out.println("Average Depth----------------------" + averageDepth);
+    	System.out.println("Time to Get Next State-------------" + getNextStateTime);
+    }
+
+    /*********************** variables *******************/
+
+    /* private variables */
+    private Move bestMove;
+    private StateMachine game;
+    private Role role;
+    private MultiNode root;
+    private double explorationFactor;
+
+
+    /* metagaming data */
+    private long expansionDepth = 4;
+    private long finishBy = 1;
+    private double depthChargeFromRootTime = 40;
+    private long numDepthChargesPerNode = 100;
+    private long branchingFactor = 5;
+    private long averageDepth = 1;
+    private long averageExploredStates = 1;
+    private double exploreEarlyStatesTime = 1;
+    private double getNextStateTime = 1000;
+    private double depthChargeFromCutoffTime = 1;
+    private double completeChargesTime = 0;
 }
