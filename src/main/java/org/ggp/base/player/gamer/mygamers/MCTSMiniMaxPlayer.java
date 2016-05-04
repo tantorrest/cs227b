@@ -11,7 +11,7 @@ import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 
-public class MCTSMultiPlayer extends SampleGamer {
+public class MCTSMiniMaxPlayer extends SampleGamer {
 
     @Override
     public void stateMachineMetaGame(long timeout)
@@ -65,10 +65,9 @@ public class MCTSMultiPlayer extends SampleGamer {
     	}
 
     	// return the best value
-		double bestUtility = Double.POSITIVE_INFINITY;
-		p(root.children.size() + "");
+		double bestUtility = Double.NEGATIVE_INFINITY;
 		for (MultiNode child : root.children) {
-    		if (child.getAveUtility() < bestUtility) {
+    		if (child.getAveUtility() > bestUtility) {
     			p("Child " + child.move + " value: " + child.getAveUtility());
     			bestUtility = child.getAveUtility();
     			bestMove = child.move;
@@ -109,7 +108,7 @@ public class MCTSMultiPlayer extends SampleGamer {
     	if (node.isMax) {
     		node.utility += score;
     	} else {
-    		node.utility -= score;
+    		node.utility += score;
     	}
     	node.utilities.add(node.utility);
     	node.visits++;
@@ -141,21 +140,43 @@ public class MCTSMultiPlayer extends SampleGamer {
     }
 
     private MultiNode select(MultiNode node) {
+    	if (node.isMax) {
+//    		p("in max node: " + node.getAveUtility());
+    	} else {
+//    		p("in min node: " + node.getAveUtility());
+    	}
     	if (node.visits == 0 || game.findTerminalp(node.state)) return node;
-    	for (int i = 0; i < node.children.size(); i++) {
-    		if (node.children.get(i).visits == 0) return node.children.get(i);
+    	if (node.isMax) {
+        	for (int i = 0; i < node.children.size(); i++) {
+        		if (node.children.get(i).visits == 0) return node.children.get(i);
+        	}
+        	double score = Double.NEGATIVE_INFINITY;
+        	MultiNode result = node;
+        	for (int i = 0; i < node.children.size(); i++) {
+        		double newscore = selectfn(node.children.get(i));
+//        		double newscore = selectfn2(node.children.get(i));
+        		if (newscore > score) {
+        			score = newscore;
+        			result = node.children.get(i);
+        		}
+        	}
+        	return select(result);
+    	} else {
+        	for (int i = 0; i < node.children.size(); i++) {
+        		if (node.children.get(i).visits == 0) return node.children.get(i);
+        	}
+        	double score = Double.POSITIVE_INFINITY;
+        	MultiNode result = node;
+        	for (int i = 0; i < node.children.size(); i++) {
+        		double newscore = selectfn(node.children.get(i));
+//        		double newscore = selectfn2(node.children.get(i));
+        		if (newscore < score) {
+        			score = newscore;
+        			result = node.children.get(i);
+        		}
+        	}
+        	return select(result);
     	}
-    	double score = Double.NEGATIVE_INFINITY;
-    	MultiNode result = node;
-    	for (int i = 0; i < node.children.size(); i++) {
-    		double newscore = selectfn(node.children.get(i));
-//    		double newscore = selectfn2(node.children.get(i));
-    		if (newscore > score) {
-    			score = newscore;
-    			result = node.children.get(i);
-    		}
-    	}
-    	return select(result);
     }
 
     private long getBranchingFactor(Role role, MachineState state, long factor, long depth)
