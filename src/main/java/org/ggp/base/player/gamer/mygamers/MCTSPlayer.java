@@ -1,6 +1,5 @@
 package org.ggp.base.player.gamer.mygamers;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
@@ -13,22 +12,31 @@ import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 
 public class MCTSPlayer extends SampleGamer {
-
+	private int count;
+	private List<Role> gameRoles;
+	private int numRoles;
+	private int myRoleNum;
     @Override
     public void stateMachineMetaGame(long timeout)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+    	count = 0;
     	game = getStateMachine();
+    	gameRoles = game.getRoles();
     	role = getRole();
+    	numRoles = gameRoles.size();
+    	myRoleNum = gameRoles.indexOf(role);
     	p("Doing metagaming");
     }
 
 	@Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+
 		root = new MCTSNode(getCurrentState(), null, 1, 0);
 		explorationFactor = Math.sqrt(2);
 		bestMove = game.getRandomMove(getCurrentState(), role);
-
+//		if(currRole == numRoles) currRole = 0;
+//		else currRole ++;
     	while (System.currentTimeMillis() < timeout - 1000) {
     		double score = 0;
     		MachineState terminal = null;
@@ -127,13 +135,19 @@ public class MCTSPlayer extends SampleGamer {
     		throws MoveDefinitionException, TransitionDefinitionException {
 
 //    	p("in expand");
-    	List<Move> actions = game.getLegalMoves(node.state, role);
+    	game.getRoles();
+    	//List<Move> actions = game.getLegalMoves(node.state, role);
+    	List<List<Move>> actions = game.getLegalJointMoves(node.state);
     	for (int i = 0; i < actions.size(); i++) {
-    		List<Move> jointMove = new ArrayList<Move>();
-    		jointMove.add(actions.get(i));
+    		List<Move> jointMove = actions.get(i);
+    				//new ArrayList<Move>();
+    		//jointMove.add(actions.get(i));
+    		//System.out.println("node state " + node.state +", jointMove = " + jointMove);
     		MachineState newstate = game.getNextState(node.state, jointMove); // changed from getCurrentState to state
-    		MCTSNode newnode = new MCTSNode(newstate, actions.get(i), 0, 0);
+    		MCTSNode newnode = new MCTSNode(newstate, jointMove.get(0), 0, 0);
     		node.addChild(newnode);
+    		count++;
+    		//System.out.println("Count = " + count);
     	}
 //    	p("out expand");
     }
