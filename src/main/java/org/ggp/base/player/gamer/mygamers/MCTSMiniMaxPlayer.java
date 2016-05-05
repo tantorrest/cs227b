@@ -59,9 +59,9 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     		}
     		score = game.findReward(role, terminal) / 100.0;
     		backPropagate(selected, score);
-//    		for (MultiNode child : root.children) {
+    		for (MultiNode child : root.children) {
 //    			p("Child " + child.move + " value: " + child.getAveUtility());
-//        	}
+        	}
     	}
 
     	// return the best value
@@ -105,11 +105,7 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
 
     // pretty sure this function does what it's meant to do
     private void backPropagate(MultiNode node, double score) {
-    	if (node.isMax) {
-    		node.utility += score;
-    	} else {
-    		node.utility += score;
-    	}
+    	node.utility += score;
     	node.utilities.add(node.utility);
     	node.visits++;
     	if (node.parent != null) {
@@ -140,16 +136,11 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     }
 
     private MultiNode select(MultiNode node) {
-    	if (node.isMax) {
-//    		p("in max node: " + node.getAveUtility());
-    	} else {
-//    		p("in min node: " + node.getAveUtility());
-    	}
     	if (node.visits == 0 || game.findTerminalp(node.state)) return node;
+    	for (int i = 0; i < node.children.size(); i++) {
+    		if (node.children.get(i).visits == 0) return node.children.get(i);
+    	}
     	if (node.isMax) {
-        	for (int i = 0; i < node.children.size(); i++) {
-        		if (node.children.get(i).visits == 0) return node.children.get(i);
-        	}
         	double score = Double.NEGATIVE_INFINITY;
         	MultiNode result = node;
         	for (int i = 0; i < node.children.size(); i++) {
@@ -162,9 +153,6 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
         	}
         	return select(result);
     	} else {
-        	for (int i = 0; i < node.children.size(); i++) {
-        		if (node.children.get(i).visits == 0) return node.children.get(i);
-        	}
         	double score = Double.POSITIVE_INFINITY;
         	MultiNode result = node;
         	for (int i = 0; i < node.children.size(); i++) {
