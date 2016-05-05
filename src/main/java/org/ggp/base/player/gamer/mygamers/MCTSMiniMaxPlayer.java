@@ -18,33 +18,33 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	game = getStateMachine();
     	role = getRole();
-    	p("Doing metagaming");
 
-        finishBy = timeout - 2000;
-
-        /* calculate game parameters based on game */
-        branchingFactor = getBranchingFactor(getRole(), getCurrentState(), 0, 0);
-
-        long start = System.currentTimeMillis();
-        MachineState state  = getCurrentState();
-        final int[] theDepth = { 0 };
-        long count = 0;
-        while (System.currentTimeMillis() < finishBy) {
-        	MachineState stateForCharge = state.clone();
-    		game.performDepthCharge(stateForCharge, theDepth);
-    		averageDepth += theDepth[0];
-    		count++;
-        }
-        depthChargeFromRootTime = ((double) System.currentTimeMillis() - start) / count;
-        averageDepth /= count;
-        getNextStateTime = Math.max(1, depthChargeFromRootTime / averageDepth);
-        printMetaGameData();
+//        finishBy = timeout - 2000;
+//
+//        /* calculate game parameters based on game */
+//        branchingFactor = getBranchingFactor(getRole(), getCurrentState(), 0, 0);
+//
+//        long start = System.currentTimeMillis();
+//        MachineState state  = getCurrentState();
+//        final int[] theDepth = { 0 };
+//        long count = 0;
+//        while (System.currentTimeMillis() < finishBy) {
+//        	MachineState stateForCharge = state.clone();
+//    		game.performDepthCharge(stateForCharge, theDepth);
+//    		averageDepth += theDepth[0];
+//    		count++;
+//        }
+//        depthChargeFromRootTime = ((double) System.currentTimeMillis() - start) / count;
+//        averageDepth /= count;
+//        getNextStateTime = Math.max(1, depthChargeFromRootTime / averageDepth);
+//        printMetaGameData();
     }
 
 	@Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
+    	int numDepthCharges = 0;
 		explorationFactor = Math.sqrt(2);
 		expand(root);
     	while (System.currentTimeMillis() < timeout - 1000) {
@@ -54,6 +54,7 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     		if (!game.findTerminalp(selected.state)) {
     			expand(selected);
         		terminal = game.performDepthCharge(selected.state, null);
+        		numDepthCharges++;
     		} else {
     			terminal = selected.state;
     		}
@@ -68,13 +69,14 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
 		double bestUtility = Double.NEGATIVE_INFINITY;
 		for (MultiNode child : root.children) {
     		if (child.getAveUtility() > bestUtility) {
-    			p("Child " + child.move + " value: " + child.getAveUtility());
+//    			p("Child " + child.move + " value: " + child.getAveUtility());
     			bestUtility = child.getAveUtility();
     			bestMove = child.move;
     		}
     	}
 
-    	p("Chosen Move: " + bestMove.toString());
+//    	p("Chosen Move: " + bestMove.toString());
+    	p("Num Depth Charges MM: " + numDepthCharges);
 		return (bestUtility != 0) ? bestMove : game.getRandomMove(getCurrentState(), role);
     }
 
@@ -196,7 +198,6 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     /* metagaming data */
     private long expansionDepth = 4;
     private long finishBy = 1;
-    private double depthChargeFromRootTime = 40;
     private long numDepthChargesPerNode = 100;
     private long branchingFactor = 5;
     private long averageDepth = 1;
@@ -205,4 +206,5 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     private double getNextStateTime = 1000;
     private double depthChargeFromCutoffTime = 1;
     private double completeChargesTime = 0;
+    private double depthChargeFromRootTime = 40;
 }

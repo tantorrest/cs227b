@@ -20,25 +20,25 @@ public class MCTSMultiPlayer extends SampleGamer {
     	role = getRole();
     	p("Doing metagaming");
 
-        finishBy = timeout - 2000;
-
-        /* calculate game parameters based on game */
-        branchingFactor = getBranchingFactor(getRole(), getCurrentState(), 0, 0);
-
-        long start = System.currentTimeMillis();
-        MachineState state  = getCurrentState();
-        final int[] theDepth = { 0 };
-        long count = 0;
-        while (System.currentTimeMillis() < finishBy) {
-        	MachineState stateForCharge = state.clone();
-    		game.performDepthCharge(stateForCharge, theDepth);
-    		averageDepth += theDepth[0];
-    		count++;
-        }
-        depthChargeFromRootTime = ((double) System.currentTimeMillis() - start) / count;
-        averageDepth /= count;
-        getNextStateTime = Math.max(1, depthChargeFromRootTime / averageDepth);
-        printMetaGameData();
+//        finishBy = timeout - 2000;
+//
+//        /* calculate game parameters based on game */
+//        branchingFactor = getBranchingFactor(getRole(), getCurrentState(), 0, 0);
+//
+//        long start = System.currentTimeMillis();
+//        MachineState state  = getCurrentState();
+//        final int[] theDepth = { 0 };
+//        long count = 0;
+//        while (System.currentTimeMillis() < finishBy) {
+//        	MachineState stateForCharge = state.clone();
+//    		game.performDepthCharge(stateForCharge, theDepth);
+//    		averageDepth += theDepth[0];
+//    		count++;
+//        }
+//        depthChargeFromRootTime = ((double) System.currentTimeMillis() - start) / count;
+//        averageDepth /= count;
+//        getNextStateTime = Math.max(1, depthChargeFromRootTime / averageDepth);
+//        printMetaGameData();
     }
 
 	@Override
@@ -47,6 +47,7 @@ public class MCTSMultiPlayer extends SampleGamer {
 		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
 		explorationFactor = Math.sqrt(2);
 		expand(root);
+		int numDepthCharges = 0;
     	while (System.currentTimeMillis() < timeout - 1000) {
     		double score = 0;
     		MachineState terminal = null;
@@ -54,6 +55,7 @@ public class MCTSMultiPlayer extends SampleGamer {
     		if (!game.findTerminalp(selected.state)) {
     			expand(selected);
         		terminal = game.performDepthCharge(selected.state, null);
+        		numDepthCharges++;
     		} else {
     			terminal = selected.state;
     		}
@@ -69,13 +71,14 @@ public class MCTSMultiPlayer extends SampleGamer {
 		p(root.children.size() + "");
 		for (MultiNode child : root.children) {
     		if (child.getAveUtility() < bestUtility) {
-    			p("Child " + child.move + " value: " + child.getAveUtility());
+//    			p("Child " + child.move + " value: " + child.getAveUtility());
     			bestUtility = child.getAveUtility();
     			bestMove = child.move;
     		}
     	}
 
     	p("Chosen Move: " + bestMove.toString());
+    	p("Num Depth Charges MU: " + numDepthCharges);
 		return (bestUtility != 0) ? bestMove : game.getRandomMove(getCurrentState(), role);
     }
 
