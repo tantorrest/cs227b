@@ -16,107 +16,55 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     @Override
     public void stateMachineMetaGame(long timeout)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+    	p("Metagaming Phase");
     	game = getStateMachine();
     	role = getRole();
-
-//        finishBy = timeout - 2000;
-//
-//        /* calculate game parameters based on game */
-//        branchingFactor = getBranchingFactor(getRole(), getCurrentState(), 0, 0);
-//
-//        long start = System.currentTimeMillis();
-//        MachineState state  = getCurrentState();
-//        final int[] theDepth = { 0 };
-//        long count = 0;
-//        while (System.currentTimeMillis() < finishBy) {
-//        	MachineState stateForCharge = state.clone();
-//    		game.performDepthCharge(stateForCharge, theDepth);
-//    		averageDepth += theDepth[0];
-//    		count++;
-//        }
-//        depthChargeFromRootTime = ((double) System.currentTimeMillis() - start) / count;
-//        averageDepth /= count;
-//        getNextStateTime = Math.max(1, depthChargeFromRootTime / averageDepth);
-//        printMetaGameData();
+    	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
+		expand(root);
+		performMCTS(root, timeout - 1000);
     }
 
 	@Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
-    	int numDepthCharges = 0;
-		explorationFactor = Math.sqrt(2);
-		expand(root);
-    	while (System.currentTimeMillis() < timeout - 1000) {
-    		double score = 0;
-    		MachineState terminal = null;
-    		MultiNode selected = select(root);
-    		if (!game.findTerminalp(selected.state)) {
-    			expand(selected);
-        		terminal = game.performDepthCharge(selected.state, null);
-        		numDepthCharges++;
-    		} else {
-    			terminal = selected.state;
-    		}
-    		score = game.findReward(role, terminal) / 100.0;
-    		backPropagate(selected, score);
-    		for (MultiNode child : root.children) {
-//    			p("Child " + child.move + " value: " + child.getAveUtility());
+    	if (!isFirstMove) {
+    		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
+    		expand(root);
+    	}
+    	isFirstMove = false;
+    	performMCTS(root, timeout - 1000);
+    	return getBestMove();
+    }
+
+	/************* major helper functions *****************/
+    private MultiNode select(MultiNode node) {
+    	if (node.visits == 0 || game.findTerminalp(node.state)) return node;
+    	for (int i = 0; i < node.children.size(); i++) {
+    		if (node.children.get(i).visits == 0) return node.children.get(i);
+    	}
+    	if (node.isMax) {
+        	double score = Double.NEGATIVE_INFINITY;
+        	MultiNode result = node;
+        	for (int i = 0; i < node.children.size(); i++) {
+        		double newscore = selectfn(node.children.get(i));
+        		if (newscore > score) {
+        			score = newscore;
+        			result = node.children.get(i);
+        		}
         	}
+        	return select(result);
+    	} else {
+        	double score = Double.POSITIVE_INFINITY;
+        	MultiNode result = node;
+        	for (int i = 0; i < node.children.size(); i++) {
+        		double newscore = selectfn(node.children.get(i));
+        		if (newscore < score) {
+        			score = newscore;
+        			result = node.children.get(i);
+        		}
+        	}
+        	return select(result);
     	}
-
-    	// return the best value
-		double bestUtility = Double.NEGATIVE_INFINITY;
-		for (MultiNode child : root.children) {
-    		if (child.getAveUtility() > bestUtility) {
-//    			p("Child " + child.move + " value: " + child.getAveUtility());
-    			bestUtility = child.getAveUtility();
-    			bestMove = child.move;
-    		}
-    	}
-
-//    	p("Chosen Move: " + bestMove.toString());
-    	p("Num Depth Charges MM: " + numDepthCharges);
-		return (bestUtility != 0) ? bestMove : game.getRandomMove(getCurrentState(), role);
-    }
-
-
-	// works as far as I know
-    private double selectfn(MultiNode node) {
-    	return (node.getAveUtility()) + explorationFactor * Math.sqrt(2 * Math.log(node.parent.visits) / node.visits);
-    }
-
-    private double selectfn2(MultiNode node) {
-    	return (node.getAveUtility()) + explorationFactor * Math.sqrt(tunedFunction(node));
-    }
-
-    private double tunedFunction(MultiNode node) {
-    	double result = Math.log(node.parent.visits) / node.visits;
-    	double factor = Math.min(0.25, adjustedVariance(node));
-//    	p("tunedFunction: " + Math.sqrt(result * factor));
-    	return Math.sqrt(result * factor);
-    }
-
-    private double adjustedVariance(MultiNode node) {
-    	double result = 0;
-    	for (double utility : node.utilities) {
-    		result += Math.pow(utility, 2);
-    	}
-    	return (0.5 * result) - (Math.pow(node.getAveUtility(), 2)) + (Math.sqrt(2 * Math.log(node.parent.visits) / node.visits));
-    }
-
-    // pretty sure this function does what it's meant to do
-    private void backPropagate(MultiNode node, double score) {
-    	node.utility += score;
-    	node.utilities.add(node.utility);
-    	node.visits++;
-    	if (node.parent != null) {
-    		backPropagate(node.parent, score);
-    	}
-    }
-
-    private void p(String message) {
-    	System.out.println(message);
     }
 
     private void expand(MultiNode node)
@@ -137,65 +85,75 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     	}
     }
 
-    private MultiNode select(MultiNode node) {
-    	if (node.visits == 0 || game.findTerminalp(node.state)) return node;
-    	for (int i = 0; i < node.children.size(); i++) {
-    		if (node.children.get(i).visits == 0) return node.children.get(i);
+    private void backPropagate(MultiNode node, double score) {
+    	node.utility += score;
+    	node.visits++;
+    	node.utilities.add(node.utility);
+    	if (node.parent != null) {
+    		backPropagate(node.parent, score);
     	}
-    	if (node.isMax) {
-        	double score = Double.NEGATIVE_INFINITY;
-        	MultiNode result = node;
-        	for (int i = 0; i < node.children.size(); i++) {
-        		double newscore = selectfn(node.children.get(i));
-//        		double newscore = selectfn2(node.children.get(i));
-        		if (newscore > score) {
-        			score = newscore;
-        			result = node.children.get(i);
-        		}
-        	}
-        	return select(result);
+    }
+
+	/************* minor helper functions *****************/
+    private void performMCTS(MultiNode root, long timeout)
+    		throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
+    	while (System.currentTimeMillis() < timeout) {
+    		double score = 0;
+    		MachineState terminal = null;
+    		MultiNode selected = select(root);
+    		if (!game.findTerminalp(selected.state)) {
+    			expand(selected);
+        		terminal = game.performDepthCharge(selected.state, null);
+    		} else {
+    			terminal = selected.state;
+    		}
+    		score = game.findReward(role, terminal) / 100.0;
+    		backPropagate(selected, score);
+    	}
+    }
+
+    private Move getBestMove() throws MoveDefinitionException {
+    	double bestUtility = 0;
+		for (MultiNode child : root.children) {
+    		if (child.getAveUtility() > bestUtility) {
+    			p("improved: " + child.getAveUtility());
+    			bestUtility = child.getAveUtility();
+    			bestMove = child.move;
+    		}
+    	}
+		return (bestUtility != 0) ? bestMove : game.getRandomMove(getCurrentState(), role);
+    }
+
+    private double selectfn(MultiNode node) {
+    	return (node.getAveUtility()) + explorationFactor * Math.sqrt(tunedFunction(node));
+    }
+
+    private double tunedFunction(MultiNode node) {
+    	if (useUCBTuned) {
+    		double result = Math.log(node.parent.visits) / node.visits;
+        	double factor = Math.min(0.25, adjustedVariance(node));
+        	return Math.sqrt(result * factor);
     	} else {
-        	double score = Double.POSITIVE_INFINITY;
-        	MultiNode result = node;
-        	for (int i = 0; i < node.children.size(); i++) {
-        		double newscore = selectfn(node.children.get(i));
-//        		double newscore = selectfn2(node.children.get(i));
-        		if (newscore < score) {
-        			score = newscore;
-        			result = node.children.get(i);
-        		}
-        	}
-        	return select(result);
+    		return 2 * Math.log(node.parent.visits) / node.visits;
     	}
     }
 
-    private long getBranchingFactor(Role role, MachineState state, long factor, long depth)
-    		throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
-    	StateMachine game = getStateMachine();
-    	if (game.findTerminalp(state)) { return (long) Math.ceil(factor / depth); }
-    	List<Move> moves = game.getRandomJointMove(state);
-    	return getBranchingFactor(role, game.getNextState(state, moves), factor + game.getLegalJointMoves(state).size(), depth + 1);
-    }
-
-    /* game data */
-    private void printMetaGameData() {
-    	System.out.println("Time for Depth Charge from Root----" + depthChargeFromRootTime + "ms");
-    	System.out.println("Branching Factor-------------------" + branchingFactor);
-    	System.out.println("Average Depth----------------------" + averageDepth);
-    	System.out.println("Time to Get Next State-------------" + getNextStateTime);
+    private double adjustedVariance(MultiNode node) {
+    	double result = 0;
+    	for (double utility : node.utilities) {
+    		result += Math.pow(utility, 2);
+    	}
+    	return (0.5 * result) - (Math.pow(node.getAveUtility(), 2)) + (Math.sqrt(2 * Math.log(node.parent.visits) / node.visits));
     }
 
     /*********************** variables *******************/
+    /* dynamic game state data */
+    private Move bestMove = null;
+    private StateMachine game = null;
+    private Role role = null;
+    private MultiNode root = null;
 
-    /* private variables */
-    private Move bestMove;
-    private StateMachine game;
-    private Role role;
-    private MultiNode root;
-    private double explorationFactor;
-
-
-    /* metagaming data */
+    /* game information data */
     private long expansionDepth = 4;
     private long finishBy = 1;
     private long numDepthChargesPerNode = 100;
@@ -207,4 +165,12 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     private double depthChargeFromCutoffTime = 1;
     private double completeChargesTime = 0;
     private double depthChargeFromRootTime = 40;
+    private double bestUtility = Double.NEGATIVE_INFINITY;
+    private boolean isFirstMove = true;
+    private boolean useUCBTuned = true;
+
+    /* game paramter data */
+    private double explorationFactor = Math.sqrt(2);
+
+    private void p(String message) { System.out.println(message); }
 }
