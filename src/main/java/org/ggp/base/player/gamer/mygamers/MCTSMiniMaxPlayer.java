@@ -85,30 +85,32 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     	}
     }
 
-    private void backPropagate(MultiNode node, double score) {
+    private void backPropagate(MultiNode node, double score, int depth) {
+    	if (depth <= 1 && score == 0) node.utility = 0;
     	node.utility += score;
     	node.visits++;
     	node.utilities.add(node.utility);
     	if (node.parent != null) {
-    		backPropagate(node.parent, score);
+    		backPropagate(node.parent, score, depth);
     	}
     }
 
 	/************* minor helper functions *****************/
     private void performMCTS(MultiNode root, long timeout)
     		throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
+    	int[] depth = { 0 };
     	while (System.currentTimeMillis() < timeout) {
     		double score = 0;
     		MachineState terminal = null;
     		MultiNode selected = select(root);
     		if (!game.findTerminalp(selected.state)) {
     			expand(selected);
-        		terminal = game.performDepthCharge(selected.state, null);
+        		terminal = game.performDepthCharge(selected.state, depth);
     		} else {
     			terminal = selected.state;
     		}
     		score = game.findReward(role, terminal) / 100.0;
-    		backPropagate(selected, score);
+    		backPropagate(selected, score, depth[0]);
     	}
     }
 
@@ -167,7 +169,7 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     private double depthChargeFromRootTime = 40;
     private double bestUtility = Double.NEGATIVE_INFINITY;
     private boolean isFirstMove = true;
-    private boolean useUCBTuned = true;
+    private boolean useUCBTuned = false;
 
     /* game paramter data */
     private double explorationFactor = Math.sqrt(2);
