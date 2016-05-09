@@ -549,4 +549,9 @@ public final class PropNet
         //c.removeAllInputs();
         //c.removeAllOutputs();
     }
+
+    //TODO: oluwasanya edits from here
+    public void setInitProposition(boolean flag) {
+    	initProposition.setValue(flag);
+    }
 }
