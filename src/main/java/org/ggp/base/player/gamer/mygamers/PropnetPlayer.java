@@ -98,6 +98,7 @@ public class PropnetPlayer extends SampleGamer {
 	/************* minor helper functions *****************/
     private void performMCTS(MultiNode root, long timeout)
     		throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
+    	p("mcts");
     	int[] depth = { 0 };
     	int numDepthCharges = 0;
     	while (System.currentTimeMillis() < timeout) {
@@ -180,7 +181,7 @@ public class PropnetPlayer extends SampleGamer {
     private boolean useUCBTuned = false;
 
     /* game paramter data */
-    private double explorationFactor = Math.sqrt(1);
+    private double explorationFactor = Math.sqrt(2);
 
     private void p(String message) { System.out.println(message); }
 }

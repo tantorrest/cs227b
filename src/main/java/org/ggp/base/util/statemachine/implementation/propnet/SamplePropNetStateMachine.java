@@ -48,7 +48,7 @@ public class SamplePropNetStateMachine extends StateMachine {
             propNet = OptimizingPropNetFactory.create(description);
             roles = propNet.getRoles();
             ordering = getOrdering();
-            p(propNet.toString());
+            propNet.renderToFile("C:/Users/oluwasanya/Desktop/test.dot");
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -83,7 +83,10 @@ public class SamplePropNetStateMachine extends StateMachine {
     	// TODO: oluwasanya adjusted pseudocode here
     	Set<Proposition> rewards = propNet.getGoalPropositions().get(role);
       	for (Proposition p : rewards) {
-      		if (propmarkp(p)) { return getGoalValue(p); } // TODO: how to get int value
+      		if (propmarkp(p)) {
+      			p("" + getGoalValue(p));
+      			return getGoalValue(p);
+      		} // TODO: how to get int value
       	}
       	throw new GoalDefinitionException(state, role);
     }
@@ -117,6 +120,7 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public List<Move> getLegalMoves(MachineState state, Role role)
             throws MoveDefinitionException {
+    	p("get legal moves");
         markbases(state, propNet);
         List<Proposition> legals = new ArrayList<Proposition>();;
         for (int i = 0; i < roles.size(); i++){
@@ -141,6 +145,7 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public MachineState getNextState(MachineState state, List<Move> moves)
             throws TransitionDefinitionException {
+    	p("get next state");
         markactions(moves, propNet);
         Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
         //List<Move> nexts = new ArrayList<Move>();
@@ -274,6 +279,8 @@ public class SamplePropNetStateMachine extends StateMachine {
 	 p("markActions: Moves     : " + moves.size());
 	 // is this accurate?
 	 for (Move move : moves) {
+		 p(move.toString());
+		 if (props.get(move.getContents().toSentence()) == null) { p("err"); }
 		 props.get(move.getContents().toSentence()).setValue(true);
 	 }
    }
@@ -287,59 +294,54 @@ public class SamplePropNetStateMachine extends StateMachine {
 	   }
    }
 
-   public boolean propmarkp (Proposition p) {
-	   p("propmarkp " + p.toString());
-	   // base
-		if ((Component) p instanceof Transition) {
+   public boolean propmarkp (Component cp) {
+//	   Component cp = (Component) p;
+	   boolean val = cp instanceof Or;
+	   p("boolean: " + val);
+	   p("propmarkp " + cp.toString());
+		if (cp instanceof Transition) {
 			p("Base");
-			return p.getValue();
-		} else if (( p.getName()).getName().getValue().equals("does")) {
-			p("Input");
-			return p.getValue();
-		} else if ((Component) p instanceof Not) {
+			return cp.getValue();
+		} else if (cp instanceof Not) {
 			p("Not");
-			return propmarknegation(p);
-		} else if ((Component) p instanceof And) {
+			return propmarknegation(cp);
+		} else if (cp instanceof And) {
 			p("And");
-			return propmarkconjunction(p);
-		} else if ((Component) p instanceof Or) {
+			return propmarkconjunction(cp);
+		} else if (cp instanceof Or) {
 			p("Or");
-			return propmarkdisjunction(p);
-		} else { // TODO: Major todo
-			return true;
+			return propmarkdisjunction(cp);
+		} else if (cp.toString().equals("anon")){
+			p("anon");
+			return false; // TODO: anon
+		} else if (((Proposition) cp).getName().getName().getValue().equals("does")) {
+			p("Input");
+			return cp.getValue();
+		} else {
+			p("view");
+			return propmarkp(cp.getSingleInput());
 		}
    }
 
-//	public boolean propmarkp (Proposition p) {
-//		p("propmarkp " + p.toString());
-//		if (p.getName().toString()=="base") return p.getValue();
-//		else if (p.getName().toString()=="input") return p.getValue();
-//		else if (p.getName().toString()=="view") return propmarkp((Proposition) p.getSingleInput());
-//		else  if (p.getName().toString()=="negation") return propmarknegation(p);
-//		else if (p.getName().toString()=="conjunction") return propmarkconjunction(p);
-//		else if (p.getName().toString()=="disjunction") return propmarkdisjunction(p);
-//		else { p("returning false"); return false; }
-//	}
-
-	public boolean propmarknegation (Proposition p) {
-		p("propmarknegation " + p.toString());
-		return !propmarkp((Proposition)p.getSingleInput());
+	public boolean propmarknegation (Component cp) {
+		p("propmarknegation " + cp.toString());
+		return !propmarkp(cp.getSingleInput());
 	}
 
-	private boolean propmarkconjunction (Proposition p) {
-		p("propmarkconjunction " + p.toString());
-		Set<Component> sources = p.getInputs();
+	private boolean propmarkconjunction (Component cp) {
+		p("propmarkconjunction " + cp.toString());
+		Set<Component> sources = cp.getInputs();
 		for (Component source : sources) {
-			if (!propmarkp((Proposition) source)) return false;
+			if (!propmarkp(source)) return false;
 		}
 		return true;
    }
 
-	private boolean propmarkdisjunction (Proposition p) {
-		p("propmarkdisjunction " + p.toString());
-		Set<Component> sources = p.getInputs();
+	private boolean propmarkdisjunction (Component cp) {
+		p("propmarkdisjunction " + cp.toString());
+		Set<Component> sources = cp.getInputs();
 		for (Component source : sources) {
-			if (propmarkp((Proposition) source)) return true;
+			if (propmarkp(source)) return true;
 		}
 		return true;
 	}
