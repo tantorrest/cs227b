@@ -113,7 +113,6 @@ public final class PropNet
      */
     public PropNet(List<Role> roles, Set<Component> components)
     {
-
         this.roles = roles;
         this.components = components;
         this.propositions = recordPropositions();
@@ -548,5 +547,10 @@ public final class PropNet
         //These are actually unnecessary...
         //c.removeAllInputs();
         //c.removeAllOutputs();
+    }
+
+    //TODO: oluwasanya edits from here
+    public void setInitProposition(boolean flag) {
+    	initProposition.setValue(flag);
     }
 }

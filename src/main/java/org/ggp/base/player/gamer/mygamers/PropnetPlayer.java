@@ -11,7 +11,7 @@ import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 
-public class MCTSMiniMaxPlayer extends SampleGamer {
+public class PropnetPlayer extends SampleGamer {
 
     @Override
     public void stateMachineMetaGame(long timeout)

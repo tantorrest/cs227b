@@ -57,7 +57,8 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public boolean isTerminal(MachineState state) {
         // TODO: Compute whether the MachineState is terminal.
-        return false;
+    	markbases(state, propNet);
+    	return propmarkp(propNet.getTerminalProposition());
     }
 
     /**
@@ -71,7 +72,14 @@ public class SamplePropNetStateMachine extends StateMachine {
     public int getGoal(MachineState state, Role role)
             throws GoalDefinitionException {
         // TODO: Compute the goal for role in state.
-        return -1;
+    	markbases(state, propNet);
+    	List<Role> roles = propNet.getRoles();
+    	// TODO: oluwasanya adjusted pseudocode here
+    	Set<Proposition> rewards = propNet.getGoalPropositions().get(role);
+      	for (Proposition p : rewards) {
+      		if (propmarkp(p)) { return getGoalValue(p); } // TODO: how to get int value
+      	}
+      	throw new GoalDefinitionException(state, role);
     }
 
     /**
@@ -82,15 +90,15 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public MachineState getInitialState() {
         // TODO: Compute the initial state.
-        return null;
+    	propNet.setInitProposition(true);
+    	return getStateFromBase();
     }
 
     /**
      * Computes all possible actions for role.
      */
     @Override
-    public List<Move> findActions(Role role)
-            throws MoveDefinitionException {
+    public List<Move> findActions(Role role) throws MoveDefinitionException {
         // TODO: Compute legal moves.
         return null;
     }
@@ -102,7 +110,15 @@ public class SamplePropNetStateMachine extends StateMachine {
     public List<Move> getLegalMoves(MachineState state, Role role)
             throws MoveDefinitionException {
         // TODO: Compute legal moves.
-        return null;
+    	markbases(state, propNet);
+    	List<Role> roles = propNet.getRoles();
+    	// TODO: adjusted
+    	Set<Proposition> legals = propNet.getLegalPropositions().get(role);
+    	List<Move> actions = new ArrayList<Move>();
+    	for (Proposition p : legals) {
+    		if (propmarkp(p)) actions.add(getMoveFromProposition(p)); // TODO:
+    	}
+    	return actions;
     }
 
     /**
@@ -112,10 +128,12 @@ public class SamplePropNetStateMachine extends StateMachine {
     public MachineState getNextState(MachineState state, List<Move> moves)
             throws TransitionDefinitionException {
         // TODO: Compute the next state.
-        return null;
+    	markactions(moves, propNet);
+		markbases(state, propNet);
+		return getStateFromBase();
     }
 
-    /**
+	/**
      * This should compute the topological ordering of propositions.
      * Each component is either a proposition, logical gate, or transition.
      * Logical gates and transitions only have propositions as inputs.
@@ -152,7 +170,6 @@ public class SamplePropNetStateMachine extends StateMachine {
     }
 
     /* Helper methods */
-
     /**
      * The Input propositions are indexed by (does ?player ?action).
      *
@@ -219,4 +236,62 @@ public class SamplePropNetStateMachine extends StateMachine {
         }
         return new MachineState(contents);
     }
+
+    /** additional methods from 10.3 and 10.4 */
+    // TODO:
+    private void markbases (MachineState state, PropNet propNet) {
+    	Map<GdlSentence, Proposition> props = propNet.getBasePropositions();
+    	p("markBases: Base Props   : " + props.size());
+    	Set<GdlSentence> stateContents = state.getContents();
+    	p("markBases: Machine State: " + stateContents.size());
+    	for (GdlSentence gs : stateContents) {
+    		props.get(gs).setValue(true);
+    	}
+    }
+
+   private void markactions (List<Move> moves, PropNet propNet) {
+	 Map<GdlSentence, Proposition> props = propNet.getInputPropositions();
+	 p("markActions: Base Props: " + props.size());
+	 p("markActions: Moves     : " + moves.size());
+	 // is this accurate?
+	 for (Move move : moves) {
+		 props.get(move.getContents().toSentence()).setValue(true);
+	 }
+   }
+
+   private void clearpropnet (PropNet propNet) {
+	   Map<GdlSentence, Proposition> props = propNet.getBasePropositions();
+	   p("clearPropnet: Base Props: " + props.size());
+	   for (GdlSentence gs : props.keySet()) {
+		   props.get(gs).setValue(false);
+	   }
+   }
+
+   private boolean propmarkp (Proposition p) {
+	   return false;
+  }
+
+   private boolean propmarknegation (Proposition p) {
+	   // is the casting correct?
+	   return !propmarkp((Proposition) p.getSingleInput());
+   }
+
+	private boolean propmarkconjunction (Proposition p) {
+		Set<Component> sources = p.getInputs();
+		for (Component source : sources) {
+			if (!propmarkp((Proposition) source)) return false;
+		}
+		return true;
+   }
+
+	private boolean propmarkdisjunction (Proposition p) {
+		Set<Component> sources = p.getInputs();
+		for (Component source : sources) {
+			if (propmarkp((Proposition) source)) return true;
+		}
+		return true;
+	}
+
+	private void p(String word) { System.out.println(word); }
+
 }
