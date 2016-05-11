@@ -48,6 +48,7 @@ public class SamplePropNetStateMachine extends StateMachine {
             propNet = OptimizingPropNetFactory.create(description);
             roles = propNet.getRoles();
             ordering = getOrdering();
+            p(propNet.toString());
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -289,15 +290,24 @@ public class SamplePropNetStateMachine extends StateMachine {
    public boolean propmarkp (Proposition p) {
 	   p("propmarkp " + p.toString());
 	   // base
-		if ((Component) p instanceof Transition) return p.getValue();
-		// input
-		else if (( p.getName()).getName().getValue().equals("does")) return p.getValue();
-
-		else if ((Component) p instanceof Not) return propmarknegation(p);
-		else if ((Component) p instanceof And) return propmarkconjunction(p);
-		else if ((Component) p instanceof Or) return propmarkdisjunction(p);
-		else if ((Component) p instanceof Transition) return propmarkp((Proposition) p.getSingleInput()); // TODO
-		else { p("returning false"); return false; }
+		if ((Component) p instanceof Transition) {
+			p("Base");
+			return p.getValue();
+		} else if (( p.getName()).getName().getValue().equals("does")) {
+			p("Input");
+			return p.getValue();
+		} else if ((Component) p instanceof Not) {
+			p("Not");
+			return propmarknegation(p);
+		} else if ((Component) p instanceof And) {
+			p("And");
+			return propmarkconjunction(p);
+		} else if ((Component) p instanceof Or) {
+			p("Or");
+			return propmarkdisjunction(p);
+		} else { // TODO: Major todo
+			return true;
+		}
    }
 
 //	public boolean propmarkp (Proposition p) {
