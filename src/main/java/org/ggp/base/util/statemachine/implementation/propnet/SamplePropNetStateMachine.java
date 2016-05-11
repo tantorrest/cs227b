@@ -14,6 +14,7 @@ import org.ggp.base.util.gdl.grammar.GdlSentence;
 import org.ggp.base.util.propnet.architecture.Component;
 import org.ggp.base.util.propnet.architecture.PropNet;
 import org.ggp.base.util.propnet.architecture.components.And;
+import org.ggp.base.util.propnet.architecture.components.Constant;
 import org.ggp.base.util.propnet.architecture.components.Not;
 import org.ggp.base.util.propnet.architecture.components.Or;
 import org.ggp.base.util.propnet.architecture.components.Proposition;
@@ -82,7 +83,9 @@ public class SamplePropNetStateMachine extends StateMachine {
     	List<Role> roles = propNet.getRoles();
     	// TODO: oluwasanya adjusted pseudocode here
     	Set<Proposition> rewards = propNet.getGoalPropositions().get(role);
+    	p("total rewards size: " + rewards.size());
     	for (Proposition p : rewards) {
+    		p("Proposition: " + p.toString());
       		if (propmarkp(p)) {
       			p("Goal Value: " + getGoalValue(p));
       			return getGoalValue(p);
@@ -124,13 +127,14 @@ public class SamplePropNetStateMachine extends StateMachine {
         markbases(state, propNet);
         Set<Proposition> legals = propNet.getLegalPropositions().get(role); // sanya replaced this
         // same but adjusted for Set
+        p("returning before legals of size: " + legals.size());
         List<Move> actions = new ArrayList<Move>();
         for (Proposition p : legals) {
         	if (propmarkp(p)) {
         		actions.add(getMoveFromProposition(p));
         	}
         }
-        p("returning legals of size: " + actions.size());
+        p("returning after legals of size: " + actions.size());
         return actions;
     }
 
@@ -147,7 +151,8 @@ public class SamplePropNetStateMachine extends StateMachine {
         Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
         Set<GdlSentence> nextState = new HashSet<GdlSentence>();
         for (GdlSentence gs : bases.keySet()) {
-        	if(propmarkp(bases.get(gs).getSingleInput().getSingleInput())) {
+        	Component cp = bases.get(gs).getSingleInput();
+        	if(propmarkp(cp.getSingleInput())) {
         		nextState.add(gs);
         	}
         }
@@ -260,6 +265,7 @@ public class SamplePropNetStateMachine extends StateMachine {
     /** additional methods from 10.3 and 10.4 */
     // TODO:
     private void markbases (MachineState state, PropNet propNet) {
+    	clearpropnet(propNet); //?is this okay?
     	Map<GdlSentence, Proposition> props = propNet.getBasePropositions();
     	p("markBases: Base Props   : " + props.size());
     	Set<GdlSentence> stateContents = state.getContents();
@@ -283,37 +289,40 @@ public class SamplePropNetStateMachine extends StateMachine {
    }
 
    private void clearpropnet (PropNet propNet) {
-	   p("clearpropnet");
 	   Map<GdlSentence, Proposition> props = propNet.getBasePropositions();
+	   propNet.setInitProposition(false);
 	   p("clearPropnet: Base Props: " + props.size());
 	   for (GdlSentence gs : props.keySet()) {
 		   props.get(gs).setValue(false);
 	   }
    }
 
+   // need to redo
    public boolean propmarkp (Component cp) {
-//	   p("propmarkp " + cp.toString());
-		if (cp instanceof Transition) {
-//			p("Base");
+//	   p("propmarkp: " + cp.toString());
+		if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) {
+//			p("Base: " + cp.getValue());
 			return cp.getValue();
 		} else if (cp instanceof Not) {
-			p("Not");
+//			p("Not: " + propmarknegation(cp));
 			return propmarknegation(cp);
 		} else if (cp instanceof And) {
-			p("And");
+//			p("And: " + propmarkconjunction(cp));
 			return propmarkconjunction(cp);
 		} else if (cp instanceof Or) {
-			p("Or");
+//			p("Or: " + propmarkdisjunction(cp));
 			return propmarkdisjunction(cp);
-		} else if (cp.toString().equals("anon")){
-			p("anon");
-			return false; // TODO: anon
-		} else if (((Proposition) cp).getName().getName().getValue().equals("does")) {
-			p("Input");
+		} else if (cp instanceof Constant) {
+//			p("Constant: " + cp.getValue());
 			return cp.getValue();
-		} else {
-//			p("view");
+		} else if (((Proposition) cp).getName().getName().getValue().equals("does")) {
+//			p("Input: " + cp.getValue());
+			return cp.getValue();
+		} else if (cp.getInputs().size() == 1){
+//			p("view: " + propmarkp(cp.getSingleInput()));
 			return propmarkp(cp.getSingleInput());
+		} else {
+			return false;
 		}
    }
 
@@ -337,7 +346,7 @@ public class SamplePropNetStateMachine extends StateMachine {
 		for (Component source : sources) {
 			if (propmarkp(source)) return true;
 		}
-		return true;
+		return false;
 	}
 
 	private void p(String word) { System.out.println(word); }

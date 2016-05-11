@@ -27,7 +27,8 @@ public class PropnetPlayer extends SampleGamer {
 	@Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-    	if (!isFirstMove) {
+		p("select move");
+		if (!isFirstMove) {
     		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
     		expand(root);
     	}
@@ -38,12 +39,14 @@ public class PropnetPlayer extends SampleGamer {
 
 	/************* major helper functions *****************/
     private MultiNode select(MultiNode node) {
+//    	p("select " + node.toString());
     	if (node.visits == 0 || game.findTerminalp(node.state)) return node;
     	for (int i = 0; i < node.children.size(); i++) {
     		if (node.children.get(i).visits == 0) return node.children.get(i);
     	}
     	if (node.isMax) {
     		double score = selectfnMax(node.children.get(0));
+//    		p("Max select: " + node.children.size());
         	MultiNode result = node.children.get(0);
         	for (int i = 1; i < node.children.size(); i++) {
         		double newscore = selectfnMax(node.children.get(i));
@@ -56,6 +59,7 @@ public class PropnetPlayer extends SampleGamer {
     	} else {
         	double score = selectfnMin(node.children.get(0));
         	MultiNode result = node.children.get(0);
+//        	p("Min select: " + node.children.size());
         	for (int i = 1; i < node.children.size(); i++) {
         		double newscore = selectfnMin(node.children.get(i));
         		if (newscore > score) {
@@ -69,20 +73,25 @@ public class PropnetPlayer extends SampleGamer {
 
     private void expand(MultiNode node)
     		throws MoveDefinitionException, TransitionDefinitionException {
+
+//    	p("expand");
     	if (node.isMax) {
     		List<Move> moves = game.getLegalMoves(node.state, role);
+//    		p("Max node num legals: " + game.getLegalMoves(node.state, role).size());
     		for (Move move : moves) {
         		MultiNode newnode = new MultiNode(node.state, move, null, 0, 0, !node.isMax); // alternate state
         		node.addChild(newnode);
     		}
     	} else {
     		List<List<Move>> jointMoves = game.getLegalJointMoves(node.state, role, node.move);
+//    		p("Min node num legals: " + game.getLegalJointMoves(node.state, role, node.move).size());
     		for (List<Move> jointMove : jointMoves) {
     			MachineState nextState = game.getNextState(node.state, jointMove);
     			MultiNode newnode = new MultiNode(nextState, null, jointMove, 0, 0, !node.isMax);
     			node.addChild(newnode);
     		}
     	}
+//    	p("done expanding: " + node.children.size());
     }
 
     private void backPropagate(MultiNode node, double score, int depth) {
