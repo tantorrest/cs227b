@@ -144,7 +144,7 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public MachineState getNextState(MachineState state, List<Move> moves)
             throws TransitionDefinitionException {
-        markactions(moves, this);
+        markactions(moves, propNet);
         Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
         //List<Move> nexts = new ArrayList<Move>();
         for (int i = 0; i < bases.size(); i++){
