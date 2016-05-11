@@ -237,6 +237,7 @@ public class SamplePropNetStateMachine extends StateMachine {
         return new MachineState(contents);
     }
 
+<<<<<<< Updated upstream
     /** additional methods from 10.3 and 10.4 */
     // TODO:
     private void markbases (MachineState state, PropNet propNet) {
@@ -293,5 +294,21 @@ public class SamplePropNetStateMachine extends StateMachine {
 	}
 
 	private void p(String word) { System.out.println(word); }
+=======
+
+public boolean propmarkp (Proposition p) {
+	if (p.getName().toString()=="base") return p.getValue();
+	else if (p.getName().toString()=="input") return p.getValue();
+	else if (p.getName().toString()=="view") return propmarkp((Proposition)p.getSingleInput());
+	else  if (p.getName().toString()=="negation") return propmarknegation(p);
+	else if (p.getName().toString()=="conjunction") return propmarkconjunction(p);
+	else if (p.getName().toString()=="disjunction") return propmarkdisjunction(p);
+	else return false;
+}
+
+public boolean propmarknegation (Proposition p) {
+	return !propmarkp((Proposition)p.getSingleInput());
+}
+>>>>>>> Stashed changes
 
 }
