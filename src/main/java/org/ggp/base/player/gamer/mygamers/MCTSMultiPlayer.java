@@ -19,26 +19,6 @@ public class MCTSMultiPlayer extends SampleGamer {
     	game = getStateMachine();
     	role = getRole();
     	p("Doing metagaming");
-
-//        finishBy = timeout - 2000;
-//
-//        /* calculate game parameters based on game */
-//        branchingFactor = getBranchingFactor(getRole(), getCurrentState(), 0, 0);
-//
-//        long start = System.currentTimeMillis();
-//        MachineState state  = getCurrentState();
-//        final int[] theDepth = { 0 };
-//        long count = 0;
-//        while (System.currentTimeMillis() < finishBy) {
-//        	MachineState stateForCharge = state.clone();
-//    		game.performDepthCharge(stateForCharge, theDepth);
-//    		averageDepth += theDepth[0];
-//    		count++;
-//        }
-//        depthChargeFromRootTime = ((double) System.currentTimeMillis() - start) / count;
-//        averageDepth /= count;
-//        getNextStateTime = Math.max(1, depthChargeFromRootTime / averageDepth);
-//        printMetaGameData();
     }
 
 	@Override
@@ -61,9 +41,6 @@ public class MCTSMultiPlayer extends SampleGamer {
     		}
     		score = game.findReward(role, terminal) / 100.0;
     		backPropagate(selected, score);
-//    		for (MultiNode child : root.children) {
-//    			p("Child " + child.move + " value: " + child.getAveUtility());
-//        	}
     	}
 
     	// return the best value
@@ -71,7 +48,6 @@ public class MCTSMultiPlayer extends SampleGamer {
 		p(root.children.size() + "");
 		for (MultiNode child : root.children) {
     		if (child.getAveUtility() < bestUtility) {
-//    			p("Child " + child.move + " value: " + child.getAveUtility());
     			bestUtility = child.getAveUtility();
     			bestMove = child.move;
     		}
@@ -95,7 +71,6 @@ public class MCTSMultiPlayer extends SampleGamer {
     private double tunedFunction(MultiNode node) {
     	double result = Math.log(node.parent.visits) / node.visits;
     	double factor = Math.min(0.25, adjustedVariance(node));
-//    	p("tunedFunction: " + Math.sqrt(result * factor));
     	return Math.sqrt(result * factor);
     }
 
@@ -152,7 +127,6 @@ public class MCTSMultiPlayer extends SampleGamer {
     	MultiNode result = node;
     	for (int i = 0; i < node.children.size(); i++) {
     		double newscore = selectfn(node.children.get(i));
-//    		double newscore = selectfn2(node.children.get(i));
     		if (newscore > score) {
     			score = newscore;
     			result = node.children.get(i);

@@ -42,7 +42,7 @@ public class MCSPlayer extends SampleGamer {
     @Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-    	finishBy = timeout - 500;
+    	finishBy = timeout - 1000;
     	long start = System.currentTimeMillis();
     	expansionDepth = 2;
     	branchingFactor = getStateMachine().getLegalMoves(getCurrentState(), getRole()).size();
@@ -52,9 +52,10 @@ public class MCSPlayer extends SampleGamer {
         exploreEarlyStatesTime = averageExploredStates * getNextStateTime;
         completeChargesTime = (depthChargeFromRootTime + exploreEarlyStatesTime);
         numDepthChargesPerNode = (long) Math.min(((double) finishBy - start) / completeChargesTime, 2);
-        printMoveData();
 
-    	return bestMove(getRole(), getCurrentState());
+    	Move bestMove = bestMove(getRole(), getCurrentState());
+    	printMoveData();
+    	return bestMove;
     }
 
     private Move bestMove(Role role, MachineState state)
@@ -118,6 +119,7 @@ public class MCSPlayer extends SampleGamer {
     		throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
     	double total = 0.0;
     	int count = 0;
+
     	for (int i = 0; i < numDepthChargesPerNode; i++) {
     		// in case we are close to time out
     		if (System.currentTimeMillis() > finishBy) {
@@ -133,10 +135,11 @@ public class MCSPlayer extends SampleGamer {
     		MachineState stateForCharge = state.clone();
     		int[] theDepth = new int[1];
     		MachineState finalState = getStateMachine().performDepthCharge(stateForCharge, theDepth);
+    		numDepthCharges++;
     		total += getStateMachine().getGoal(finalState, role);
     		count++;
     	}
-    	System.out.println("runToCompletion: " + total / numDepthChargesPerNode);
+//    	System.out.println("runToCompletion: " + total / numDepthChargesPerNode);
     	return total / count;
     }
 
@@ -163,6 +166,7 @@ public class MCSPlayer extends SampleGamer {
     	System.out.println("Average Explored States------------" + averageExploredStates);
     	System.out.println("Average Explore Early States Time--" + exploreEarlyStatesTime + "ms");
     	System.out.println("Complete Charges Time--------------" + completeChargesTime + "ms");
+    	System.out.println("Num Depth Charges------------------" + numDepthCharges);
     }
 
     /* private variables */
@@ -177,5 +181,6 @@ public class MCSPlayer extends SampleGamer {
     private double getNextStateTime = 1000;
     private double depthChargeFromCutoffTime = 1;
     private double completeChargesTime = 0;
+    private long numDepthCharges = 0;
 }
 
