@@ -82,9 +82,10 @@ public class SamplePropNetStateMachine extends StateMachine {
     	List<Role> roles = propNet.getRoles();
     	// TODO: oluwasanya adjusted pseudocode here
     	Set<Proposition> rewards = propNet.getGoalPropositions().get(role);
-      	for (Proposition p : rewards) {
+//      	if (rewards.size() != 1) throw new GoalDefinitionException(state, role);
+    	for (Proposition p : rewards) {
       		if (propmarkp(p)) {
-      			p("" + getGoalValue(p));
+      			p("Goal Value: " + getGoalValue(p));
       			return getGoalValue(p);
       		} // TODO: how to get int value
       	}
@@ -274,10 +275,11 @@ public class SamplePropNetStateMachine extends StateMachine {
 	 p("markActions: Base Props: " + props.size());
 	 p("markActions: Moves     : " + moves.size());
 	 // is this accurate?
-	 for (Move move : moves) {
+	 List<GdlSentence> toDo = toDoes(moves);
+	 for (GdlSentence move : toDo) {
 		 p(move.toString());
-		 if (props.get(move.getContents().toSentence()) == null) { p("err"); }
-		 props.get(move.getContents().toSentence()).setValue(true);
+		 if (props.get(move) == null) { p("could not find in actions"); }
+		 props.get(move).setValue(true);
 	 }
    }
 
