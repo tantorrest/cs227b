@@ -291,7 +291,7 @@ public class SamplePropNetStateMachine extends StateMachine {
 	   // base
 		if ((Component) p instanceof Transition) return p.getValue();
 		// input
-		else if (((GdlRelation) p.getName()).getName().getValue().equals("does")) return p.getValue();
+		else if (( p.getName()).getName().getValue().equals("does")) return p.getValue();
 
 		else if ((Component) p instanceof Not) return propmarknegation(p);
 		else if ((Component) p instanceof And) return propmarkconjunction(p);
