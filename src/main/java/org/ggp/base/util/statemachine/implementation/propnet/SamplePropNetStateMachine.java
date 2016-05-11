@@ -122,20 +122,16 @@ public class SamplePropNetStateMachine extends StateMachine {
             throws MoveDefinitionException {
     	p("get legal moves");
         markbases(state, propNet);
-        List<Proposition> legals = new ArrayList<Proposition>();;
-        for (int i = 0; i < roles.size(); i++){
-        	if (role == roles.get(i)){
-        		Map<Role, Set<Proposition> >legalMap = propNet.getLegalPropositions();
-        		legals = new ArrayList<Proposition>(legalMap.get(role));
-        		break;
-        	}
-        }
+        Set<Proposition> legals = new HashSet<Proposition>();
+        legals = propNet.getLegalPropositions().get(role); // sanya replaced this
+        // same but adjusted for Set
         List<Move> actions = new ArrayList<Move>();
-        for (int i = 0; i < legals.size(); i++){
-        	if (propmarkp(legals.get(i))){
-        		actions.add(getMoveFromProposition(legals.get(i)));
+        for (Proposition p : legals) {
+        	if (propmarkp(p)) {
+        		actions.add(getMoveFromProposition(p));
         	}
         }
+        p("returning legals of size: " + actions.size());
         return actions;
     }
 
@@ -295,9 +291,6 @@ public class SamplePropNetStateMachine extends StateMachine {
    }
 
    public boolean propmarkp (Component cp) {
-//	   Component cp = (Component) p;
-	   boolean val = cp instanceof Or;
-	   p("boolean: " + val);
 	   p("propmarkp " + cp.toString());
 		if (cp instanceof Transition) {
 			p("Base");
