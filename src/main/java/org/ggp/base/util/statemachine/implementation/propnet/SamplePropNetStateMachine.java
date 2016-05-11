@@ -82,12 +82,11 @@ public class SamplePropNetStateMachine extends StateMachine {
     	List<Role> roles = propNet.getRoles();
     	// TODO: oluwasanya adjusted pseudocode here
     	Set<Proposition> rewards = propNet.getGoalPropositions().get(role);
-//      	if (rewards.size() != 1) throw new GoalDefinitionException(state, role);
     	for (Proposition p : rewards) {
       		if (propmarkp(p)) {
       			p("Goal Value: " + getGoalValue(p));
       			return getGoalValue(p);
-      		} // TODO: how to get int value
+      		}
       	}
       	throw new GoalDefinitionException(state, role);
     }
@@ -123,8 +122,7 @@ public class SamplePropNetStateMachine extends StateMachine {
             throws MoveDefinitionException {
     	p("get legal moves");
         markbases(state, propNet);
-        Set<Proposition> legals = new HashSet<Proposition>();
-        legals = propNet.getLegalPropositions().get(role); // sanya replaced this
+        Set<Proposition> legals = propNet.getLegalPropositions().get(role); // sanya replaced this
         // same but adjusted for Set
         List<Move> actions = new ArrayList<Move>();
         for (Proposition p : legals) {
@@ -144,15 +142,16 @@ public class SamplePropNetStateMachine extends StateMachine {
             throws TransitionDefinitionException {
     	p("get next state");
         markactions(moves, propNet);
-        Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
-        //List<Move> nexts = new ArrayList<Move>();
-        for (int i = 0; i < bases.size(); i++){
-        	List<GdlSentence> keys = new ArrayList<GdlSentence>(bases.keySet());
-        	propmarkp(bases.get(keys.get(i)));
+        markbases(state, propNet);
 
+        Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
+        Set<GdlSentence> nextState = new HashSet<GdlSentence>();
+        for (GdlSentence gs : bases.keySet()) {
+        	if(propmarkp(bases.get(gs).getSingleInput().getSingleInput())) {
+        		nextState.add(gs);
+        	}
         }
-        MachineState nextState = getStateFromBase();
-        return nextState;
+        return new MachineState(nextState);
     }
 
 	/**
@@ -293,9 +292,9 @@ public class SamplePropNetStateMachine extends StateMachine {
    }
 
    public boolean propmarkp (Component cp) {
-	   p("propmarkp " + cp.toString());
+//	   p("propmarkp " + cp.toString());
 		if (cp instanceof Transition) {
-			p("Base");
+//			p("Base");
 			return cp.getValue();
 		} else if (cp instanceof Not) {
 			p("Not");
@@ -313,18 +312,18 @@ public class SamplePropNetStateMachine extends StateMachine {
 			p("Input");
 			return cp.getValue();
 		} else {
-			p("view");
+//			p("view");
 			return propmarkp(cp.getSingleInput());
 		}
    }
 
 	public boolean propmarknegation (Component cp) {
-		p("propmarknegation " + cp.toString());
+//		p("propmarknegation " + cp.toString());
 		return !propmarkp(cp.getSingleInput());
 	}
 
 	private boolean propmarkconjunction (Component cp) {
-		p("propmarkconjunction " + cp.toString());
+//		p("propmarkconjunction " + cp.toString());
 		Set<Component> sources = cp.getInputs();
 		for (Component source : sources) {
 			if (!propmarkp(source)) return false;
@@ -333,7 +332,7 @@ public class SamplePropNetStateMachine extends StateMachine {
    }
 
 	private boolean propmarkdisjunction (Component cp) {
-		p("propmarkdisjunction " + cp.toString());
+//		p("propmarkdisjunction " + cp.toString());
 		Set<Component> sources = cp.getInputs();
 		for (Component source : sources) {
 			if (propmarkp(source)) return true;
