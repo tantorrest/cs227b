@@ -101,8 +101,26 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public List<Move> getLegalMoves(MachineState state, Role role)
             throws MoveDefinitionException {
-        // TODO: Compute legal moves.
-        return null;
+        markbases(state, propNet);
+        List<Move> legals = new ArrayList<Move>();
+        for (int i = 0; i < roles.size(); i++){
+        	if (role == roles.get(i)){
+        		Map<Role, Set<Proposition> >legalMap = propNet.getLegalPropositions();
+        		List<Proposition>legalProps = new ArrayList<Proposition>(legalMap.get(role));
+        		for (int j = 0; j < legalProps.size(); j++){
+        			Move legalMove = getMoveFromProposition(legalProps.get(j));
+        			legals.add(legalMove);
+        		}
+        		break;
+        	}
+        }
+        List<Move> actions = new ArrayList<Move>();
+        for (int i = 0; i < legals.size(); i++){
+        	if (propmarkp(legals.get(i))){
+        		actions.add(legals.get(i));
+        	}
+        }
+        return actions;
     }
 
     /**
@@ -111,8 +129,16 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public MachineState getNextState(MachineState state, List<Move> moves)
             throws TransitionDefinitionException {
-        // TODO: Compute the next state.
-        return null;
+        markactions(moves, this);
+        Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
+        //List<Move> nexts = new ArrayList<Move>();
+        for (int i = 0; i < bases.size(); i++){
+        	List<GdlSentence> keys = new ArrayList<GdlSentence>(bases.keySet());
+        	propmarkp(bases.get(keys.get(i)));
+
+        }
+        MachineState nextState = getStateFromBase();
+        return nextState;
     }
 
     /**
