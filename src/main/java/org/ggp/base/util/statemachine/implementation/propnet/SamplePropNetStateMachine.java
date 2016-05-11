@@ -80,7 +80,6 @@ public class SamplePropNetStateMachine extends StateMachine {
     	p("goal");
         // TODO: Compute the goal for role in state.
     	markbases(state, propNet);
-    	List<Role> roles = propNet.getRoles();
     	// TODO: oluwasanya adjusted pseudocode here
     	Set<Proposition> rewards = propNet.getGoalPropositions().get(role);
     	p("total rewards size: " + rewards.size());
@@ -153,6 +152,10 @@ public class SamplePropNetStateMachine extends StateMachine {
         	if(propmarkp(cp.getSingleInput())) {
         		nextState.add(gs);
         	}
+        }
+        p("Addedd the ff");
+        for (GdlSentence gs : nextState) {
+        	p(gs.toString());
         }
         return new MachineState(nextState);
     }
