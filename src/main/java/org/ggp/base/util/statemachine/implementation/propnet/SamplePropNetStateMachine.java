@@ -126,8 +126,6 @@ public class SamplePropNetStateMachine extends StateMachine {
     	p("get legal moves");
         markbases(state, propNet);
         Set<Proposition> legals = propNet.getLegalPropositions().get(role); // sanya replaced this
-        // same but adjusted for Set
-        p("returning before legals of size: " + legals.size());
         List<Move> actions = new ArrayList<Move>();
         for (Proposition p : legals) {
         	if (propmarkp(p)) {
@@ -277,8 +275,8 @@ public class SamplePropNetStateMachine extends StateMachine {
 
    private void markactions (List<Move> moves, PropNet propNet) {
 	 Map<GdlSentence, Proposition> props = propNet.getInputPropositions();
-	 p("markActions: Base Props: " + props.size());
-	 p("markActions: Moves     : " + moves.size());
+	 p("markActions: Poss Actions: " + props.size());
+	 p("markActions: Moves       : " + moves.size());
 	 // is this accurate?
 	 List<GdlSentence> toDo = toDoes(moves);
 	 for (GdlSentence move : toDo) {
@@ -299,7 +297,6 @@ public class SamplePropNetStateMachine extends StateMachine {
 
    // need to redo
    public boolean propmarkp (Component cp) {
-//	   p("propmarkp: " + cp.toString());
 		if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) {
 //			p("Base: " + cp.getValue());
 			return cp.getValue();
@@ -322,6 +319,7 @@ public class SamplePropNetStateMachine extends StateMachine {
 //			p("view: " + propmarkp(cp.getSingleInput()));
 			return propmarkp(cp.getSingleInput());
 		} else {
+			p(cp.toString());
 			return false;
 		}
    }
