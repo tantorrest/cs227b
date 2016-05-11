@@ -16,7 +16,7 @@ public class PropnetPlayer extends SampleGamer {
     @Override
     public void stateMachineMetaGame(long timeout)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-    	p("Metagaming Phase");
+    	p("Metagaming Phase Propnet");
     	game = getStateMachine();
     	role = getRole();
     	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
@@ -121,7 +121,7 @@ public class PropnetPlayer extends SampleGamer {
     	double bestUtility = 0;
 		for (MultiNode child : root.children) {
     		if (child.getAveUtility() > bestUtility) {
-    			p("improved: " + child.getAveUtility());
+    			p("prop improved: " + child.getAveUtility());
     			bestUtility = child.getAveUtility();
     			bestMove = child.move;
     		}
@@ -159,6 +159,7 @@ public class PropnetPlayer extends SampleGamer {
     /* dynamic game state data */
     private Move bestMove = null;
     private StateMachine game = null;
+    private StateMachine propnetGame = null;
     private Role role = null;
     private MultiNode root = null;
 
