@@ -3,13 +3,17 @@ package org.ggp.base.player.gamer.mygamers;
 import java.util.List;
 
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
+import org.ggp.base.util.statemachine.DualStateMachine;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
 import org.ggp.base.util.statemachine.StateMachine;
+import org.ggp.base.util.statemachine.cache.CachedStateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
+import org.ggp.base.util.statemachine.implementation.propnet.SamplePropNetStateMachine;
+import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class PropnetPlayer extends SampleGamer {
 
@@ -17,17 +21,32 @@ public class PropnetPlayer extends SampleGamer {
     public void stateMachineMetaGame(long timeout)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	p("Metagaming Phase Propnet");
-    	game = getStateMachine();
+
+    	StateMachine prover = getStateMachine();
+
+        StateMachine propnet = getPropnetStateMachine();
+        propnet.initialize(getMatch().getGame().getRules());
+
+    	game = new DualStateMachine(prover, propnet);
     	role = getRole();
     	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
 		expand(root);
 		performMCTS(root, timeout - 1000);
     }
 
+    @Override
+	public StateMachine getInitialStateMachine() {
+    	return new CachedStateMachine(new ProverStateMachine());
+    }
+
+    public StateMachine getPropnetStateMachine() {
+    	return new CachedStateMachine(new SamplePropNetStateMachine());
+    }
+
+
 	@Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-		p("select move");
 		if (!isFirstMove) {
     		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
     		expand(root);
@@ -39,14 +58,12 @@ public class PropnetPlayer extends SampleGamer {
 
 	/************* major helper functions *****************/
     private MultiNode select(MultiNode node) {
-//    	p("select " + node.toString());
     	if (node.visits == 0 || game.findTerminalp(node.state)) return node;
     	for (int i = 0; i < node.children.size(); i++) {
     		if (node.children.get(i).visits == 0) return node.children.get(i);
     	}
     	if (node.isMax) {
     		double score = selectfnMax(node.children.get(0));
-//    		p("Max select: " + node.children.size());
         	MultiNode result = node.children.get(0);
         	for (int i = 1; i < node.children.size(); i++) {
         		double newscore = selectfnMax(node.children.get(i));
@@ -59,7 +76,6 @@ public class PropnetPlayer extends SampleGamer {
     	} else {
         	double score = selectfnMin(node.children.get(0));
         	MultiNode result = node.children.get(0);
-//        	p("Min select: " + node.children.size());
         	for (int i = 1; i < node.children.size(); i++) {
         		double newscore = selectfnMin(node.children.get(i));
         		if (newscore > score) {
@@ -74,24 +90,20 @@ public class PropnetPlayer extends SampleGamer {
     private void expand(MultiNode node)
     		throws MoveDefinitionException, TransitionDefinitionException {
 
-//    	p("expand");
     	if (node.isMax) {
     		List<Move> moves = game.getLegalMoves(node.state, role);
-//    		p("Max node num legals: " + game.getLegalMoves(node.state, role).size());
     		for (Move move : moves) {
         		MultiNode newnode = new MultiNode(node.state, move, null, 0, 0, !node.isMax); // alternate state
         		node.addChild(newnode);
     		}
     	} else {
     		List<List<Move>> jointMoves = game.getLegalJointMoves(node.state, role, node.move);
-//    		p("Min node num legals: " + game.getLegalJointMoves(node.state, role, node.move).size());
     		for (List<Move> jointMove : jointMoves) {
     			MachineState nextState = game.getNextState(node.state, jointMove);
     			MultiNode newnode = new MultiNode(nextState, null, jointMove, 0, 0, !node.isMax);
     			node.addChild(newnode);
     		}
     	}
-//    	p("done expanding: " + node.children.size());
     }
 
     private void backPropagate(MultiNode node, double score, int depth) {
@@ -124,14 +136,14 @@ public class PropnetPlayer extends SampleGamer {
     		score = game.findReward(role, terminal) / 100.0;
     		backPropagate(selected, score, depth[0]);
     	}
-    	p("Num Depth Charges: " + numDepthCharges);
+    	p("Num Depth Charges PP: " + numDepthCharges);
     }
 
     private Move getBestMove() throws MoveDefinitionException {
     	double bestUtility = 0;
 		for (MultiNode child : root.children) {
     		if (child.getAveUtility() > bestUtility) {
-    			p("prop improved: " + child.getAveUtility());
+//    			p("prop improved: " + child.getAveUtility());
     			bestUtility = child.getAveUtility();
     			bestMove = child.move;
     		}
@@ -170,6 +182,7 @@ public class PropnetPlayer extends SampleGamer {
     private Move bestMove = null;
     private StateMachine game = null;
     private StateMachine propnetGame = null;
+    private StateMachine proverStateMachine = null;
     private Role role = null;
     private MultiNode root = null;
 

@@ -16,6 +16,7 @@ public class MCTSMultiPlayer extends SampleGamer {
     @Override
     public void stateMachineMetaGame(long timeout)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+
     	game = getStateMachine();
     	role = getRole();
     	p("Doing metagaming");
@@ -53,7 +54,7 @@ public class MCTSMultiPlayer extends SampleGamer {
     		}
     	}
 
-    	p("Chosen Move: " + bestMove.toString());
+//    	p("Chosen Move: " + bestMove.toString());
     	p("Num Depth Charges MU: " + numDepthCharges);
 		return (bestUtility != 0) ? bestMove : game.getRandomMove(getCurrentState(), role);
     }

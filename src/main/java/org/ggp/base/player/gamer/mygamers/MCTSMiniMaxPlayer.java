@@ -114,7 +114,7 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     		score = game.findReward(role, terminal) / 100.0;
     		backPropagate(selected, score, depth[0]);
     	}
-    	p("Num Depth Charges: " + numDepthCharges);
+    	p("Num Depth Charges MM: " + numDepthCharges);
     }
 
     private Move getBestMove() throws MoveDefinitionException {
@@ -179,7 +179,7 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     private boolean useUCBTuned = false;
 
     /* game paramter data */
-    private double explorationFactor = Math.sqrt(1);
+    private double explorationFactor = Math.sqrt(2);
 
     private void p(String message) { System.out.println(message); }
 }

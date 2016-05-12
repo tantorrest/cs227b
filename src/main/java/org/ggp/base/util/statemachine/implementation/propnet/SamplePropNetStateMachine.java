@@ -47,12 +47,21 @@ public class SamplePropNetStateMachine extends StateMachine {
     public void initialize(List<Gdl> description) {
         try {
             propNet = OptimizingPropNetFactory.create(description);
+            reportStats();
             roles = propNet.getRoles();
             ordering = getOrdering();
-            propNet.renderToFile("C:/Users/oluwasanya/Desktop/test.dot");
+//            propNet.renderToFile("C:/Users/oluwasanya/Desktop/test.dot");
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void reportStats() {
+    	p("Size: " + propNet.getSize());
+    	p("Num Ands: " + propNet.getNumAnds());
+    	p("Num Ors: " + propNet.getNumOrs());
+    	p("Num Nots: " + propNet.getNumNots());
+    	p("Num Links: " + propNet.getNumLinks());
     }
 
     /**
@@ -61,8 +70,7 @@ public class SamplePropNetStateMachine extends StateMachine {
      */
     @Override
     public boolean isTerminal(MachineState state) {
-        // TODO: Compute whether the MachineState is terminal.
-    	p("is terminal");
+//    	p("is terminal");
     	markbases(state, propNet);
     	return propmarkp(propNet.getTerminalProposition());
     }
@@ -77,16 +85,16 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public int getGoal(MachineState state, Role role)
             throws GoalDefinitionException {
-    	p("goal");
+//    	p("goal");
         // TODO: Compute the goal for role in state.
     	markbases(state, propNet);
     	// TODO: oluwasanya adjusted pseudocode here
     	Set<Proposition> rewards = propNet.getGoalPropositions().get(role);
-    	p("total rewards size: " + rewards.size());
+//    	p("total rewards size: " + rewards.size());
     	for (Proposition p : rewards) {
-    		p("Proposition: " + p.toString());
+//    		p("Proposition: " + p.toString());
       		if (propmarkp(p)) {
-      			p("Goal Value: " + getGoalValue(p));
+//      			p("Goal Value: " + getGoalValue(p));
       			return getGoalValue(p);
       		}
       	}
@@ -100,8 +108,7 @@ public class SamplePropNetStateMachine extends StateMachine {
      */
     @Override
     public MachineState getInitialState() {
-    	p("get initial state");
-        // TODO: Compute the initial state.
+//    	p("get initial state");
     	propNet.setInitProposition(true);
     	return getStateFromBase();
     }
@@ -122,7 +129,7 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public List<Move> getLegalMoves(MachineState state, Role role)
             throws MoveDefinitionException {
-    	p("get legal moves");
+//    	p("get legal moves");
         markbases(state, propNet);
         Set<Proposition> legals = propNet.getLegalPropositions().get(role); // sanya replaced this
         List<Move> actions = new ArrayList<Move>();
@@ -131,7 +138,7 @@ public class SamplePropNetStateMachine extends StateMachine {
         		actions.add(getMoveFromProposition(p));
         	}
         }
-        p("returning after legals of size: " + actions.size());
+//        p("returning after legals of size: " + actions.size());
         return actions;
     }
 
@@ -141,7 +148,7 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public MachineState getNextState(MachineState state, List<Move> moves)
             throws TransitionDefinitionException {
-    	p("get next state");
+//    	p("get next state");
         markactions(moves, propNet);
         markbases(state, propNet);
 
@@ -152,10 +159,6 @@ public class SamplePropNetStateMachine extends StateMachine {
         	if(propmarkp(cp.getSingleInput())) {
         		nextState.add(gs);
         	}
-        }
-        p("Addedd the ff");
-        for (GdlSentence gs : nextState) {
-        	p(gs.toString());
         }
         return new MachineState(nextState);
     }
@@ -268,9 +271,9 @@ public class SamplePropNetStateMachine extends StateMachine {
     private void markbases (MachineState state, PropNet propNet) {
     	clearpropnet(propNet); //?is this okay?
     	Map<GdlSentence, Proposition> props = propNet.getBasePropositions();
-    	p("markBases: Base Props   : " + props.size());
+//    	p("markBases: Base Props   : " + props.size());
     	Set<GdlSentence> stateContents = state.getContents();
-    	p("markBases: Machine State: " + stateContents.size());
+//    	p("markBases: Machine State: " + stateContents.size());
     	for (GdlSentence gs : stateContents) {
     		props.get(gs).setValue(true);
     	}
@@ -278,9 +281,8 @@ public class SamplePropNetStateMachine extends StateMachine {
 
    private void markactions (List<Move> moves, PropNet propNet) {
 	 Map<GdlSentence, Proposition> props = propNet.getInputPropositions();
-	 p("markActions: Poss Actions: " + props.size());
-	 p("markActions: Moves       : " + moves.size());
-	 // is this accurate?
+//	 p("markActions: Poss Actions: " + props.size());
+//	 p("markActions: Moves       : " + moves.size());
 	 List<GdlSentence> toDo = toDoes(moves);
 	 for (GdlSentence move : toDo) {
 		 p(move.toString());
@@ -292,7 +294,7 @@ public class SamplePropNetStateMachine extends StateMachine {
    private void clearpropnet (PropNet propNet) {
 	   Map<GdlSentence, Proposition> props = propNet.getBasePropositions();
 	   propNet.setInitProposition(false);
-	   p("clearPropnet: Base Props: " + props.size());
+//	   p("clearPropnet: Base Props: " + props.size());
 	   for (GdlSentence gs : props.keySet()) {
 		   props.get(gs).setValue(false);
 	   }
@@ -322,7 +324,7 @@ public class SamplePropNetStateMachine extends StateMachine {
 //			p("view: " + propmarkp(cp.getSingleInput()));
 			return propmarkp(cp.getSingleInput());
 		} else {
-			p(cp.toString());
+//			p(cp.toString());
 			return false;
 		}
    }
