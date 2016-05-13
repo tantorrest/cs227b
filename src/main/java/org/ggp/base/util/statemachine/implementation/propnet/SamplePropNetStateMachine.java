@@ -14,11 +14,9 @@ import org.ggp.base.util.gdl.grammar.GdlSentence;
 import org.ggp.base.util.propnet.architecture.Component;
 import org.ggp.base.util.propnet.architecture.PropNet;
 import org.ggp.base.util.propnet.architecture.components.And;
-import org.ggp.base.util.propnet.architecture.components.Constant;
 import org.ggp.base.util.propnet.architecture.components.Not;
 import org.ggp.base.util.propnet.architecture.components.Or;
 import org.ggp.base.util.propnet.architecture.components.Proposition;
-import org.ggp.base.util.propnet.architecture.components.Transition;
 import org.ggp.base.util.propnet.factory.OptimizingPropNetFactory;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
@@ -301,7 +299,7 @@ public class SamplePropNetStateMachine extends StateMachine {
    }
 
    // need to redo
-   public boolean propmarkp (Component cp) {
+   /*public boolean propmarkp (Component cp) {
 		if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) {
 //			p("Base: " + cp.getValue());
 			return cp.getValue();
@@ -327,6 +325,34 @@ public class SamplePropNetStateMachine extends StateMachine {
 //			p(cp.toString());
 			return false;
 		}
+   }*/
+
+   public boolean propmarkp (Component cp){
+	   //Proposition
+	   if (cp instanceof Proposition){
+		   //Base
+		   if (propNet.getBasePropositions().containsValue((Proposition) cp)){
+			   return cp.getValue();//from above, could be wrong
+		   }
+		   //Input
+		   if (propNet.getInputPropositions().containsValue((Proposition) cp)){
+			   return cp.getValue();
+		   }
+		   //View
+		   return propmarkp(cp.getSingleInput());
+	   }
+	   //Negation
+	   if (cp instanceof Not){
+		   return propmarknegation(cp);
+	   }
+	   //Conjunction
+	   if (cp instanceof And){
+		  return propmarkconjunction(cp);
+	   }
+	   if (cp instanceof Or){
+		   return propmarkdisjunction(cp);
+	   }
+	   return false;
    }
 
 	public boolean propmarknegation (Component cp) {
