@@ -3,7 +3,6 @@ package org.ggp.base.player.gamer.mygamers;
 import java.util.List;
 
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
-import org.ggp.base.util.statemachine.DualStateMachine;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
@@ -13,7 +12,6 @@ import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.propnet.SamplePropNetStateMachine;
-import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class PropnetPlayer extends SampleGamer {
 
@@ -21,13 +19,7 @@ public class PropnetPlayer extends SampleGamer {
     public void stateMachineMetaGame(long timeout)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	p("Metagaming Phase Propnet");
-
-    	StateMachine prover = getStateMachine();
-
-        StateMachine propnet = getPropnetStateMachine();
-        propnet.initialize(getMatch().getGame().getRules());
-
-    	game = new DualStateMachine(prover, propnet);
+    	game = getStateMachine();
     	role = getRole();
     	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
 		expand(root);
@@ -36,13 +28,8 @@ public class PropnetPlayer extends SampleGamer {
 
     @Override
 	public StateMachine getInitialStateMachine() {
-    	return new CachedStateMachine(new ProverStateMachine());
-    }
-
-    public StateMachine getPropnetStateMachine() {
     	return new CachedStateMachine(new SamplePropNetStateMachine());
     }
-
 
 	@Override
     public Move stateMachineSelectMove(long timeout)
@@ -119,7 +106,6 @@ public class PropnetPlayer extends SampleGamer {
 	/************* minor helper functions *****************/
     private void performMCTS(MultiNode root, long timeout)
     		throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
-    	p("mcts");
     	int[] depth = { 0 };
     	int numDepthCharges = 0;
     	while (System.currentTimeMillis() < timeout) {
@@ -143,7 +129,6 @@ public class PropnetPlayer extends SampleGamer {
     	double bestUtility = 0;
 		for (MultiNode child : root.children) {
     		if (child.getAveUtility() > bestUtility) {
-//    			p("prop improved: " + child.getAveUtility());
     			bestUtility = child.getAveUtility();
     			bestMove = child.move;
     		}
