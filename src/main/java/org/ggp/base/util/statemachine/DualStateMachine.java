@@ -23,64 +23,100 @@ public class DualStateMachine extends StateMachine {
     public synchronized void initialize(List<Gdl> description) {
         proverStateMachine.initialize(description);
         propnetStateMachine.initialize(description);
+        if (!proverStateMachine.equals(propnetStateMachine)) {
+        	p("failed initialization");
+        }
     }
 
     @Override
     public int getGoal(MachineState state, Role role) throws GoalDefinitionException {
-//    	p("Goal for propnet: " + propnetStateMachine.getGoal(state, role));
-//    	p("Goal for prover : " + proverStateMachine.getGoal(state, role));
-    	return proverStateMachine.getGoal(state, role);
+    	int g1 = propnetStateMachine.getGoal(state, role);
+    	int g2 = proverStateMachine.getGoal(state, role);
+    	if (g1 != g2) {
+    		p("propnet goal: " + g1);
+    		p("prover goal : " + g2);
+    		p("");
+    	}
+    	return g1;
     }
 
     private void p(String word) { System.out.println(word); }
 
     @Override
     public MachineState getInitialState() {
-    	return proverStateMachine.getInitialState();
+    	MachineState s1 = propnetStateMachine.getInitialState();
+    	MachineState s2 = proverStateMachine.getInitialState();
+
+    	if (!s1.equals(s2)) {
+    		p(diff(s1.getContents(), s2.getContents()).toString());
+    		p("");
+    	}
+    	return s1;
     }
 
     @Override
     public List<Move> findActions(Role role) throws MoveDefinitionException {
-//    	p("Find Actions Size Propnet: " + propnetStateMachine.findActions(role).size());
-//    	p("Find Actions Size Prover : " + proverStateMachine.findActions(role).size());
-        return proverStateMachine.findActions(role);
+    	int s1 = propnetStateMachine.findActions(role).size();
+    	int s2 = proverStateMachine.findActions(role).size();
+
+    	if (s1 != s2) {
+    		p("propnet: " + s1);
+    		p("prover  : " + s2);
+    		p("");
+    	}
+    	return propnetStateMachine.findActions(role);
     }
 
     @Override
     public List<Move> getLegalMoves(MachineState state, Role role) throws MoveDefinitionException {
-//    	p("Get Legal Moves Size Propnet: " + propnetStateMachine.getLegalMoves(state, role).size());
-//    	p("Get Legal Moves Size Prover : " + proverStateMachine.getLegalMoves(state, role).size());
-        return proverStateMachine.getLegalMoves(state, role);
+    	List<Move> m1 = propnetStateMachine.getLegalMoves(state, role);
+    	List<Move> m2 = proverStateMachine.getLegalMoves(state, role);;
+
+    	if (m1.size() != m2.size()) {
+    		p("diff legal moves");
+    		p("propnet : " + m1.toString());
+    		p("prover  : " + m2.toString());
+    		p("");
+    	}
+    	return m1;
     }
 
     @Override
     public MachineState getNextState(MachineState state, List<Move> moves) throws TransitionDefinitionException {
-//    	p("Get Next State Size Propnet: " + propnetStateMachine.getNextState(state, moves).getContents().size());
-//    	p("Get Next State Size Prover : " + proverStateMachine.getNextState(state, moves).getContents().size());
+
     	MachineState ms1 = propnetStateMachine.getNextState(state, moves);
     	MachineState ms2 = proverStateMachine.getNextState(state, moves);
-    	Set<GdlSentence> propnet = ms1.getContents();
-    	Set<GdlSentence> prover = ms2.getContents();
-    	Set<GdlSentence> difference = diff(propnet, prover);
-    	for (GdlSentence gs : difference) {
-    		System.out.print(gs + " ");
+    	if (!ms1.equals(ms2)) {
+        	Set<GdlSentence> propnet = ms1.getContents();
+        	Set<GdlSentence> prover = ms2.getContents();
+        	Set<GdlSentence> difference = diff(propnet, prover);
+        	for (GdlSentence gs : difference) {
+        		System.out.print(gs + " ");
+        	}
+        	System.out.println(" ");
     	}
-    	System.out.println(" ");
-    	return ms2;
+    	return ms1;
     }
 
 	@Override
 	public boolean isTerminal(MachineState state) {
-//		p("Is Terminal Pronent: " + propnetStateMachine.isTerminal(state));
-//    	p("Is Terminal Prover : " + proverStateMachine.isTerminal(state));
-        return proverStateMachine.isTerminal(state);
+		boolean t1 = propnetStateMachine.isTerminal(state);
+		boolean t2 = proverStateMachine.isTerminal(state);
+		if (t1 != t2) {
+			p("propnet :" + t1);
+			p("prover  :" + t2);
+		}
+		return t1;
     }
 
 	@Override
 	public List<Role> getRoles() {
-//		p("Get Roles Size Pronent: " + propnetStateMachine.getRoles());
-//    	p("Get Roles Size Prover : " + proverStateMachine.getRoles());
-        return proverStateMachine.getRoles();
+		List<Role> r1 = propnetStateMachine.getRoles();
+		List<Role> r2 = proverStateMachine.getRoles();
+		if (!r1.equals(r2)) {
+			p("diff roles");
+		}
+		return r1;
 	}
 
 	public static <T> Set<T> diff(final Set<? extends T> s1, final Set<? extends T> s2) {

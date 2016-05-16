@@ -3,7 +3,6 @@ package org.ggp.base.player.gamer.mygamers;
 import java.util.List;
 
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
-import org.ggp.base.util.statemachine.DualStateMachine;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
@@ -13,7 +12,6 @@ import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.propnet.SamplePropNetStateMachine;
-import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class PropnetPlayer extends SampleGamer {
 
@@ -21,13 +19,7 @@ public class PropnetPlayer extends SampleGamer {
     public void stateMachineMetaGame(long timeout)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	p("Metagaming Phase Propnet");
-
-    	StateMachine prover = getStateMachine();
-
-        StateMachine propnet = getPropnetStateMachine();
-        propnet.initialize(getMatch().getGame().getRules());
-
-    	game = new DualStateMachine(prover, propnet);
+    	game = getStateMachine();
     	role = getRole();
     	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
 		expand(root);
@@ -36,13 +28,8 @@ public class PropnetPlayer extends SampleGamer {
 
     @Override
 	public StateMachine getInitialStateMachine() {
-    	return new CachedStateMachine(new ProverStateMachine());
-    }
-
-    public StateMachine getPropnetStateMachine() {
     	return new CachedStateMachine(new SamplePropNetStateMachine());
     }
-
 
 	@Override
     public Move stateMachineSelectMove(long timeout)
@@ -107,7 +94,10 @@ public class PropnetPlayer extends SampleGamer {
     }
 
     private void backPropagate(MultiNode node, double score, int depth) {
-    	if (depth <= 1 && score == 0) node.utility = 0;
+    	if (depth <= 1 && score == 0) {
+    		p("spotted forced loss");
+    	}
+
     	node.utility += score;
     	node.visits++;
     	node.utilities.add(node.utility);
@@ -119,7 +109,6 @@ public class PropnetPlayer extends SampleGamer {
 	/************* minor helper functions *****************/
     private void performMCTS(MultiNode root, long timeout)
     		throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
-    	p("mcts");
     	int[] depth = { 0 };
     	int numDepthCharges = 0;
     	while (System.currentTimeMillis() < timeout) {
@@ -143,11 +132,11 @@ public class PropnetPlayer extends SampleGamer {
     	double bestUtility = 0;
 		for (MultiNode child : root.children) {
     		if (child.getAveUtility() > bestUtility) {
-//    			p("prop improved: " + child.getAveUtility());
     			bestUtility = child.getAveUtility();
     			bestMove = child.move;
     		}
     	}
+		p("utility PP: " + bestUtility);
 		return (bestUtility != 0) ? bestMove : game.getRandomMove(getCurrentState(), role);
     }
 
@@ -181,29 +170,15 @@ public class PropnetPlayer extends SampleGamer {
     /* dynamic game state data */
     private Move bestMove = null;
     private StateMachine game = null;
-    private StateMachine propnetGame = null;
-    private StateMachine proverStateMachine = null;
     private Role role = null;
     private MultiNode root = null;
 
     /* game information data */
-    private long expansionDepth = 4;
-    private long finishBy = 1;
-    private long numDepthChargesPerNode = 100;
-    private long branchingFactor = 5;
-    private long averageDepth = 1;
-    private long averageExploredStates = 1;
-    private double exploreEarlyStatesTime = 1;
-    private double getNextStateTime = 1000;
-    private double depthChargeFromCutoffTime = 1;
-    private double completeChargesTime = 0;
-    private double depthChargeFromRootTime = 40;
-    private double bestUtility = Double.NEGATIVE_INFINITY;
     private boolean isFirstMove = true;
     private boolean useUCBTuned = false;
 
     /* game paramter data */
-    private double explorationFactor = Math.sqrt(2);
+    private double explorationFactor = Math.sqrt(2.1);
 
     private void p(String message) { System.out.println(message); }
 }
