@@ -94,7 +94,10 @@ public class PropnetPlayer extends SampleGamer {
     }
 
     private void backPropagate(MultiNode node, double score, int depth) {
-    	if (depth <= 1 && score == 0) node.utility = 0;
+    	if (depth <= 1 && score == 0) {
+    		p("spotted forced loss");
+    	}
+
     	node.utility += score;
     	node.visits++;
     	node.utilities.add(node.utility);
@@ -133,6 +136,7 @@ public class PropnetPlayer extends SampleGamer {
     			bestMove = child.move;
     		}
     	}
+		p("utility PP: " + bestUtility);
 		return (bestUtility != 0) ? bestMove : game.getRandomMove(getCurrentState(), role);
     }
 
@@ -166,29 +170,15 @@ public class PropnetPlayer extends SampleGamer {
     /* dynamic game state data */
     private Move bestMove = null;
     private StateMachine game = null;
-    private StateMachine propnetGame = null;
-    private StateMachine proverStateMachine = null;
     private Role role = null;
     private MultiNode root = null;
 
     /* game information data */
-    private long expansionDepth = 4;
-    private long finishBy = 1;
-    private long numDepthChargesPerNode = 100;
-    private long branchingFactor = 5;
-    private long averageDepth = 1;
-    private long averageExploredStates = 1;
-    private double exploreEarlyStatesTime = 1;
-    private double getNextStateTime = 1000;
-    private double depthChargeFromCutoffTime = 1;
-    private double completeChargesTime = 0;
-    private double depthChargeFromRootTime = 40;
-    private double bestUtility = Double.NEGATIVE_INFINITY;
     private boolean isFirstMove = true;
     private boolean useUCBTuned = false;
 
     /* game paramter data */
-    private double explorationFactor = Math.sqrt(2);
+    private double explorationFactor = Math.sqrt(2.1);
 
     private void p(String message) { System.out.println(message); }
 }

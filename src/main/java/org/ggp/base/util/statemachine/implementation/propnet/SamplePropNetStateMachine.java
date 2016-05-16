@@ -47,10 +47,8 @@ public class SamplePropNetStateMachine extends StateMachine {
     public void initialize(List<Gdl> description) {
         try {
             propNet = OptimizingPropNetFactory.create(description);
-            reportStats();
             roles = propNet.getRoles();
             ordering = getOrdering();
-            propNet.renderToFile("C:/Users/oluwasanya/Desktop/test.dot");
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -290,6 +288,7 @@ public class SamplePropNetStateMachine extends StateMachine {
 
    /***************** propagating view **********************/
    public boolean propmarkp (Component cp) {
+	   cp.setValueIsCorrect(true);  	// optimized
 	   if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) { // base
 		   return cp.getValue();
 	   } else if (cp instanceof Not) { // negation
@@ -313,7 +312,6 @@ public class SamplePropNetStateMachine extends StateMachine {
 	   } else if (cp.getInputs().size() == 1) { // view
 		   return propmarkp(cp.getSingleInput());
 	   } else {
-		   p("false called");
 		   return false;
 	   }
 	}

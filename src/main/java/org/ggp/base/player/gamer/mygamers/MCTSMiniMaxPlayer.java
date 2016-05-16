@@ -86,7 +86,6 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     }
 
     private void backPropagate(MultiNode node, double score, int depth) {
-    	if (depth <= 1 && score == 0) node.utility = 0;
     	node.utility += score;
     	node.visits++;
     	node.utilities.add(node.utility);
@@ -121,11 +120,11 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     	double bestUtility = 0;
 		for (MultiNode child : root.children) {
     		if (child.getAveUtility() > bestUtility) {
-    			p("improved: " + child.getAveUtility());
     			bestUtility = child.getAveUtility();
     			bestMove = child.move;
     		}
     	}
+		p("utility MM: " + bestUtility);
 		return (bestUtility != 0) ? bestMove : game.getRandomMove(getCurrentState(), role);
     }
 
@@ -163,18 +162,6 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     private MultiNode root = null;
 
     /* game information data */
-    private long expansionDepth = 4;
-    private long finishBy = 1;
-    private long numDepthChargesPerNode = 100;
-    private long branchingFactor = 5;
-    private long averageDepth = 1;
-    private long averageExploredStates = 1;
-    private double exploreEarlyStatesTime = 1;
-    private double getNextStateTime = 1000;
-    private double depthChargeFromCutoffTime = 1;
-    private double completeChargesTime = 0;
-    private double depthChargeFromRootTime = 40;
-    private double bestUtility = Double.NEGATIVE_INFINITY;
     private boolean isFirstMove = true;
     private boolean useUCBTuned = false;
 
