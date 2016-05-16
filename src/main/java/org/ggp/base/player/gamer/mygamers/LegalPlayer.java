@@ -1,7 +1,10 @@
 package org.ggp.base.player.gamer.mygamers;
 
+import java.util.Set;
+
 import org.ggp.base.player.gamer.event.GamerSelectedMoveEvent;
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
+import org.ggp.base.util.gdl.grammar.GdlSentence;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
@@ -11,6 +14,15 @@ import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 
 public class LegalPlayer extends SampleGamer {
+
+
+	@Override
+	public void stateMachineMetaGame(long timeout){
+		StateMachine sm = getStateMachine();
+		MachineState ms = getCurrentState();
+		Set<GdlSentence> contents = ms.getContents();
+		System.out.println(contents);
+	}
 
 	@Override
 	public Move stateMachineSelectMove(long timeout)
