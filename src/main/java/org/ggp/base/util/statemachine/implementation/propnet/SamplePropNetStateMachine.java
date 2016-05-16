@@ -14,11 +14,9 @@ import org.ggp.base.util.gdl.grammar.GdlSentence;
 import org.ggp.base.util.propnet.architecture.Component;
 import org.ggp.base.util.propnet.architecture.PropNet;
 import org.ggp.base.util.propnet.architecture.components.And;
-import org.ggp.base.util.propnet.architecture.components.Constant;
 import org.ggp.base.util.propnet.architecture.components.Not;
 import org.ggp.base.util.propnet.architecture.components.Or;
 import org.ggp.base.util.propnet.architecture.components.Proposition;
-import org.ggp.base.util.propnet.architecture.components.Transition;
 import org.ggp.base.util.propnet.factory.OptimizingPropNetFactory;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
@@ -286,6 +284,7 @@ public class SamplePropNetStateMachine extends StateMachine {
 	   }
    }
 
+<<<<<<< HEAD
    /***************** propagating view **********************/
    public boolean propmarkp (Component cp) {
 	   cp.setValueIsCorrect(true);  	// optimized
@@ -315,6 +314,64 @@ public class SamplePropNetStateMachine extends StateMachine {
 		   return false;
 	   }
 	}
+=======
+   // need to redo
+   /*public boolean propmarkp (Component cp) {
+		if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) {
+//			p("Base: " + cp.getValue());
+			return cp.getValue();
+		} else if (cp instanceof Not) {
+//			p("Not: " + propmarknegation(cp));
+			return propmarknegation(cp);
+		} else if (cp instanceof And) {
+//			p("And: " + propmarkconjunction(cp));
+			return propmarkconjunction(cp);
+		} else if (cp instanceof Or) {
+//			p("Or: " + propmarkdisjunction(cp));
+			return propmarkdisjunction(cp);
+		} else if (cp instanceof Constant) {
+//			p("Constant: " + cp.getValue());
+			return cp.getValue();
+		} else if (((Proposition) cp).getName().getName().getValue().equals("does")) {
+//			p("Input: " + cp.getValue());
+			return cp.getValue();
+		} else if (cp.getInputs().size() == 1){
+//			p("view: " + propmarkp(cp.getSingleInput()));
+			return propmarkp(cp.getSingleInput());
+		} else {
+//			p(cp.toString());
+			return false;
+		}
+   }*/
+
+   public boolean propmarkp (Component cp){
+	   //Proposition
+	   if (cp instanceof Proposition){
+		   //Base
+		   if (propNet.getBasePropositions().containsValue((Proposition) cp)){
+			   return cp.getValue();//from above, could be wrong
+		   }
+		   //Input
+		   if (propNet.getInputPropositions().containsValue((Proposition) cp)){
+			   return cp.getValue();
+		   }
+		   //View
+		   return propmarkp(cp.getSingleInput());
+	   }
+	   //Negation
+	   if (cp instanceof Not){
+		   return propmarknegation(cp);
+	   }
+	   //Conjunction
+	   if (cp instanceof And){
+		  return propmarkconjunction(cp);
+	   }
+	   if (cp instanceof Or){
+		   return propmarkdisjunction(cp);
+	   }
+	   return false;
+   }
+>>>>>>> 66614fead5ac55aeb041e3b3236644475516966f
 
 	public boolean propmarknegation (Component cp) {
 		return !propmarkp(cp.getSingleInput());
