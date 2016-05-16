@@ -7,11 +7,10 @@ import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
 import org.ggp.base.util.statemachine.StateMachine;
-import org.ggp.base.util.statemachine.cache.CachedStateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
-import org.ggp.base.util.statemachine.implementation.propnet.SamplePropNetStateMachine;
+import org.ggp.base.util.statemachine.implementation.propnet.FactorPropNetStateMachine;
 
 public class PropnetPlayer extends SampleGamer {
 
@@ -20,6 +19,7 @@ public class PropnetPlayer extends SampleGamer {
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	p("Metagaming Phase Propnet");
     	game = getStateMachine();
+    	((FactorPropNetStateMachine) game).independentFactor();
     	role = getRole();
     	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
 		expand(root);
@@ -28,7 +28,7 @@ public class PropnetPlayer extends SampleGamer {
 
     @Override
 	public StateMachine getInitialStateMachine() {
-    	return new CachedStateMachine(new SamplePropNetStateMachine());
+    	return new FactorPropNetStateMachine();
     }
 
 	@Override
@@ -95,7 +95,7 @@ public class PropnetPlayer extends SampleGamer {
 
     private void backPropagate(MultiNode node, double score, int depth) {
     	if (depth <= 1 && score == 0) {
-    		p("spotted forced loss");
+    		//p("spotted forced loss");
     	}
 
     	node.utility += score;
