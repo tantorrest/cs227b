@@ -297,14 +297,17 @@ public class PropNetStateMachine extends StateMachine {
    private void clearpropnet (PropNet propNet) {
 	   propNet.setInitProposition(false);
 	   Map<GdlSentence, Proposition> props = propNet.getBasePropositions();
-	   for (GdlSentence gs : props.keySet()) {
-		   props.get(gs).setValue(false);
+	   for (Proposition p : props.values()) {
+		   p.setValue(false);
+	   }
+	   for (Proposition p : propNet.getPropositions()) {
+		   p.setValueIsCorrect(false);
 	   }
    }
 
    /***************** propagating view **********************/
    public boolean propmarkp (Component cp) {
-//	   cp.setValueIsCorrect(true);// optimized
+	   cp.setValueIsCorrect(true);// optimized
 	   if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) { // base
 		   return cp.getValue();
 	   } else if (cp instanceof Not) { // negation

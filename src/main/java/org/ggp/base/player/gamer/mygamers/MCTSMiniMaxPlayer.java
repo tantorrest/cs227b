@@ -113,10 +113,10 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     		if (!game.findTerminalp(selected.state)) {
     			expand(selected);
         		terminal = game.performDepthCharge(selected.state, depth);
-        		numDepthCharges++;
     		} else {
     			terminal = selected.state;
     		}
+    		numDepthCharges++;
     		score = game.findReward(role, terminal) / 100.0;
     		backPropagate(selected, score, depth[0]);
     	}

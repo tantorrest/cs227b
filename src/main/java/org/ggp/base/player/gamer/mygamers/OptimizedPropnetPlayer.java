@@ -23,7 +23,6 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 //    	StateMachine prover = getProverStateMachine();
 //        prover.initialize(getMatch().getGame().getRules());
 //
-//    	StateMachine propnet = getStateMachine();
 //    	game = new DualStateMachine(prover, propnet);
 //    	role = getRole();
 //    	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
@@ -49,6 +48,10 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 
 	public StateMachine getProverStateMachine() {
     	return new CachedStateMachine(new ProverStateMachine());
+    }
+
+	public StateMachine getPropNetStateMachine() {
+    	return new CachedStateMachine(new PropNetStateMachine());
     }
 
 
@@ -236,7 +239,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 
     /* game information data */
     private boolean isFirstMove = true;
-    private double discountingFactor = 0.9;
+    private double discountingFactor = 1;
     private boolean useUCBTuned = false;
     private double maxScore = 100;
     private double minScore = 0;
