@@ -46,7 +46,10 @@ public class PropnetPlayer extends SampleGamer {
 
     @Override
 	public StateMachine getInitialStateMachine() {
-    	return new FactorPropNetStateMachine();
+    	FactorPropNetStateMachine sm =  new FactorPropNetStateMachine();
+    	sm.initialize(getMatch().getGame().getRules());
+    	sm.independentFactor();
+    	return sm;
     }
 
 	public StateMachine getProverStateMachine() {
