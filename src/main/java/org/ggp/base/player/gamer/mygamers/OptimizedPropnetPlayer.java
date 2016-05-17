@@ -11,10 +11,10 @@ import org.ggp.base.util.statemachine.cache.CachedStateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
-import org.ggp.base.util.statemachine.implementation.propnet.SamplePropNetStateMachine;
+import org.ggp.base.util.statemachine.implementation.propnet.PropNetStateMachine;
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
-public class PropnetPlayer extends SampleGamer {
+public class OptimizedPropnetPlayer extends SampleGamer {
 
 //    @Override
 //    public void stateMachineMetaGame(long timeout)
@@ -44,7 +44,7 @@ public class PropnetPlayer extends SampleGamer {
 
     @Override
 	public StateMachine getInitialStateMachine() {
-    	return new CachedStateMachine(new SamplePropNetStateMachine());
+    	return new CachedStateMachine(new PropNetStateMachine());
     }
 
 	public StateMachine getProverStateMachine() {
@@ -55,7 +55,9 @@ public class PropnetPlayer extends SampleGamer {
 	@Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-    	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
+    	if (!isFirstMove) {
+    		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
+    	}
     	expand(root);
     	isFirstMove = false;
     	performMCTS(root, timeout - 1000);
@@ -112,23 +114,18 @@ public class PropnetPlayer extends SampleGamer {
     	}
     }
 
-    private void backPropagate(MultiNode node, double score, int depth) {
-    	if (depth <= 1 && score == 0) {
-    		p("spotted forced loss");
-    	}
-
+    private void backPropagate(MultiNode node, double score) {
     	node.utility += score;
     	node.visits++;
     	node.utilities.add(node.utility);
     	if (node.parent != null) {
-    		backPropagate(node.parent, score, depth);
+    		backPropagate(node.parent, discountingFactor * score);
     	}
     }
 
 	/************* minor helper functions *****************/
     private void performMCTS(MultiNode root, long timeout)
     		throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
-    	int[] depth = { 0 };
     	int numDepthCharges = 0;
     	while (System.currentTimeMillis() < timeout) {
     		double score = 0;
@@ -136,13 +133,13 @@ public class PropnetPlayer extends SampleGamer {
     		MultiNode selected = select(root);
     		if (!game.findTerminalp(selected.state)) {
     			expand(selected);
-        		terminal = game.performDepthCharge(selected.state, depth);
+        		terminal = game.performDepthCharge(selected.state, null);
     		} else {
     			terminal = selected.state;
     		}
     		numDepthCharges++;
     		score = game.findReward(role, terminal) / 100.0;
-    		backPropagate(selected, score, depth[0]);
+    		backPropagate(selected, score);
     	}
     	p("Num Depth Charges PP: " + numDepthCharges);
     }
@@ -194,6 +191,7 @@ public class PropnetPlayer extends SampleGamer {
 
     /* game information data */
     private boolean isFirstMove = true;
+    private double discountingFactor = 0.9;
     private boolean useUCBTuned = false;
 
     /* game paramter data */
