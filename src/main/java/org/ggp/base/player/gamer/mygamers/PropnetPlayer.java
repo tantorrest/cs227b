@@ -3,41 +3,62 @@ package org.ggp.base.player.gamer.mygamers;
 import java.util.List;
 
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
+import org.ggp.base.util.statemachine.DualStateMachine;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
 import org.ggp.base.util.statemachine.StateMachine;
+import org.ggp.base.util.statemachine.cache.CachedStateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.propnet.FactorPropNetStateMachine;
+import org.ggp.base.util.statemachine.implementation.propnet.SamplePropNetStateMachine;
 
 public class PropnetPlayer extends SampleGamer {
 
     @Override
     public void stateMachineMetaGame(long timeout)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-    	p("Metagaming Phase Propnet");
-    	game = getStateMachine();
-    	((FactorPropNetStateMachine) game).independentFactor();
+
+    	p("Debug Metagaming Phase Propnet");
+    	StateMachine prover = getProverStateMachine();
+        prover.initialize(getMatch().getGame().getRules());
+
+    	StateMachine propnet = getStateMachine();
+    	game = new DualStateMachine(prover, propnet);
     	role = getRole();
     	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
 		expand(root);
 		performMCTS(root, timeout - 1000);
     }
 
+//    @Override
+//    public void stateMachineMetaGame(long timeout)
+//    		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+//    	p("Metagaming Phase Propnet");
+//    	game = getStateMachine();
+//    	role = getRole();
+//    	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
+//		expand(root);
+//		performMCTS(root, timeout - 1000);
+//    }
+
     @Override
 	public StateMachine getInitialStateMachine() {
     	return new FactorPropNetStateMachine();
     }
 
+	public StateMachine getProverStateMachine() {
+    	return new CachedStateMachine(new SamplePropNetStateMachine());
+    }
+
+
 	@Override
     public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-		if (!isFirstMove) {
-    		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
-    		expand(root);
-    	}
+    	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
+    	expand(root);
     	isFirstMove = false;
     	performMCTS(root, timeout - 1000);
     	return getBestMove();

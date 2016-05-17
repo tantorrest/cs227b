@@ -46,7 +46,7 @@ public abstract class SampleGamer extends StateMachineGamer
 <<<<<<< HEAD
 =======
       //return new CachedStateMachine(new SamplePropNetStateMachine());
->>>>>>> 66614fead5ac55aeb041e3b3236644475516966f
+>>>>>>> 42cee036d6f73132f45b7e97042307d8ad9bf82f
     }
 
     // This is the default Sample Panel

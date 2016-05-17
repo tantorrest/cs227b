@@ -84,8 +84,10 @@ public class SamplePropNetStateMachine extends StateMachine {
             throws GoalDefinitionException {
     	markbases(state, propNet);
     	Set<Proposition> rewards = propNet.getGoalPropositions().get(role);
+//    	p("rewards: " + rewards.toString());
     	for (Proposition p : rewards) {
       		if (propmarkp(p)) {
+//      			p(p.toString());
       			return getGoalValue(p);
       		}
       	}
@@ -280,6 +282,7 @@ public class SamplePropNetStateMachine extends StateMachine {
    }
 
    private void clearpropnet (PropNet propNet) {
+	   propNet.setInitProposition(false);
 	   Map<GdlSentence, Proposition> props = propNet.getBasePropositions();
 	   for (GdlSentence gs : props.keySet()) {
 		   props.get(gs).setValue(false);
@@ -290,6 +293,7 @@ public class SamplePropNetStateMachine extends StateMachine {
    public boolean propmarkp (Component cp) {
 	   cp.setValueIsCorrect(true);// optimized
 	   if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) { // base
+//		   p("base");
 		   return cp.getValue();
 	   } else if (cp instanceof Not) { // negation
 		   return propmarknegation(cp);
@@ -298,20 +302,32 @@ public class SamplePropNetStateMachine extends StateMachine {
 	   } else if (cp instanceof And) { // conjunction
 		   return propmarkconjunction(cp);
 	   } else if (cp instanceof Constant) { // constant
+//		   p("constant");
 		   return cp.getValue();
 	   } else if (((Proposition) cp).getName().getName().getValue().equals("does")) { // input
+//		   p("input");
 		   return cp.getValue();
 	   } else if((((Proposition) cp).getName().getName().getValue().toUpperCase().equals("INIT"))) { // init
+//		   p("init");
 		   return cp.getValue();
-	   } else if(((Proposition) cp).getName().getName().getValue().equals("legal")) { // legal
-		   return propmarkp(cp.getSingleInput());
-	   } else if(((Proposition) cp).getName().getName().getValue().equals("terminal")) {
-		   return propmarkp(cp.getSingleInput());
-	   } else if (((Proposition) cp).getName().getName().getValue().equals("goal")) {
-		  return propmarkp(cp.getSingleInput());
-	   } else if (cp.getInputs().size() == 1) { // view
+	   }
+//	   else if(((Proposition) cp).getName().getName().getValue().equals("legal")) { // legal
+//		   p("legal");
+//		   return propmarkp(cp.getSingleInput());
+//	   }
+//	   else if(((Proposition) cp).getName().getName().getValue().equals("terminal")) {
+//		   p("terminal");
+//		   return propmarkp(cp.getSingleInput());
+//	   }
+//	   else if (((Proposition) cp).getName().getName().getValue().equals("goal")) {
+//		   p("goal");
+//		  return propmarkp(cp.getSingleInput());
+//	   }
+	   else if (cp.getInputs().size() == 1) { // view
+//		   p("view");
 		   return propmarkp(cp.getSingleInput());
 	   } else {
+//		   p("false");
 		   return false;
 	   }
 	}
