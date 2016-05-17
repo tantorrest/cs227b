@@ -182,6 +182,51 @@ public class OptimizedPropnetPlayer extends SampleGamer {
     	return (0.5 * result) - (Math.pow(node.getAveUtility(), 2)) + (Math.sqrt(2 * Math.log(node.parent.visits) / node.visits));
     }
 
+
+    /************** mcts-solver. TODO **********************/
+    double MCTSSolver(MultiNode node)
+    		throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
+    	if (game.findTerminalp(node.state) && game.findReward(role, node.state) == maxScore) {
+    		return Double.POSITIVE_INFINITY;
+    	} else if (game.findTerminalp(node.state) && game.findReward(role, node.state) == minScore) {
+    		return Double.NEGATIVE_INFINITY;
+    	}
+    	expand(node);
+    	MultiNode selected = select(node);
+    	node.visits++; //??
+    	double result = 0;
+    	if (selected.getAveUtility() != Double.NEGATIVE_INFINITY && selected.getAveUtility() != Double.POSITIVE_INFINITY) {
+    		if (selected.visits == 0) {
+    			MachineState terminal = game.performDepthCharge(selected.state, null);
+    			result = game.findReward(role, terminal);
+    		} else {
+    			result = -MCTSSolver(selected);
+    		}
+    	} else {
+    		result = selected.getAveUtility();
+    	}
+    	if (result == Double.POSITIVE_INFINITY) {
+    		node.utility = Double.NEGATIVE_INFINITY;
+    		return result;
+    	} else {
+    		if (result == -Double.NEGATIVE_INFINITY) {
+    			for (MultiNode child : node.children) {
+    				if (child.utility != result) {
+    					result = 0; // initially -1
+    					break;
+    				}
+    				node.utility = Double.POSITIVE_INFINITY;
+    				return result;
+    			}
+    		}
+    		node.utility += result;
+    		node.visits++;
+    		return result;
+    	}
+    }
+
+    /************* end mcts-solver *****************/
+
     /*********************** variables *******************/
     /* dynamic game state data */
     private Move bestMove = null;
@@ -193,6 +238,8 @@ public class OptimizedPropnetPlayer extends SampleGamer {
     private boolean isFirstMove = true;
     private double discountingFactor = 0.9;
     private boolean useUCBTuned = false;
+    private double maxScore = 100;
+    private double minScore = 0;
 
     /* game paramter data */
     private double explorationFactor = Math.sqrt(2.1);
