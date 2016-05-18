@@ -5,12 +5,14 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.ggp.base.util.gdl.grammar.Gdl;
 import org.ggp.base.util.gdl.grammar.GdlConstant;
 import org.ggp.base.util.gdl.grammar.GdlRelation;
 import org.ggp.base.util.gdl.grammar.GdlSentence;
+import org.ggp.base.util.gdl.grammar.GdlTerm;
 import org.ggp.base.util.propnet.architecture.Component;
 import org.ggp.base.util.propnet.architecture.PropNet;
 import org.ggp.base.util.propnet.architecture.components.And;
@@ -69,13 +71,7 @@ public class PropNetStateMachine extends StateMachine {
      */
     @Override
     public boolean isTerminal(MachineState state) {
-    	markbases(state, propNet);
-    	Proposition p = propNet.getTerminalProposition();
-    	if (p.getValueIsCorrect()) {
-    		return p.getValue();
-    	} else {
-    		return propmarkp(p);
-    	}
+    	return isTerminalContents(state.getContents());
     }
 
     /**
@@ -88,7 +84,7 @@ public class PropNetStateMachine extends StateMachine {
     @Override
     public int getGoal(MachineState state, Role role)
             throws GoalDefinitionException {
-    	markbases(state, propNet);
+    	markbases(state.getContents(), propNet);
     	Set<Proposition> rewards = propNet.getGoalPropositions().get(role);
     	for (Proposition p : rewards) {
     		// this uses a tagged node
@@ -131,7 +127,7 @@ public class PropNetStateMachine extends StateMachine {
     @Override
     public List<Move> getLegalMoves(MachineState state, Role role)
             throws MoveDefinitionException {
-        markbases(state, propNet);
+        markbases(state.getContents(), propNet);
         Set<Proposition> legals = propNet.getLegalPropositions().get(role);
         List<Move> actions = new ArrayList<Move>();
         for (Proposition p : legals) {
@@ -150,8 +146,8 @@ public class PropNetStateMachine extends StateMachine {
     @Override
     public MachineState getNextState(MachineState state, List<Move> moves)
             throws TransitionDefinitionException {
-        markactions(moves, propNet);
-        markbases(state, propNet);
+        markactions(toDoes(moves), propNet);
+        markbases(state.getContents(), propNet);
         Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
         Set<GdlSentence> nextState = new HashSet<GdlSentence>();
         for (GdlSentence gs : bases.keySet()) {
@@ -235,6 +231,7 @@ public class PropNetStateMachine extends StateMachine {
      */
     public static Move getMoveFromProposition(Proposition p)
     {
+//    	System.out.println("GdlTerm: " + p.getName().get(0).toString());
         return new Move(p.getName().get(1));
     }
 
@@ -273,19 +270,17 @@ public class PropNetStateMachine extends StateMachine {
 	private void p(String word) { System.out.println(word); }
 
 	/************** marking functions ********************/
-    private void markbases (MachineState state, PropNet propNet) {
+    private void markbases (Set<GdlSentence> stateContents, PropNet propNet) {
     	clearpropnet(propNet); // sets everything to false
     	Map<GdlSentence, Proposition> props = propNet.getBasePropositions();
-    	Set<GdlSentence> stateContents = state.getContents();
     	for (GdlSentence gs : stateContents) {
     		props.get(gs).setValue(true);
     	}
     }
 
-   private void markactions (List<Move> moves, PropNet propNet) {
+   private void markactions (List<GdlSentence> toDo, PropNet propNet) {
 	 Map<GdlSentence, Proposition> props = propNet.getInputPropositions();
 	 // TODO: is this the right way
-	 List<GdlSentence> toDo = toDoes(moves);
 	 for (GdlSentence gs : props.keySet()) {
 		 props.get(gs).setValue(false);
 	 }
@@ -329,7 +324,7 @@ public class PropNetStateMachine extends StateMachine {
 	   }
 	}
 
-	public boolean propmarknegation (Component cp) {
+	private boolean propmarknegation (Component cp) {
 		return !propmarkp(cp.getSingleInput());
 	}
 
@@ -348,4 +343,83 @@ public class PropNetStateMachine extends StateMachine {
 		}
 		return false;
 	}
+
+	/***** propnet functions *****/
+	@Override
+	public MachineState performPropNetDepthCharge(MachineState state, final int[] theDepth)
+			throws TransitionDefinitionException, MoveDefinitionException {
+		int nDepth = 0;
+        Set<GdlSentence> stateContents = state.getContents();
+        while(!isTerminalContents(stateContents)) {
+            nDepth++;
+            stateContents = getNextStateContents(stateContents, getRandomJointMoveContents(stateContents));
+        }
+        if(theDepth != null) theDepth[0] = nDepth;
+        return new MachineState(stateContents);
+	}
+
+	private boolean isTerminalContents(Set<GdlSentence> contents) {
+    	markbases(contents, propNet);
+    	Proposition p = propNet.getTerminalProposition();
+    	if (p.getValueIsCorrect()) {
+    		return p.getValue();
+    	} else {
+    		return propmarkp(p);
+    	}
+	}
+
+	private Set<GdlSentence> getNextStateContents(Set<GdlSentence> stateContents, List<GdlTerm> movesContents) {
+		markactionsContents(movesContents, propNet);
+        markbases(stateContents, propNet);
+        Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
+        Set<GdlSentence> nextState = new HashSet<GdlSentence>();
+        for (GdlSentence gs : bases.keySet()) {
+        	Component cp = bases.get(gs).getSingleInput();
+        	if (cp.getValueIsCorrect()) {
+        		if (cp.getValue()) nextState.add(gs);
+        	} else {
+            	if(propmarkp(cp.getSingleInput())) nextState.add(gs);
+        	}
+        }
+        return nextState;
+	}
+
+	private List<GdlTerm> getRandomJointMoveContents(Set<GdlSentence> stateContents) {
+        List<GdlTerm> random = new ArrayList<GdlTerm>();
+        for (Role role : getRoles()) {
+            random.add(getRandomMoveContents(stateContents, role));
+        }
+        return random;
+	}
+
+	private GdlTerm getRandomMoveContents(Set<GdlSentence> stateContents, Role role) {
+        List<GdlTerm> legals = getLegalMovesContents(stateContents, role);
+        return legals.get(new Random().nextInt(legals.size()));
+	}
+
+	private List<GdlTerm> getLegalMovesContents(Set<GdlSentence> stateContents, Role role) {
+        markbases(stateContents, propNet); // necessary?
+        Set<Proposition> legals = propNet.getLegalPropositions().get(role);
+        List<GdlTerm> actions = new ArrayList<GdlTerm>();
+        for (Proposition p : legals) {
+        	if (p.getValueIsCorrect()) {
+        		if (p.getValue()) actions.add(p.getName().get(1));
+        	} else {
+        		if (propmarkp(p)) actions.add(p.getName().get(1));
+        	}
+        }
+        return actions;
+	}
+
+	   private void markactionsContents(List<GdlTerm> toDo, PropNet propNet) {
+			 Map<GdlSentence, Proposition> props = propNet.getInputPropositions();
+			 // TODO: is this the right way
+			 Set<GdlTerm> toDoSet = new HashSet<GdlTerm>(toDo);
+			 for (Proposition p : props.values()) {
+				 p.setValue(false);
+				 if (toDoSet.contains(p.getName().get(1))) {
+					 p.setValue(true);
+				 }
+			 }
+		   }
 }

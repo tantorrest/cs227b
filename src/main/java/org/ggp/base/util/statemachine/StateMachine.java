@@ -459,6 +459,8 @@ public abstract class StateMachine
         return state;
     }
 
+    public abstract MachineState performPropNetDepthCharge(MachineState state, final int[] theDepth) throws TransitionDefinitionException, MoveDefinitionException;
+
     public void getAverageDiscountedScoresFromRepeatedDepthCharges(final MachineState state, final double[] avgScores, final double[] avgDepth, final double discountFactor, final int repetitions) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
         avgDepth[0] = 0;
         for (int j = 0; j < avgScores.length; j++) {

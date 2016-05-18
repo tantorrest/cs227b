@@ -136,7 +136,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
     		MultiNode selected = select(root);
     		if (!game.findTerminalp(selected.state)) {
     			expand(selected);
-        		terminal = game.performDepthCharge(selected.state, null);
+        		terminal = game.performPropNetDepthCharge(selected.state, null);
     		} else {
     			terminal = selected.state;
     		}
@@ -144,7 +144,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
     		score = game.findReward(role, terminal) / 100.0;
     		backPropagate(selected, score);
     	}
-    	p("Num Depth Charges PP: " + numDepthCharges);
+    	p("Num Depth Charges OP: " + numDepthCharges);
     }
 
     private Move getBestMove() throws MoveDefinitionException {

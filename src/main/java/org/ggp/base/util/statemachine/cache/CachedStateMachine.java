@@ -157,4 +157,12 @@ public final class CachedStateMachine extends StateMachine
         // TODO(schreib): Should this be cached as well?
         return backingStateMachine.getInitialState();
     }
+
+	@Override
+	public MachineState performPropNetDepthCharge(MachineState state,
+			int[] theDepth) throws TransitionDefinitionException,
+			MoveDefinitionException {
+		// TODO Auto-generated method stub
+		return backingStateMachine.performPropNetDepthCharge(state, null);
+	}
 }
