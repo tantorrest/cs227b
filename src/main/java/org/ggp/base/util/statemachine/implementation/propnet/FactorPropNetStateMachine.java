@@ -12,6 +12,7 @@ import org.ggp.base.util.propnet.architecture.components.Proposition;
 public class FactorPropNetStateMachine extends SamplePropNetStateMachine {
 
 	public List<List<Gdl>> independentFactor (){
+		propNet.renderToFile("/Users/matthewdaniel/mytest.dot");
 		List<Proposition> propositions = new ArrayList<Proposition>(propNet.getPropositions());
 		System.out.println("terminal:" + propositions.toString());
 		List<Set<Component>> subGames = new ArrayList<Set<Component>>();

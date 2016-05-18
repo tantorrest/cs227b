@@ -3,7 +3,7 @@ package org.ggp.base.player.gamer.mygamers;
 import java.util.List;
 
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
-import org.ggp.base.util.statemachine.DualStateMachine;
+import org.ggp.base.util.gdl.grammar.Gdl;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
@@ -22,11 +22,12 @@ public class PropnetPlayer extends SampleGamer {
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 
     	p("Debug Metagaming Phase Propnet");
-    	StateMachine prover = getProverStateMachine();
-        prover.initialize(getMatch().getGame().getRules());
+    	//StateMachine prover = getProverStateMachine();
+        //prover.initialize(getMatch().getGame().getRules());
 
-    	StateMachine propnet = getStateMachine();
-    	game = new DualStateMachine(prover, propnet);
+    	game = getStateMachine();
+    	//game = new DualStateMachine(prover, propnet);
+
     	role = getRole();
     	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
 		expand(root);
@@ -48,8 +49,21 @@ public class PropnetPlayer extends SampleGamer {
 	public StateMachine getInitialStateMachine() {
     	FactorPropNetStateMachine sm =  new FactorPropNetStateMachine();
     	sm.initialize(getMatch().getGame().getRules());
-    	sm.independentFactor();
-    	return sm;
+    	SamplePropNetStateMachine smp = new SamplePropNetStateMachine();
+    	/****incorrect will need to be updated***/
+    	subGameContents = sm.independentFactor();
+    	smp.initialize(subGameContents.get(10));
+    	return smp;
+//    	return new CachedStateMachine(smp);
+//    	for(int i = 0; i < subGameContents.size(); i++){
+//    		smp.initialize(subGameContents.get(i));
+//    		if(smp.getTerminal() != null){
+//    			System.out.println("Breaking!!");
+//    			break;
+//    		}
+//    		if(i == subGameContents.size() - 1) return new CachedStateMachine(sm);
+//    	}
+//    	return new CachedStateMachine(smp);
     }
 
 	public StateMachine getProverStateMachine() {
@@ -196,6 +210,7 @@ public class PropnetPlayer extends SampleGamer {
     private StateMachine game = null;
     private Role role = null;
     private MultiNode root = null;
+    List<List<Gdl>> subGameContents = null;
 
     /* game information data */
     private boolean isFirstMove = true;

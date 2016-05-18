@@ -257,6 +257,10 @@ public class SamplePropNetStateMachine extends StateMachine {
         return new MachineState(contents);
     }
 
+    public Proposition getTerminal(){
+    	return propNet.getTerminalProposition();
+    }
+
 	private void p(String word) { System.out.println(word); }
 
 	/************** marking functions ********************/
