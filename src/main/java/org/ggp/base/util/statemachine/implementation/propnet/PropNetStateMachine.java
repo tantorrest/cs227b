@@ -231,7 +231,6 @@ public class PropNetStateMachine extends StateMachine {
      */
     public static Move getMoveFromProposition(Proposition p)
     {
-//    	System.out.println("GdlTerm: " + p.getName().get(0).toString());
         return new Move(p.getName().get(1));
     }
 
@@ -344,7 +343,7 @@ public class PropNetStateMachine extends StateMachine {
 		return false;
 	}
 
-	/***** propnet functions *****/
+	/********************* optimized propnet functions *************************/
 	@Override
 	public MachineState performPropNetDepthCharge(MachineState state, final int[] theDepth)
 			throws TransitionDefinitionException, MoveDefinitionException {
@@ -411,15 +410,15 @@ public class PropNetStateMachine extends StateMachine {
         return actions;
 	}
 
-	   private void markactionsContents(List<GdlTerm> toDo, PropNet propNet) {
-			 Map<GdlSentence, Proposition> props = propNet.getInputPropositions();
-			 // TODO: is this the right way
-			 Set<GdlTerm> toDoSet = new HashSet<GdlTerm>(toDo);
-			 for (Proposition p : props.values()) {
-				 p.setValue(false);
-				 if (toDoSet.contains(p.getName().get(1))) {
-					 p.setValue(true);
-				 }
+	// TODO: expensive function
+   private void markactionsContents(List<GdlTerm> toDo, PropNet propNet) {
+		 Map<GdlSentence, Proposition> props = propNet.getInputPropositions();
+		 Set<GdlTerm> toDoSet = new HashSet<GdlTerm>(toDo);
+		 for (Proposition p : props.values()) {
+			 p.setValue(false);
+			 if (toDoSet.contains(p.getName().get(1))) {
+				 p.setValue(true);
 			 }
-		   }
+		 }
+	   }
 }

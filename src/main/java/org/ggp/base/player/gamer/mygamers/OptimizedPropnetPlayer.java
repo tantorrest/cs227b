@@ -36,7 +36,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
     @Override
     public void stateMachineMetaGame(long timeout)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-    	p("Metagaming Phase Propnet");
+    	p("Metagaming Phase Optimized Propnet");
     	game = getStateMachine();
     	role = getRole();
     	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
