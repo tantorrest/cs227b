@@ -401,7 +401,7 @@ public class PropNetStateMachine extends StateMachine {
 
 	private List<GdlTerm> getLegalMovesContents(Set<GdlSentence> stateContents, Role role) {
 		markbases(stateContents, propNet); // necessary?
-				Set<Proposition> legals = propNet.getLegalPropositions().get(role);
+		Set<Proposition> legals = propNet.getLegalPropositions().get(role);
 		List<GdlTerm> actions = new ArrayList<GdlTerm>();
 		for (Proposition p : legals) {
 			if (p.getValueIsCorrect()) {
