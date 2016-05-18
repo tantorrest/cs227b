@@ -135,4 +135,11 @@ public class ProverStateMachine extends StateMachine
     {
         return prover.prove(ProverQueryBuilder.getTerminalQuery(), ProverQueryBuilder.getContext(state));
     }
+
+	@Override
+	public MachineState performPropNetDepthCharge(MachineState state,
+			int[] theDepth) throws TransitionDefinitionException,
+			MoveDefinitionException {
+		return performDepthCharge(state, theDepth);
+	}
 }

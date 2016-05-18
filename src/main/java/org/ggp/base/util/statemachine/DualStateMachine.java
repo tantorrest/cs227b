@@ -31,6 +31,7 @@ public class DualStateMachine extends StateMachine {
     @Override
     public int getGoal(MachineState state, Role role) throws GoalDefinitionException {
     	int g1 = propnetStateMachine.getGoal(state, role);
+    	p("stt goal: " + state.getContents());
     	int g2 = proverStateMachine.getGoal(state, role);
     	if (g1 != g2) {
     		p("propnet goal: " + g1);
@@ -126,5 +127,20 @@ public class DualStateMachine extends StateMachine {
 	    tmp.retainAll(s2);
 	    symmetricDiff.removeAll(tmp);
 	    return symmetricDiff;
+	}
+
+	@Override
+	public MachineState performPropNetDepthCharge(MachineState state,
+			int[] theDepth) throws TransitionDefinitionException,
+			MoveDefinitionException {
+		MachineState m1 = propnetStateMachine.performPropNetDepthCharge(state.clone(), null);
+		p("mch: " + m1.getContents());
+		p("stt: " + state);
+		MachineState m2 = proverStateMachine.performPropNetDepthCharge(state, null);
+		if (m1.equals(m2)) {
+			p("propnet :" + m1);
+			p("prover  :" + m2);
+		}
+		return m1;
 	}
 }
