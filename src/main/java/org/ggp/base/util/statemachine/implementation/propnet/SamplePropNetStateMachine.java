@@ -352,4 +352,11 @@ public class SamplePropNetStateMachine extends StateMachine {
 		}
 		return false;
 	}
+
+	@Override
+	public MachineState performPropNetDepthCharge(MachineState state,
+			int[] theDepth) throws TransitionDefinitionException,
+			MoveDefinitionException {
+		return performDepthCharge(state, theDepth);
+	}
 }
