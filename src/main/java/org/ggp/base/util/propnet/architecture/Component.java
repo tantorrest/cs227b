@@ -20,6 +20,7 @@ public abstract class Component implements Serializable
     private final Set<Component> outputs;
     /** The value of the component is correct. Oluwasanya. */
     private boolean valueIsCorrect = false;
+    private boolean value = false;
 
     /**
      * Creates a new Component with no inputs or outputs.
@@ -137,6 +138,10 @@ public abstract class Component implements Serializable
 
     public void setValueIsCorrect(boolean flag) {
     	valueIsCorrect = flag;
+    }
+
+    public void setValue(boolean flag) {
+    	value = flag;
     }
 
     /**

@@ -200,7 +200,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
     private boolean useUCBTuned = false;
 
     /* game parameter data */
-    private double explorationFactor = Math.sqrt(2.1);
+    private double explorationFactor = Math.sqrt(2.3);
 
     private void p(String message) { System.out.println(message); }
 }
