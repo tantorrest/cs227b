@@ -7,9 +7,11 @@ import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
 import org.ggp.base.util.statemachine.StateMachine;
+import org.ggp.base.util.statemachine.cache.CachedStateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
+import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class MCTSMiniMaxPlayer extends SampleGamer {
 
@@ -25,7 +27,12 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     }
 
 	@Override
-    public Move stateMachineSelectMove(long timeout)
+    public StateMachine getInitialStateMachine() {
+		return new CachedStateMachine(new ProverStateMachine());
+	}
+
+    @Override
+	public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
     	if (!isFirstMove) {
     		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
@@ -86,7 +93,6 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     }
 
     private void backPropagate(MultiNode node, double score, int depth) {
-    	if (depth <= 1 && score == 0) node.utility = 0;
     	node.utility += score;
     	node.visits++;
     	node.utilities.add(node.utility);
@@ -121,11 +127,11 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     	double bestUtility = 0;
 		for (MultiNode child : root.children) {
     		if (child.getAveUtility() > bestUtility) {
-    			p("improved: " + child.getAveUtility());
     			bestUtility = child.getAveUtility();
     			bestMove = child.move;
     		}
     	}
+		p("utility MM: " + bestUtility);
 		return (bestUtility != 0) ? bestMove : game.getRandomMove(getCurrentState(), role);
     }
 
@@ -163,18 +169,6 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     private MultiNode root = null;
 
     /* game information data */
-    private long expansionDepth = 4;
-    private long finishBy = 1;
-    private long numDepthChargesPerNode = 100;
-    private long branchingFactor = 5;
-    private long averageDepth = 1;
-    private long averageExploredStates = 1;
-    private double exploreEarlyStatesTime = 1;
-    private double getNextStateTime = 1000;
-    private double depthChargeFromCutoffTime = 1;
-    private double completeChargesTime = 0;
-    private double depthChargeFromRootTime = 40;
-    private double bestUtility = Double.NEGATIVE_INFINITY;
     private boolean isFirstMove = true;
     private boolean useUCBTuned = false;
 
