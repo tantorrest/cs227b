@@ -65,7 +65,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
     }
 
 	/************* major helper functions *****************/
-    private MultiNode select(MultiNode node) {
+    protected MultiNode select(MultiNode node) {
     	if (node.visits == 0 || game.findTerminalp(node.state)) return node;
     	for (int i = 0; i < node.children.size(); i++) {
     		if (node.children.get(i).visits == 0) return node.children.get(i);
@@ -95,7 +95,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
     	}
     }
 
-    private void expand(MultiNode node)
+    protected void expand(MultiNode node)
     		throws MoveDefinitionException, TransitionDefinitionException {
 
     	if (node.isMax) {
@@ -114,7 +114,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
     	}
     }
 
-    private void backPropagate(MultiNode node, double score) {
+    protected void backPropagate(MultiNode node, double score) {
     	node.utility += score;
     	node.visits++;
     	node.utilities.add(node.utility);
@@ -124,7 +124,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
     }
 
 	/************* minor helper functions *****************/
-    private void performMCTS(MultiNode root, long timeout)
+    protected void performMCTS(MultiNode root, long timeout)
     		throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
     	int numDepthCharges = 0;
     	while (System.currentTimeMillis() < timeout) {
@@ -230,9 +230,9 @@ public class OptimizedPropnetPlayer extends SampleGamer {
     /*********************** variables *******************/
     /* dynamic game state data */
     private Move bestMove = null;
-    private StateMachine game = null;
-    private Role role = null;
-    private MultiNode root = null;
+    protected StateMachine game = null;
+    protected Role role = null;
+    protected MultiNode root = null;
 
     /* game information data */
     private boolean isFirstMove = true;
@@ -244,5 +244,5 @@ public class OptimizedPropnetPlayer extends SampleGamer {
     /* game paramter data */
     private double explorationFactor = Math.sqrt(2.1);
 
-    private void p(String message) { System.out.println(message); }
+    protected void p(String message) { System.out.println(message); }
 }

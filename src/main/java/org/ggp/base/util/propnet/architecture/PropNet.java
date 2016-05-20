@@ -72,7 +72,7 @@ public final class PropNet
     private final Set<Component> components;
 
     /** References to every Proposition in the PropNet. */
-    private final Set<Proposition> propositions;
+    public final Set<Proposition> propositions;
 
     /** References to every BaseProposition in the PropNet, indexed by name. */
     private final Map<GdlSentence, Proposition> basePropositions;

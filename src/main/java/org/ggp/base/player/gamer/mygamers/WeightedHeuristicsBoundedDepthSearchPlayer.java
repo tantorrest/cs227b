@@ -11,6 +11,7 @@ import org.ggp.base.util.statemachine.StateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
+import org.ggp.base.util.statemachine.implementation.propnet.SamplePropNetStateMachine;
 
 public class WeightedHeuristicsBoundedDepthSearchPlayer extends SampleGamer {
 
@@ -120,6 +121,14 @@ public class WeightedHeuristicsBoundedDepthSearchPlayer extends SampleGamer {
     	List<Move> actions = game.findLegals(role, state);
     	List<Move> feasibles = game.findActions(role);
     	return ((double) actions.size() / feasibles.size() * 100);
+	}
+
+    @Override
+	public void stateMachineStop(){
+		MachineState ms = getCurrentState();
+		SamplePropNetStateMachine sm = (SamplePropNetStateMachine) getStateMachine();
+		System.out.println("Final Propositions: " + ms.getContents());
+		//System.out.println("All Propositions: " + sm.getPropositions());
 	}
 
 	// make estimation of result
