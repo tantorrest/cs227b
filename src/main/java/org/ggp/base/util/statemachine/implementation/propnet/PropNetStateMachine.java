@@ -52,9 +52,10 @@ public class PropNetStateMachine extends StateMachine {
 			roles = propNet.getRoles();
 			ordering = getOrdering();
 			isSinglePlayer = (roles.size() == 1);
+			jointMoves = new ArrayList<GdlTerm>();
 			if (isSinglePlayer) {
 				p("single player propnet");
-				jointMoves = new ArrayList<GdlTerm>();
+
 			}
 //			propNet.renderToFile(description.get(0).toString() + ".dot");
 		} catch (InterruptedException e) {
