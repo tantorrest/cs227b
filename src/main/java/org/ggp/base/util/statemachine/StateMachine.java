@@ -481,4 +481,6 @@ public abstract class StateMachine
             avgScores[j] /= repetitions;
         }
     }
+
+	public abstract List<Move> getBestMoves();
 }

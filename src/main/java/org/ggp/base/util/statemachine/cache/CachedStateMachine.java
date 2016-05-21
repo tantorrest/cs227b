@@ -165,4 +165,9 @@ public final class CachedStateMachine extends StateMachine
 		// TODO Auto-generated method stub
 		return backingStateMachine.performPropNetDepthCharge(state, null);
 	}
+
+	@Override
+	public List<Move> getBestMoves() {
+		return backingStateMachine.getBestMoves();
+	}
 }

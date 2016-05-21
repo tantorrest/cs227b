@@ -51,7 +51,12 @@ public class PropNetStateMachine extends StateMachine {
 			propNet = OptimizingPropNetFactory.create(description);
 			roles = propNet.getRoles();
 			ordering = getOrdering();
-			propNet.renderToFile(description.get(0).toString() + ".dot");
+			isSinglePlayer = (roles.size() == 1);
+			if (isSinglePlayer) {
+				p("single player propnet");
+				jointMoves = new ArrayList<GdlTerm>();
+			}
+//			propNet.renderToFile(description.get(0).toString() + ".dot");
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
@@ -351,10 +356,13 @@ public class PropNetStateMachine extends StateMachine {
 	public MachineState performPropNetDepthCharge(MachineState state, final int[] theDepth)
 			throws TransitionDefinitionException, MoveDefinitionException {
 		int nDepth = 0;
+		jointMoves.clear();
 		Set<GdlSentence> stateContents = state.getContents();
 		while(!isTerminalContents(stateContents)) {
 			nDepth++;
-			stateContents = getNextStateContents(stateContents, getRandomJointMoveContents(stateContents));
+			List<GdlTerm> jointMove = getRandomJointMoveContents(stateContents);
+			if (isSinglePlayer) jointMoves.add(jointMove.get(0));
+			stateContents = getNextStateContents(stateContents, jointMove);
 		}
 		if(theDepth != null) theDepth[0] = nDepth;
 		return new MachineState(stateContents);
@@ -424,4 +432,16 @@ public class PropNetStateMachine extends StateMachine {
 			}
 		}
 	}
+
+	private List<GdlTerm> jointMoves = null;
+
+	@Override
+	public List<Move> getBestMoves() {
+		List<Move> moves = new ArrayList<Move>();
+		for (GdlTerm gt : jointMoves) {
+			moves.add(getMoveFromTerm(gt));
+		}
+		return moves;
+	}
+	private boolean isSinglePlayer = false;
 }
