@@ -55,7 +55,6 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		bestPathFound = false;
 		stepAfterFoundBestMove = 0;
 		isSinglePlayer = (game.getRoles().size() == 1);
-		stepAfterFoundBestMove = 0;
 	}
 
 	@Override
@@ -147,12 +146,10 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		if (isSinglePlayer && bestPathFound && !node.isMax) { // the move it gets at a max node
 			p("adding move: " + node.move);
 			bestPathReversed.add(node.move);
-		} else {
-			node.utility += score;
-			node.visits++;
-			if (useUCBTuned) node.utilities.add(node.utility);
 		}
-
+		node.utility += score;
+		node.visits++;
+		if (useUCBTuned) node.utilities.add(node.utility);
 		if (node.parent != null) {
 			backPropagate(node.parent, score);
 		}
@@ -174,7 +171,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			}
 			numDepthCharges++;
 			// informs us that we have found a sure line of attack
-			score = game.findReward(role, terminal) / 100;
+			score = game.findReward(role, terminal) / 100.0;
 			if (score == 1) {
 				p("found forced win");
 				bestPathReversed = reverse(game.getBestMoves());
