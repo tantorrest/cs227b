@@ -174,7 +174,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			numDepthCharges++;
 			// informs us that we have found a sure line of attack
 			score = game.findReward(role, terminal) / 100.0;
-			if (score == 1) {
+			if (score == 1 && isSinglePlayer) {
 				p("found forced win");
 				bestPathReversed = reverse(game.getBestMoves());
 				bestPathFound = true;
