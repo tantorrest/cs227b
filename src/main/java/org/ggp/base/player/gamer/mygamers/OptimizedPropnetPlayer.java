@@ -145,7 +145,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	}
 
 	private void backPropagate(MultiNode node, double score) {
-		if (isSinglePlayer && bestPathFound && !node.isMax) { // the move it gets at a max node
+		if (isSinglePlayer && bestPathFound && !node.isMax && node.parent != null) { // the move it gets at a max node
 			p("adding move: " + node.move);
 			bestPathReversed.add(node.move);
 		}
