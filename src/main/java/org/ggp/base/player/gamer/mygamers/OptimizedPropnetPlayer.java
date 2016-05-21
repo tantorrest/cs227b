@@ -76,11 +76,13 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		if (isSinglePlayer && bestPathFound) {
 			// we save time on reversing the loop and rather just work backwards instead
+			p("previous perfect move: " + bestMove);
 			stepAfterFoundBestMove++;
 			p("bestPath: " + bestPathReversed);
 			p("step    : " + stepAfterFoundBestMove);
 			bestMove = bestPathReversed.get(bestPathReversed.size() - stepAfterFoundBestMove);
 			// stepAfterFoundBestMove++;
+			p("playing perfect move : " + bestMove);
 			return bestMove;
 		}
 		if (!isFirstMove) {
