@@ -33,7 +33,7 @@ import org.ggp.base.util.statemachine.implementation.prover.query.ProverQueryBui
 @SuppressWarnings("unused")
 public class SamplePropNetStateMachine extends StateMachine {
     /** The underlying proposition network  */
-    private PropNet propNet;
+    protected PropNet propNet;
     /** The topological ordering of the propositions */
     private List<Proposition> ordering;
     /** The player roles */
@@ -358,5 +358,10 @@ public class SamplePropNetStateMachine extends StateMachine {
 			int[] theDepth) throws TransitionDefinitionException,
 			MoveDefinitionException {
 		return performDepthCharge(state, theDepth);
+	}
+
+	@Override
+	public List<Move> getBestMoves() {
+		return null;
 	}
 }
