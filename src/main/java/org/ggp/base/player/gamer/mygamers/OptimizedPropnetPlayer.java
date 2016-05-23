@@ -163,7 +163,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	}
 
 	/************* minor helper functions *****************/
-	private void performMCTS(MultiNode root, long timeout)mnmDCA
+	private void performMCTS(MultiNode root, long timeout)
 			throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
 		int numDepthCharges = 0;
 		while (System.currentTimeMillis() < timeout && !bestPathFound) {

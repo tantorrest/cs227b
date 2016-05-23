@@ -63,14 +63,6 @@ public class PropNetStateMachine extends StateMachine {
 		}
 	}
 
-	private void reportStats() {
-		p("Size: " + propNet.getSize());
-		p("Num Ands: " + propNet.getNumAnds());
-		p("Num Ors: " + propNet.getNumOrs());
-		p("Num Nots: " + propNet.getNumNots());
-		p("Num Links: " + propNet.getNumLinks());
-	}
-
 	/**
 	 * Computes if the state is terminal. Should return the value
 	 * of the terminal proposition for the state.
@@ -289,8 +281,8 @@ public class PropNetStateMachine extends StateMachine {
 	private void markactions (List<GdlSentence> toDo, PropNet propNet) {
 		Map<GdlSentence, Proposition> props = propNet.getInputPropositions();
 		// TODO: is this the right way
-		for (GdlSentence gs : props.keySet()) {
-			props.get(gs).setValue(false);
+		for (Proposition p : props.values()) {
+			p.setValue(false);
 		}
 		for (GdlSentence move : toDo) {
 			props.get(move).setValue(true);
@@ -303,9 +295,6 @@ public class PropNetStateMachine extends StateMachine {
 		Map<GdlSentence, Proposition> props = propNet.getBasePropositions();
 		for (Proposition p : props.values()) {
 			p.setValue(false);
-		}
-		for (Proposition p : propNet.getPropositions()) {
-			p.setValueIsCorrect(false);
 		}
 	}
 
@@ -339,7 +328,6 @@ public class PropNetStateMachine extends StateMachine {
 	private boolean propmarknegation (Component cp) {
 		if (cp.getSingleInput().getValueIsCorrect()) {
 //			p("using cached value: propmarknegation");
-//			if (cp.getSingleInput().getCachedValue() != propmarkp(cp.getSingleInput())) { p("bad1");}
 			return !cp.getSingleInput().getCachedValue();
 		}
 		return !propmarkp(cp.getSingleInput());
@@ -365,9 +353,11 @@ public class PropNetStateMachine extends StateMachine {
 		for (Component source : sources) {
 			if (source.getValueIsCorrect()) {
 //				p("using cached value: propmarkdisjunction");
-//				if (source.getCachedValue() != propmarkp(source)) {
-//					p("bad3: " + source.getCachedValue() + " " + propmarkp(source));
-//					}
+//				boolean b1 = source.getCachedValue();
+////				boolean b2 = propmarkp(source);
+//				if (b1 != b2) {
+//					p("bad3: " + b1 + " " + b2);
+//				}
 //				if(source.getCachedValue()) return true;
 			}
 			if (propmarkp(source)) return true;
