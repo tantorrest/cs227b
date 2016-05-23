@@ -170,7 +170,6 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			double score = 0;
 			MachineState terminal = null;
 			MultiNode selected = select(root);
-			if (!selected.isMax) p("from min node: " + selected.move);
 			if (!game.findTerminalp(selected.state)) {
 				expand(selected);
 				terminal = game.performPropNetDepthCharge(selected.state, null);
