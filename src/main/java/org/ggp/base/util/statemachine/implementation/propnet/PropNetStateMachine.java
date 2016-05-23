@@ -269,7 +269,7 @@ public class PropNetStateMachine extends StateMachine {
 
 	/************** marking functions ********************/
 	private void markbases (Set<GdlSentence> stateContents, PropNet propNet) {
-		clearpropnet(propNet); // sets everything to false
+		// clear propnet
 		propNet.setInitProposition(false);
 		Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
 		for (Proposition p : bases.values()) {
@@ -278,6 +278,8 @@ public class PropNetStateMachine extends StateMachine {
 		for (Proposition p : propNet.getPropositions()) {
 			p.setValueIsCorrect(false);
 		}
+
+		// update bases
 		for (GdlSentence gs : stateContents) {
 			bases.get(gs).setValue(true);
 		}
@@ -294,18 +296,8 @@ public class PropNetStateMachine extends StateMachine {
 		}
 	}
 
-	private void clearpropnet (PropNet propNet) {
-
-	}
-
 	/***************** propagating view **********************/
 	public boolean propmarkp (Component cp) {
-		if (cp instanceof Proposition) {
-			if (cp.getValueIsCorrect()) {
-				return cp.getCachedValue();
-			}
-			cp.setValueIsCorrect(true);
-		}
 		boolean value;
 		if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) { // base
 			value = cp.getValue();
@@ -328,12 +320,13 @@ public class PropNetStateMachine extends StateMachine {
 		}
 		if (cp instanceof Proposition) {
 			cp.setCachedValue(value);
+			cp.setValueIsCorrect(true);
 		}
 		return value;
 	}
 
 	private boolean propmarknegation (Component cp) {
-		if (cp.getSingleInput() instanceof Proposition && cp.getSingleInput().getValueIsCorrect()) {
+		if (cp.getSingleInput().getValueIsCorrect()) {
 //			p("using cached value: propmarknegation");
 			return !cp.getSingleInput().getCachedValue();
 		}
@@ -343,7 +336,7 @@ public class PropNetStateMachine extends StateMachine {
 	private boolean propmarkconjunction (Component cp) {
 		Set<Component> sources = cp.getInputs();
 		for (Component source : sources) {
-			if (source instanceof Proposition && source.getValueIsCorrect()) {
+			if (source.getValueIsCorrect()) {
 //				p("using cached value: propmarkconjunction");
 				if (!source.getCachedValue()) return false;
 			}
@@ -355,7 +348,7 @@ public class PropNetStateMachine extends StateMachine {
 	private boolean propmarkdisjunction (Component cp) {
 		Set<Component> sources = cp.getInputs();
 		for (Component source : sources) {
-			if (source instanceof Proposition && source.getValueIsCorrect()) {
+			if (source.getValueIsCorrect()) {
 //				p("using cached value: propmarkdisjunction");
 				if(source.getCachedValue()) return true;
 			}
