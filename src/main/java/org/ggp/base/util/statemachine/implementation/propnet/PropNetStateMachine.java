@@ -95,6 +95,7 @@ public class PropNetStateMachine extends StateMachine {
 		for (Proposition p : rewards) {
 			// this uses a tagged node
 			if (p.getValueIsCorrect()) {
+				p("using cached value: goal");
 				if (p.getValue()) return getGoalValue(p);
 			} else {
 				if (propmarkp(p)) return getGoalValue(p);
@@ -138,6 +139,7 @@ public class PropNetStateMachine extends StateMachine {
 		List<Move> actions = new ArrayList<Move>();
 		for (Proposition p : legals) {
 			if (p.getValueIsCorrect()) {
+				p("using cached value: legal movess");
 				if (p.getValue()) actions.add(getMoveFromProposition(p));
 			} else {
 				if (propmarkp(p)) actions.add(getMoveFromProposition(p));
@@ -159,6 +161,7 @@ public class PropNetStateMachine extends StateMachine {
 		for (GdlSentence gs : bases.keySet()) {
 			Component cp = bases.get(gs).getSingleInput();
 			if (cp.getValueIsCorrect()) {
+				p("using cached value: next state");
 				if (cp.getValue()) nextState.add(gs);
 			} else {
 				if(propmarkp(cp.getSingleInput())) nextState.add(gs);
@@ -333,12 +336,20 @@ public class PropNetStateMachine extends StateMachine {
 	}
 
 	private boolean propmarknegation (Component cp) {
+		if (cp.getSingleInput().getValueIsCorrect()) {
+			p("using cached value: propmarknegation");
+			return !cp.getSingleInput().getValue();
+		}
 		return !propmarkp(cp.getSingleInput());
 	}
 
 	private boolean propmarkconjunction (Component cp) {
 		Set<Component> sources = cp.getInputs();
 		for (Component source : sources) {
+			if (source.getValueIsCorrect()) {
+				p("using cached value: propmarkconjunction");
+				if (!source.getValue()) return false;
+			}
 			if (!propmarkp(source)) return false;
 		}
 		return true;
@@ -347,6 +358,10 @@ public class PropNetStateMachine extends StateMachine {
 	private boolean propmarkdisjunction (Component cp) {
 		Set<Component> sources = cp.getInputs();
 		for (Component source : sources) {
+			if (source.getValueIsCorrect()) {
+				p("using cached value: propmarkdisjunction");
+				if(source.getValue()) return true;
+			}
 			if (propmarkp(source)) return true;
 		}
 		return false;
