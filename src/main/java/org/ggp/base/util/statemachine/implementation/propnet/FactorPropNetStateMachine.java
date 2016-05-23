@@ -3,16 +3,17 @@ package org.ggp.base.util.statemachine.implementation.propnet;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.ggp.base.util.gdl.grammar.Gdl;
-import org.ggp.base.util.propnet.architecture.Component;
-import org.ggp.base.util.propnet.architecture.components.Constant;
 import org.ggp.base.util.propnet.architecture.components.Proposition;
 
 public class FactorPropNetStateMachine extends SamplePropNetStateMachine {
 
-	public List<List<Gdl>> independentFactor (){
+
+
+	/*public List<List<Gdl>> independentFactor (){
 		System.out.println("v2.0");
 		List<Proposition> propositions = new ArrayList<Proposition>(propNet.getPropositions());
 		System.out.println("terminal:" + propositions.toString());
@@ -91,6 +92,40 @@ public class FactorPropNetStateMachine extends SamplePropNetStateMachine {
 			System.out.println(subgame.toString());
 		}
 		return subGameContents;
+	}*/
+
+	public Set<Proposition> independentFactor(){
+		Proposition terminal = propNet.getTerminalProposition();
+		Set<Proposition> usedProps = new HashSet<Proposition>();
+		usedProps.add(terminal);
+		usedProps = recursiveFactor(terminal, usedProps);
+		List<Gdl> factored = new ArrayList<Gdl>();
+		for (Proposition p : usedProps){
+			factored.add(p.getName());
+		}
+		//return factored;
+		return usedProps;
+	}
+
+	public Set<Proposition> recursiveFactor(Proposition prop, Set<Proposition> seen){
+		if (prop.equals(propNet.getInitProposition())){
+			if (!seen.contains(prop)){
+				seen.add(prop);
+			}
+
+			System.out.println("done");
+			return seen;
+		}
+		Map<Proposition, Proposition> legalInputMap = propNet.getLegalInputMap();
+		for (Proposition input : legalInputMap.keySet()){
+			if (prop.equals(legalInputMap.get(input))){
+				if (!seen.contains(input)){
+					seen.add(input);
+					seen = recursiveFactor(input, seen);
+				}
+			}
+		}
+		return seen;
 	}
 
 }

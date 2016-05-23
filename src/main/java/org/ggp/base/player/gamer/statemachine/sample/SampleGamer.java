@@ -43,10 +43,7 @@ public abstract class SampleGamer extends StateMachineGamer
     @Override
     public StateMachine getInitialStateMachine() {
       return new CachedStateMachine(new ProverStateMachine());
-<<<<<<< HEAD
-=======
       //return new CachedStateMachine(new SamplePropNetStateMachine());
->>>>>>> 42cee036d6f73132f45b7e97042307d8ad9bf82f
     }
 
     // This is the default Sample Panel
