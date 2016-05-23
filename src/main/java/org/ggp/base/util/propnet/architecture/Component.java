@@ -140,8 +140,12 @@ public abstract class Component implements Serializable
     	valueIsCorrect = flag;
     }
 
-    public void setValue(boolean flag) {
+    public void setCachedValue(boolean flag) {
     	value = flag;
+    }
+
+    public boolean getCachedValue() {
+    	return value;
     }
 
     /**

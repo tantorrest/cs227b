@@ -294,6 +294,7 @@ public class PropNetStateMachine extends StateMachine {
 		}
 		for (GdlSentence move : toDo) {
 			props.get(move).setValue(true);
+//			props.get(move).setCachedValue(true);
 		}
 	}
 
@@ -331,14 +332,15 @@ public class PropNetStateMachine extends StateMachine {
 		} else {
 			value =  false;
 		}
-		cp.setValue(value);
+		cp.setCachedValue(value);
 		return value;
 	}
 
 	private boolean propmarknegation (Component cp) {
 		if (cp.getSingleInput().getValueIsCorrect()) {
-			p("using cached value: propmarknegation");
-			return !cp.getSingleInput().getValue();
+//			p("using cached value: propmarknegation");
+//			if (cp.getSingleInput().getCachedValue() != propmarkp(cp.getSingleInput())) { p("bad1");}
+			return !cp.getSingleInput().getCachedValue();
 		}
 		return !propmarkp(cp.getSingleInput());
 	}
@@ -347,8 +349,11 @@ public class PropNetStateMachine extends StateMachine {
 		Set<Component> sources = cp.getInputs();
 		for (Component source : sources) {
 			if (source.getValueIsCorrect()) {
-				p("using cached value: propmarkconjunction");
-				if (!source.getValue()) return false;
+//				p("using cached value: propmarkconjunction");
+//				if (source.getCachedValue() != propmarkp(source)) {
+//					p("bad2: " + source.getCachedValue() + " " + propmarkp(source));
+//					}
+//				if (!(source.getCachedValue())) return false;
 			}
 			if (!propmarkp(source)) return false;
 		}
@@ -359,8 +364,11 @@ public class PropNetStateMachine extends StateMachine {
 		Set<Component> sources = cp.getInputs();
 		for (Component source : sources) {
 			if (source.getValueIsCorrect()) {
-				p("using cached value: propmarkdisjunction");
-				if(source.getValue()) return true;
+//				p("using cached value: propmarkdisjunction");
+//				if (source.getCachedValue() != propmarkp(source)) {
+//					p("bad3: " + source.getCachedValue() + " " + propmarkp(source));
+//					}
+//				if(source.getCachedValue()) return true;
 			}
 			if (propmarkp(source)) return true;
 		}
@@ -381,6 +389,7 @@ public class PropNetStateMachine extends StateMachine {
 			stateContents = getNextStateContents(stateContents, jointMove);
 		}
 		if(theDepth != null) theDepth[0] = nDepth;
+//		p("depth: " + nDepth);
 		return new MachineState(stateContents);
 	}
 

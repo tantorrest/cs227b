@@ -94,13 +94,13 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		return getBestMove();
 	}
 
-	/************* major helper functions *****************/
-	private MultiNode select(MultiNode node) {
-		if (node.visits == 0 || game.findTerminalp(node.state)) return node;
-		for (int i = 0; i < node.children.size(); i++) {
-			if (node.children.get(i).visits == 0) return node.children.get(i);
-		}
+	/************* major helper functions
+	 * @throws TransitionDefinitionException
+	 * @throws MoveDefinitionException *****************/
+	// added node.isMax to this function
+	private MultiNode select(MultiNode node) throws MoveDefinitionException, TransitionDefinitionException {
 		if (node.isMax) {
+			if ((node.visits == 0 || game.findTerminalp(node.state))) return node;
 			double score = selectfnMax(node.children.get(0));
 			MultiNode result = node.children.get(0);
 			for (int i = 1; i < node.children.size(); i++) {
@@ -110,8 +110,13 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 					result = node.children.get(i);
 				}
 			}
+			// bug fix??
+			expand(result);
 			return select(result);
 		} else {
+			for (int i = 0; i < node.children.size(); i++) {
+				if (node.children.get(i).visits == 0) return node.children.get(i);
+			}
 			double score = selectfnMin(node.children.get(0));
 			MultiNode result = node.children.get(0);
 			for (int i = 1; i < node.children.size(); i++) {
@@ -131,23 +136,24 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		if (node.isMax) {
 			List<Move> moves = game.getLegalMoves(node.state, role);
 			for (Move move : moves) {
-				MultiNode newnode = new MultiNode(node.state, move, null, 0, 0, !node.isMax); // alternate state
+				MultiNode newnode = new MultiNode(node.state, move, null, 0, 0, !(node.isMax)); // alternate state
 				node.addChild(newnode);
 			}
 		} else {
 			List<List<Move>> jointMoves = game.getLegalJointMoves(node.state, role, node.move);
 			for (List<Move> jointMove : jointMoves) {
 				MachineState nextState = game.getNextState(node.state, jointMove);
-				MultiNode newnode = new MultiNode(nextState, null, jointMove, 0, 0, !node.isMax);
+				MultiNode newnode = new MultiNode(nextState, null, jointMove, 0, 0, !(node.isMax));
 				node.addChild(newnode);
 			}
 		}
 	}
 
 	private void backPropagate(MultiNode node, double score) {
-		if (isSinglePlayer && bestPathFound && !node.isMax && node.parent != null) { // the move it gets at a max node
-			p("adding move: " + node.move);
-			bestPathReversed.add(node.move);
+//		p("isMax: " +  node.isMax);
+		if (isSinglePlayer && bestPathFound && node.isMax && node.parent != null) { // the move it gets at a max node
+			p("adding move: " + node.jointMoves.get(0));
+			bestPathReversed.add(node.jointMoves.get(0));
 		}
 		node.utility += score;
 		node.visits++;
@@ -165,6 +171,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			double score = 0;
 			MachineState terminal = null;
 			MultiNode selected = select(root);
+			if (!selected.isMax) p("from min node: " + 			selected.move);
 			if (!game.findTerminalp(selected.state)) {
 				expand(selected);
 				terminal = game.performPropNetDepthCharge(selected.state, null);
@@ -179,6 +186,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 				bestPathReversed = reverse(game.getBestMoves());
 				bestPathFound = true;
 			}
+//			p("back propagating");
 			backPropagate(selected, score);
 		}
 		p("Num Depth Charges OP: " + numDepthCharges);
@@ -243,12 +251,12 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	private double explorationFactor = Math.sqrt(2.3);
 
 	public ArrayList<Move> reverse(List<Move> moves) {
+		p("moves: " + moves.toString());
 		for (int i = 0; i < moves.size() / 2; i++) {
 			Move tmp = moves.get(i);
 			moves.set(i, moves.get(moves.size() - i - 1));
 			moves.set(moves.size() - i - 1, tmp);
 		}
-		p("moves: " + moves.toString());
 		return (ArrayList<Move>) moves;
 	}
 

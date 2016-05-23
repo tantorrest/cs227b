@@ -551,6 +551,8 @@ public final class PropNet
 
     //TODO: oluwasanya edits from here
     public void setInitProposition(boolean flag) {
-    	initProposition.setValue(flag);
+    	if (initProposition != null) {
+        	initProposition.setValue(flag);
+    	}
     }
 }
