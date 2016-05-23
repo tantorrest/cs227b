@@ -85,7 +85,6 @@ public class PropNetStateMachine extends StateMachine {
 		markbases(state.getContents(), propNet);
 		Set<Proposition> rewards = propNet.getGoalPropositions().get(role);
 		for (Proposition p : rewards) {
-			// this uses a tagged node
 			if (p.getValueIsCorrect()) {
 				if (p.getValue()) return getGoalValue(p);
 			} else {
@@ -318,10 +317,8 @@ public class PropNetStateMachine extends StateMachine {
 		} else {
 			value =  false;
 		}
-		if (cp instanceof Proposition) {
 			cp.setCachedValue(value);
 			cp.setValueIsCorrect(true);
-		}
 		return value;
 	}
 
