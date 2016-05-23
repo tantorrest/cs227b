@@ -389,7 +389,6 @@ public class PropNetStateMachine extends StateMachine {
 			stateContents = getNextStateContents(stateContents, jointMove);
 		}
 		if(theDepth != null) theDepth[0] = nDepth;
-//		p("depth: " + nDepth);
 		return new MachineState(stateContents);
 	}
 

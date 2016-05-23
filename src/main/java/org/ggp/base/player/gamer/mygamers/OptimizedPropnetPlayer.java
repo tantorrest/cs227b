@@ -111,7 +111,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 				}
 			}
 			// bug fix??
-			expand(result);
+			if (result.children.size() == 0) expand(result);
 			return select(result);
 		} else {
 			for (int i = 0; i < node.children.size(); i++) {
@@ -150,7 +150,6 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	}
 
 	private void backPropagate(MultiNode node, double score) {
-//		p("isMax: " +  node.isMax);
 		if (isSinglePlayer && bestPathFound && node.isMax && node.parent != null) { // the move it gets at a max node
 			p("adding move: " + node.jointMoves.get(0));
 			bestPathReversed.add(node.jointMoves.get(0));
@@ -171,7 +170,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			double score = 0;
 			MachineState terminal = null;
 			MultiNode selected = select(root);
-			if (!selected.isMax) p("from min node: " + 			selected.move);
+			if (!selected.isMax) p("from min node: " + selected.move);
 			if (!game.findTerminalp(selected.state)) {
 				expand(selected);
 				terminal = game.performPropNetDepthCharge(selected.state, null);
@@ -186,13 +185,22 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 				bestPathReversed = reverse(game.getBestMoves());
 				bestPathFound = true;
 			}
-//			p("back propagating");
 			backPropagate(selected, score);
 		}
 		p("Num Depth Charges OP: " + numDepthCharges);
 	}
 
 	private Move getBestMove() throws MoveDefinitionException {
+		if (bestPathFound) {
+			// we save time on reversing the loop and rather just work backwards instead
+			p("previous perfect move: " + bestMove);
+			stepAfterFoundBestMove++;
+			p("bestPath: " + bestPathReversed);
+			p("step    : " + stepAfterFoundBestMove);
+			bestMove = bestPathReversed.get(bestPathReversed.size() - stepAfterFoundBestMove);
+			// stepAfterFoundBestMove++;
+			p("playing perfect move : " + bestMove);
+		}
 		double bestUtility = 0;
 		for (MultiNode child : root.children) {
 			if (child.getAveUtility() > bestUtility) {
