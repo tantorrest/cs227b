@@ -366,9 +366,8 @@ public class PropNetStateMachine extends StateMachine {
 //		markbases(stateContents, propNet);
 		Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
 		Set<GdlSentence> nextState = new HashSet<GdlSentence>();
-		for (GdlSentence gs : bases.keySet()) {
-			Component cp = bases.get(gs).getSingleInput();
-			if(propmarkp(cp.getSingleInput())) nextState.add(gs);
+		for (Proposition p : bases.values()) {
+			if (propmarkp(p.getSingleInput().getSingleInput())) nextState.add(p.getName());
 		}
 		return nextState;
 	}
@@ -391,7 +390,6 @@ public class PropNetStateMachine extends StateMachine {
 		List<GdlTerm> actions = new ArrayList<GdlTerm>();
 		for (Proposition p : legals) {
 			if (propmarkp(p)) actions.add(p.getName().get(1));
-
 		}
 		return actions;
 	}
@@ -401,10 +399,8 @@ public class PropNetStateMachine extends StateMachine {
 		Map<GdlSentence, Proposition> props = propNet.getInputPropositions();
 		Set<GdlTerm> toDoSet = new HashSet<GdlTerm>(toDo);
 		for (Proposition p : props.values()) {
-			p.setValue(false);
-			if (toDoSet.contains(p.getName().get(1))) {
-				p.setValue(true);
-			}
+			boolean val = toDoSet.contains(p.getName().get(1));
+			p.setValue(val);
 		}
 	}
 
