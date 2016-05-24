@@ -19,6 +19,16 @@ public abstract class Component implements Serializable
     /** The outputs of the component. */
     private final Set<Component> outputs;
 
+    private String codeName;
+
+    public void setCodeName(String name) {
+    	codeName = name;
+    }
+
+    public String getCodeName(String name) {
+    	return codeName;
+    }
+
     /**
      * Creates a new Component with no inputs or outputs.
      */

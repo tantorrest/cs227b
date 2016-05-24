@@ -363,7 +363,6 @@ public class PropNetStateMachine extends StateMachine {
 
 	private Set<GdlSentence> getNextStateContents(Set<GdlSentence> stateContents, List<GdlTerm> movesContents) {
 		markactionsContents(movesContents, propNet);
-//		markbases(stateContents, propNet);
 		Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
 		Set<GdlSentence> nextState = new HashSet<GdlSentence>();
 		for (Proposition p : bases.values()) {
