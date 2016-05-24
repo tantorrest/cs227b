@@ -50,6 +50,8 @@ public class PropNetStateMachine extends StateMachine {
             roles = propNet.getRoles();
             ordering = getOrdering();
             propNet.renderToFile(description.get(0).toString() + ".dot");
+            reportStats();
+            initLatches();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -61,6 +63,20 @@ public class PropNetStateMachine extends StateMachine {
     	p("Num Ors: " + propNet.getNumOrs());
     	p("Num Nots: " + propNet.getNumNots());
     	p("Num Links: " + propNet.getNumLinks());
+    }
+
+    private void initLatches(){
+    	Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
+        System.out.println("bases size " + bases.size());;
+        Set<GdlSentence> nextState = new HashSet<GdlSentence>();
+        Integer i = 1;
+        for (GdlSentence gs : bases.keySet()) {
+        	p(i.toString());
+        	p(bases.get(gs).toString());
+        	p(bases.get(gs).getValue() ? "true\n" : "false\n");
+        	bases.get(gs).setInitValue(bases.get(gs).getValue());
+        	i++;
+        }
     }
 
     /**
@@ -153,14 +169,20 @@ public class PropNetStateMachine extends StateMachine {
         markactions(moves, propNet);
         markbases(state, propNet);
         Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
+        System.out.println("bases size " + bases.size());;
         Set<GdlSentence> nextState = new HashSet<GdlSentence>();
+        Integer i = 0;
         for (GdlSentence gs : bases.keySet()) {
+        	p(i.toString());
         	Component cp = bases.get(gs).getSingleInput();
+        	p(bases.get(gs).toString());
+        	p(bases.get(gs).getValue() ? "true\n" : "false\n");
         	if (cp.getValueIsCorrect()) {
         		if (cp.getValue()) nextState.add(gs);
         	} else {
             	if(propmarkp(cp.getSingleInput())) nextState.add(gs);
         	}
+        	i++;
         }
         return new MachineState(nextState);
     }

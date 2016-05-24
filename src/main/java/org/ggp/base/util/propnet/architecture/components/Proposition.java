@@ -12,6 +12,10 @@ public final class Proposition extends Component {
 	private GdlSentence name;
 	/** The value of the Proposition. */
 	private boolean value;
+	/** The initial value of the Proposition. Matt*/
+	private boolean initValue;
+	/** Indicates if a proposition is a latch or not. Matt*/
+	private boolean isLatch;
 
 	/**
 	 * Creates a new Proposition with name <tt>name</tt>.
@@ -22,6 +26,8 @@ public final class Proposition extends Component {
 	public Proposition(GdlSentence name) {
 		this.name = name;
 		this.value = false;
+		this.initValue = false; //default, for latch checking and testing. Matt
+		this.isLatch = false;
 	}
 
 	/**
@@ -61,6 +67,16 @@ public final class Proposition extends Component {
 	 */
 	public void setValue(boolean value) {
 		this.value = value;
+	}
+
+	/**
+	 * Setter method.
+	 *
+	 * @param value
+	 *            The initial value of the Proposition.
+	 */
+	public void setInitValue(boolean value) {
+		this.initValue = value;
 	}
 
 	/**
