@@ -18,7 +18,7 @@ public abstract class Component implements Serializable
     private final Set<Component> inputs;
     /** The outputs of the component. */
     private final Set<Component> outputs;
-    /** The value of the component is correct. Oluwasanya. */
+    /** The value of the component is correct. */
     private boolean valueIsCorrect = false;
 
     /**
