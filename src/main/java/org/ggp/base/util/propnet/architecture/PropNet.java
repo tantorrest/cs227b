@@ -132,9 +132,9 @@ public final class PropNet
 
         /* extensions */
         this.valueIsCorrectMap = makeValueIsCorrectMap();
-        this.nextPropositions = recordNextPropositions();
-        this.dependencyMap = recordDependencyMap();
-        this.consequencyMap = recordConsequencyMap();
+        this.nextPropositions = null; 	//recordNextPropositions();
+        this.dependencyMap = null; 		// recordDependencyMap();
+        this.consequencyMap = null; 	// recordConsequencyMap();
     }
 
     public List<Role> getRoles() { return roles; }
