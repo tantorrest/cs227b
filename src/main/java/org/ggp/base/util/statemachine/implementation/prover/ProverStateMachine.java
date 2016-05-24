@@ -142,4 +142,10 @@ public class ProverStateMachine extends StateMachine
 			MoveDefinitionException {
 		return performDepthCharge(state, theDepth);
 	}
+
+	@Override
+	public List<Move> getBestMoves() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

@@ -20,6 +20,7 @@ import org.ggp.base.util.propnet.architecture.components.Constant;
 import org.ggp.base.util.propnet.architecture.components.Not;
 import org.ggp.base.util.propnet.architecture.components.Or;
 import org.ggp.base.util.propnet.architecture.components.Proposition;
+import org.ggp.base.util.propnet.architecture.components.Transition;
 import org.ggp.base.util.propnet.factory.OptimizingPropNetFactory;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
@@ -257,18 +258,17 @@ public class PropNetStateMachine extends StateMachine {
 
 	/************** marking functions ********************/
 	private void markbases (Set<GdlSentence> stateContents, PropNet propNet) {
-		// clear propnet
+		// clear boolean tagging
 		propNet.setInitProposition(false); // necessary?
 		for (Proposition p : propNet.getValueIsCorrectMap().keySet()) {
 			propNet.getValueIsCorrectMap().put(p, false);
 		}
 
-		// add the states
+		// clear the current state
 		Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
 		for (Proposition p : bases.values()) {
 			p.setValue(false);
 		}
-
 
 		// update bases
 		for (GdlSentence gs : stateContents) {
@@ -292,7 +292,8 @@ public class PropNetStateMachine extends StateMachine {
 		boolean value = false;;
 		if (cp instanceof Proposition) {
 			Proposition p = (Proposition) cp;
-			if (p.getName().getName().getValue().equals("does") ||
+			if (p.getInputs().size() == 1 && p.getSingleInput() instanceof Transition ||
+					p.getName().getName().getValue().equals("does") ||
 					p.getName().getName().getValue().toLowerCase().equals("init")) {
 				value = p.getValue();
 			} else if (p.getInputs().size() == 1) {
@@ -318,6 +319,7 @@ public class PropNetStateMachine extends StateMachine {
 		return value;
 	}
 
+//	public boolean propmarkp (Component cp) {
 //		boolean value;
 //		if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) { // base
 //			value = cp.getValue();
@@ -385,6 +387,7 @@ public class PropNetStateMachine extends StateMachine {
 			stateContents = getNextStateContents(stateContents, jointMove);
 		}
 		if(theDepth != null) theDepth[0] = nDepth;
+
 		return new MachineState(stateContents);
 	}
 

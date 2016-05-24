@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
+import org.ggp.base.util.statemachine.DualStateMachine;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
@@ -17,33 +18,36 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class OptimizedPropnetPlayer extends SampleGamer {
 
-	//    @Override
-	//    public void stateMachineMetaGame(long timeout)
-	//        throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-	//      p("Debug Metagaming Phase Propnet");
-	//      prover = getProverStateMachine();
-	//        prover.initialize(getMatch().getGame().getRules());
-	//
-	//        propnet = getPropNetStateMachine();
-	//        propnet.initialize(getMatch().getGame().getRules());
-	//       private ArrayList<Move> bestPathReversed = new ArrayList<Move>();
-	//
-	//      game = new DualStateMachine(prover, propnet);
-	//      role = getRole();
-	//		stepAfterFoundBestMove = 0;
-	//      root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
-	//    expand(root);
-	//    performMCTS(root, timeout - 1000);
-	//    }
+	private StateMachine prover;
+	private StateMachine propnet;
 
 	@Override
 	public void stateMachineMetaGame(long timeout)
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-		p("Metagaming Phase Optimized Propnet");
-		init();
+		p("Debug Metagaming Phase Propnet");
+		prover = getProverStateMachine();
+		prover.initialize(getMatch().getGame().getRules());
+
+		propnet = getPropNetStateMachine();
+		propnet.initialize(getMatch().getGame().getRules());
+
+		bestPathReversed = new ArrayList<Move>();
+		game = new DualStateMachine(prover, propnet);
+		role = getRole();
+		stepAfterFoundBestMove = 0;
+		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
 		expand(root);
 		performMCTS(root, timeout - 1000);
 	}
+
+	//	@Override
+	//	public void stateMachineMetaGame(long timeout)
+	//			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+	//		p("Metagaming Phase Optimized Propnet");
+	//		init();
+	//		expand(root);
+	//		performMCTS(root, timeout - 1000);
+	//	}
 
 	// does the initialization
 	private void init() {
@@ -81,7 +85,6 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			p("bestPath: " + bestPathReversed);
 			p("step    : " + stepAfterFoundBestMove);
 			bestMove = bestPathReversed.get(bestPathReversed.size() - stepAfterFoundBestMove);
-			// stepAfterFoundBestMove++;
 			p("playing perfect move : " + bestMove);
 			return bestMove;
 		}
