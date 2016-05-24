@@ -31,7 +31,7 @@ import org.ggp.base.util.statemachine.implementation.prover.query.ProverQueryBui
 
 
 @SuppressWarnings("unused")
-public class SamplePropNetStateMachine extends StateMachine {
+public class PropNetStateMachine extends StateMachine {
     /** The underlying proposition network  */
     private PropNet propNet;
     /** The topological ordering of the propositions */
@@ -46,8 +46,8 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public void initialize(List<Gdl> description) {
         try {
-            setPropNet(OptimizingPropNetFactory.create(description));
-            roles = getPropNet().getRoles();
+            propNet = OptimizingPropNetFactory.create(description);
+            roles = propNet.getRoles();
             ordering = getOrdering();
             propNet.renderToFile(description.get(0).toString() + ".dot");
         } catch (InterruptedException e) {
@@ -56,11 +56,11 @@ public class SamplePropNetStateMachine extends StateMachine {
     }
 
     private void reportStats() {
-    	p("Size: " + getPropNet().getSize());
-    	p("Num Ands: " + getPropNet().getNumAnds());
-    	p("Num Ors: " + getPropNet().getNumOrs());
-    	p("Num Nots: " + getPropNet().getNumNots());
-    	p("Num Links: " + getPropNet().getNumLinks());
+    	p("Size: " + propNet.getSize());
+    	p("Num Ands: " + propNet.getNumAnds());
+    	p("Num Ors: " + propNet.getNumOrs());
+    	p("Num Nots: " + propNet.getNumNots());
+    	p("Num Links: " + propNet.getNumLinks());
     }
 
     /**
@@ -69,8 +69,13 @@ public class SamplePropNetStateMachine extends StateMachine {
      */
     @Override
     public boolean isTerminal(MachineState state) {
-    	markbases(state, getPropNet());
-    	return propmarkp(getPropNet().getTerminalProposition());
+    	markbases(state, propNet);
+    	Proposition p = propNet.getTerminalProposition();
+    	if (p.getValueIsCorrect()) {
+    		return p.getValue();
+    	} else {
+    		return propmarkp(p);
+    	}
     }
 
     /**
@@ -83,14 +88,15 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public int getGoal(MachineState state, Role role)
             throws GoalDefinitionException {
-    	markbases(state, getPropNet());
-    	Set<Proposition> rewards = getPropNet().getGoalPropositions().get(role);
-//    	p("rewards: " + rewards.toString());
+    	markbases(state, propNet);
+    	Set<Proposition> rewards = propNet.getGoalPropositions().get(role);
     	for (Proposition p : rewards) {
-      		if (propmarkp(p)) {
-//      			p(p.toString());
-      			return getGoalValue(p);
-      		}
+    		// this uses a tagged node
+    		if (p.getValueIsCorrect()) {
+    			if (p.getValue()) return getGoalValue(p);
+    		} else {
+    			if (propmarkp(p)) return getGoalValue(p);
+    		}
       	}
       	throw new GoalDefinitionException(state, role);
     }
@@ -102,7 +108,7 @@ public class SamplePropNetStateMachine extends StateMachine {
      */
     @Override
     public MachineState getInitialState() {
-    	getPropNet().setInitProposition(true);
+    	propNet.setInitProposition(true);
     	return getStateFromBase();
     }
 
@@ -111,7 +117,7 @@ public class SamplePropNetStateMachine extends StateMachine {
      */
     @Override
     public List<Move> findActions(Role role) throws MoveDefinitionException {
-    	Map<GdlSentence, Proposition> actionsMap = getPropNet().getInputPropositions();
+    	Map<GdlSentence, Proposition> actionsMap = propNet.getInputPropositions();
     	List<Move> actions = new ArrayList<Move>();
     	for (Proposition p : actionsMap.values()) {
     		actions.add(getMoveFromProposition(p));
@@ -125,12 +131,14 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public List<Move> getLegalMoves(MachineState state, Role role)
             throws MoveDefinitionException {
-        markbases(state, getPropNet());
-        Set<Proposition> legals = getPropNet().getLegalPropositions().get(role);
+        markbases(state, propNet);
+        Set<Proposition> legals = propNet.getLegalPropositions().get(role);
         List<Move> actions = new ArrayList<Move>();
         for (Proposition p : legals) {
-        	if (propmarkp(p)) {
-        		actions.add(getMoveFromProposition(p));
+        	if (p.getValueIsCorrect()) {
+        		if (p.getValue()) actions.add(getMoveFromProposition(p));
+        	} else {
+        		if (propmarkp(p)) actions.add(getMoveFromProposition(p));
         	}
         }
         return actions;
@@ -142,14 +150,16 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public MachineState getNextState(MachineState state, List<Move> moves)
             throws TransitionDefinitionException {
-        markactions(moves, getPropNet());
-        markbases(state, getPropNet());
-        Map<GdlSentence, Proposition> bases = getPropNet().getBasePropositions();
+        markactions(moves, propNet);
+        markbases(state, propNet);
+        Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
         Set<GdlSentence> nextState = new HashSet<GdlSentence>();
         for (GdlSentence gs : bases.keySet()) {
         	Component cp = bases.get(gs).getSingleInput();
-        	if(propmarkp(cp.getSingleInput())) {
-        		nextState.add(gs);
+        	if (cp.getValueIsCorrect()) {
+        		if (cp.getValue()) nextState.add(gs);
+        	} else {
+            	if(propmarkp(cp.getSingleInput())) nextState.add(gs);
         	}
         }
         return new MachineState(nextState);
@@ -175,10 +185,10 @@ public class SamplePropNetStateMachine extends StateMachine {
         List<Proposition> order = new LinkedList<Proposition>();
 
         // All of the components in the PropNet
-        List<Component> components = new ArrayList<Component>(getPropNet().getComponents());
+        List<Component> components = new ArrayList<Component>(propNet.getComponents());
 
         // All of the propositions in the PropNet.
-        List<Proposition> propositions = new ArrayList<Proposition>(getPropNet().getPropositions());
+        List<Proposition> propositions = new ArrayList<Proposition>(propNet.getPropositions());
 
         // TODO: Compute the topological ordering.
 
@@ -197,7 +207,9 @@ public class SamplePropNetStateMachine extends StateMachine {
      *
      * This translates a list of Moves (backed by a sentence that is simply ?action)
      * into GdlSentences that can be used to get Propositions from inputPropositions.
-     * and accordingly set their values etc.  This is a naive implementation when coupled with
+     * and accordingly set their values etc.
+     *
+     * This is a naive implementation when coupled with
      * setting input values, feel free to change this for a more efficient implementation.
      *
      * @param moves
@@ -247,7 +259,7 @@ public class SamplePropNetStateMachine extends StateMachine {
     public MachineState getStateFromBase()
     {
         Set<GdlSentence> contents = new HashSet<GdlSentence>();
-        for (Proposition p : getPropNet().getBasePropositions().values())
+        for (Proposition p : propNet.getBasePropositions().values())
         {
             p.setValue(p.getSingleInput().getValue());
             if (p.getValue())
@@ -292,9 +304,8 @@ public class SamplePropNetStateMachine extends StateMachine {
 
    /***************** propagating view **********************/
    public boolean propmarkp (Component cp) {
-	   cp.setValueIsCorrect(true);// optimized
+//	   cp.setValueIsCorrect(true);// optimized
 	   if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) { // base
-//		   p("base");
 		   return cp.getValue();
 	   } else if (cp instanceof Not) { // negation
 		   return propmarknegation(cp);
@@ -303,32 +314,14 @@ public class SamplePropNetStateMachine extends StateMachine {
 	   } else if (cp instanceof And) { // conjunction
 		   return propmarkconjunction(cp);
 	   } else if (cp instanceof Constant) { // constant
-//		   p("constant");
 		   return cp.getValue();
 	   } else if (((Proposition) cp).getName().getName().getValue().equals("does")) { // input
-//		   p("input");
 		   return cp.getValue();
 	   } else if((((Proposition) cp).getName().getName().getValue().toUpperCase().equals("INIT"))) { // init
-//		   p("init");
 		   return cp.getValue();
-	   }
-//	   else if(((Proposition) cp).getName().getName().getValue().equals("legal")) { // legal
-//		   p("legal");
-//		   return propmarkp(cp.getSingleInput());
-//	   }
-//	   else if(((Proposition) cp).getName().getName().getValue().equals("terminal")) {
-//		   p("terminal");
-//		   return propmarkp(cp.getSingleInput());
-//	   }
-//	   else if (((Proposition) cp).getName().getName().getValue().equals("goal")) {
-//		   p("goal");
-//		  return propmarkp(cp.getSingleInput());
-//	   }
-	   else if (cp.getInputs().size() == 1) { // view
-//		   p("view");
+	   } else if (cp.getInputs().size() == 1) { // view
 		   return propmarkp(cp.getSingleInput());
 	   } else {
-//		   p("false");
 		   return false;
 	   }
 	}
@@ -351,13 +344,5 @@ public class SamplePropNetStateMachine extends StateMachine {
 			if (propmarkp(source)) return true;
 		}
 		return false;
-	}
-
-	public PropNet getPropNet() {
-		return propNet;
-	}
-
-	public void setPropNet(PropNet propNet) {
-		this.propNet = propNet;
 	}
 }
