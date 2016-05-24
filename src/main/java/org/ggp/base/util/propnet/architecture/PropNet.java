@@ -155,7 +155,7 @@ public final class PropNet
     		Component cp = base.getSingleInput().getSingleInput();
     		nexts.add(cp);
     	}
-    	System.out.println("nexts: " + nexts.toString());
+//    	System.out.println("nexts: " + nexts.toString());
     	return nexts;
     }
 

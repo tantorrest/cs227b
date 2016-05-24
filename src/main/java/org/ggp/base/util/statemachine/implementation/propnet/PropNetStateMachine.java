@@ -292,6 +292,8 @@ public class PropNetStateMachine extends StateMachine {
 		boolean value = false;;
 		if (cp instanceof Proposition) {
 			Proposition p = (Proposition) cp;
+			if (propNet.getValueIsCorrectMap().get(p)) return p.getValue();
+
 			if (p.getInputs().size() == 1 && p.getSingleInput() instanceof Transition ||
 					p.getName().getName().getValue().equals("does") ||
 					p.getName().getName().getValue().toLowerCase().equals("init")) {
@@ -318,6 +320,7 @@ public class PropNetStateMachine extends StateMachine {
 		}
 		return value;
 	}
+
 	private boolean propmarknegation (Component cp) {
 		return !propmarkp(cp.getSingleInput());
 	}
@@ -342,17 +345,13 @@ public class PropNetStateMachine extends StateMachine {
 	@Override
 	public MachineState performPropNetDepthCharge(MachineState state, final int[] theDepth)
 			throws TransitionDefinitionException, MoveDefinitionException {
-		int nDepth = 0;
 		jointMoves.clear();
 		Set<GdlSentence> stateContents = state.getContents();
 		while(!isTerminalContents(stateContents)) {
-			nDepth++;
 			List<GdlTerm> jointMove = getRandomJointMoveContents(stateContents);
 			if (isSinglePlayer) jointMoves.add(jointMove.get(0));
 			stateContents = getNextStateContents(stateContents, jointMove);
 		}
-		if(theDepth != null) theDepth[0] = nDepth;
-
 		return new MachineState(stateContents);
 	}
 
