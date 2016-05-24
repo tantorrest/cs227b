@@ -20,7 +20,6 @@ import org.ggp.base.util.propnet.architecture.components.Constant;
 import org.ggp.base.util.propnet.architecture.components.Not;
 import org.ggp.base.util.propnet.architecture.components.Or;
 import org.ggp.base.util.propnet.architecture.components.Proposition;
-import org.ggp.base.util.propnet.architecture.components.Transition;
 import org.ggp.base.util.propnet.factory.OptimizingPropNetFactory;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
@@ -57,7 +56,7 @@ public class PropNetStateMachine extends StateMachine {
 				p("single player propnet");
 
 			}
-//			propNet.renderToFile("propnet.dot");
+			//			propNet.renderToFile("propnet.dot");
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
@@ -69,6 +68,7 @@ public class PropNetStateMachine extends StateMachine {
 	 */
 	@Override
 	public boolean isTerminal(MachineState state) {
+		//		p("state:"+ state.toString());
 		return isTerminalContents(state.getContents());
 	}
 
@@ -85,11 +85,8 @@ public class PropNetStateMachine extends StateMachine {
 		markbases(state.getContents(), propNet);
 		Set<Proposition> rewards = propNet.getGoalPropositions().get(role);
 		for (Proposition p : rewards) {
-			if (p.getValueIsCorrect()) {
-				if (p.getValue()) return getGoalValue(p);
-			} else {
-				if (propmarkp(p)) return getGoalValue(p);
-			}
+			if (propmarkp(p)) return getGoalValue(p);
+
 		}
 		throw new GoalDefinitionException(state, role);
 	}
@@ -128,12 +125,7 @@ public class PropNetStateMachine extends StateMachine {
 		Set<Proposition> legals = propNet.getLegalPropositions().get(role);
 		List<Move> actions = new ArrayList<Move>();
 		for (Proposition p : legals) {
-			if (p.getValueIsCorrect()) {
-				p("using cached value: legal moves");
-				if (p.getCachedValue()) actions.add(getMoveFromProposition(p));
-			} else {
-				if (propmarkp(p)) actions.add(getMoveFromProposition(p));
-			}
+			if (propmarkp(p)) actions.add(getMoveFromProposition(p));
 		}
 		return actions;
 	}
@@ -150,12 +142,9 @@ public class PropNetStateMachine extends StateMachine {
 		Set<GdlSentence> nextState = new HashSet<GdlSentence>();
 		for (GdlSentence gs : bases.keySet()) {
 			Component cp = bases.get(gs).getSingleInput();
-			if (cp instanceof Proposition && cp.getValueIsCorrect()) {
-				if (cp.getValue()) nextState.add(gs);
-			} else {
-				if(propmarkp(cp.getSingleInput())) nextState.add(gs);
-			}
+			if(propmarkp(cp.getSingleInput())) nextState.add(gs);
 		}
+
 		return new MachineState(nextState);
 	}
 
@@ -269,14 +258,17 @@ public class PropNetStateMachine extends StateMachine {
 	/************** marking functions ********************/
 	private void markbases (Set<GdlSentence> stateContents, PropNet propNet) {
 		// clear propnet
-		propNet.setInitProposition(false);
+		propNet.setInitProposition(false); // necessary?
+		for (Proposition p : propNet.getValueIsCorrectMap().keySet()) {
+			propNet.getValueIsCorrectMap().put(p, false);
+		}
+
+		// add the states
 		Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
 		for (Proposition p : bases.values()) {
 			p.setValue(false);
 		}
-		for (Proposition p : propNet.getPropositions()) {
-			p.setValueIsCorrect(false);
-		}
+
 
 		// update bases
 		for (GdlSentence gs : stateContents) {
@@ -297,9 +289,19 @@ public class PropNetStateMachine extends StateMachine {
 
 	/***************** propagating view **********************/
 	public boolean propmarkp (Component cp) {
-		boolean value;
-		if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) { // base
-			value = cp.getValue();
+		boolean value = false;;
+		if (cp instanceof Proposition) {
+			Proposition p = (Proposition) cp;
+			if (p.getName().getName().getValue().equals("does") ||
+					p.getName().getName().getValue().toLowerCase().equals("init")) {
+				value = p.getValue();
+			} else if (p.getInputs().size() == 1) {
+				value = propmarkp(p.getSingleInput());
+			} else {
+				value = false;
+			}
+			propNet.getValueIsCorrectMap().put(p, true);
+			p.setValue(value);
 		} else if (cp instanceof Not) { // negation
 			value = propmarknegation(cp);
 		} else if (cp instanceof Or) { // disjunction
@@ -308,24 +310,47 @@ public class PropNetStateMachine extends StateMachine {
 			value = propmarkconjunction(cp);
 		} else if (cp instanceof Constant) { // constant
 			value = cp.getValue();
-		} else if (((Proposition) cp).getName().getName().getValue().equals("does")) { // input
-			value = cp.getValue();
-		} else if((((Proposition) cp).getName().getName().getValue().toUpperCase().equals("INIT"))) { // init
-			value = cp.getValue();
 		} else if (cp.getInputs().size() == 1) { // view
 			value = propmarkp(cp.getSingleInput());
 		} else {
-			value =  false;
+			value = false;
 		}
-			cp.setCachedValue(value);
-			cp.setValueIsCorrect(true);
 		return value;
 	}
 
+//		boolean value;
+//		if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) { // base
+//			value = cp.getValue();
+//			((Proposition) cp).setValue(value);
+//			propNet.getValueIsCorrectMap().put((Proposition) cp, true);
+//		} else if (cp instanceof Not) { // negation
+//			value = propmarknegation(cp);
+//		} else if (cp instanceof Or) { // disjunction
+//			value = propmarkdisjunction(cp);
+//		} else if (cp instanceof And) { // conjunction
+//			value = propmarkconjunction(cp);
+//		} else if (cp instanceof Constant) { // constant
+//			value = cp.getValue();
+//		} else if (((Proposition) cp).getName().getName().getValue().equals("does")) { // input
+//			value = cp.getValue();
+//			((Proposition) cp).setValue(value);
+//			propNet.getValueIsCorrectMap().put((Proposition) cp, true);
+//		} else if((((Proposition) cp).getName().getName().getValue().toUpperCase().equals("INIT"))) { // init
+//			value = cp.getValue();
+//			((Proposition) cp).setValue(value);
+//			propNet.getValueIsCorrectMap().put((Proposition) cp, true);
+//		} else if (cp.getInputs().size() == 1) { // view
+//			value = propmarkp(cp.getSingleInput());
+//		} else {
+//			value =  false;
+//		}
+//		return value;
+//	}
+
 	private boolean propmarknegation (Component cp) {
-		if (cp.getSingleInput().getValueIsCorrect()) {
-//			p("using cached value: propmarknegation");
-			return !cp.getSingleInput().getCachedValue();
+		if (propNet.getValueIsCorrectMap().get(cp.getSingleInput())) {
+			// p("using cached value: propmarknegation");
+			return !propNet.getValueIsCorrectMap().get(cp.getSingleInput());
 		}
 		return !propmarkp(cp.getSingleInput());
 	}
@@ -333,10 +358,6 @@ public class PropNetStateMachine extends StateMachine {
 	private boolean propmarkconjunction (Component cp) {
 		Set<Component> sources = cp.getInputs();
 		for (Component source : sources) {
-			if (source.getValueIsCorrect()) {
-//				p("using cached value: propmarkconjunction");
-				if (!source.getCachedValue()) return false;
-			}
 			if (!propmarkp(source)) return false;
 		}
 		return true;
@@ -345,10 +366,6 @@ public class PropNetStateMachine extends StateMachine {
 	private boolean propmarkdisjunction (Component cp) {
 		Set<Component> sources = cp.getInputs();
 		for (Component source : sources) {
-			if (source.getValueIsCorrect()) {
-//				p("using cached value: propmarkdisjunction");
-				if(source.getCachedValue()) return true;
-			}
 			if (propmarkp(source)) return true;
 		}
 		return false;
@@ -374,11 +391,7 @@ public class PropNetStateMachine extends StateMachine {
 	private boolean isTerminalContents(Set<GdlSentence> contents) {
 		markbases(contents, propNet);
 		Proposition p = propNet.getTerminalProposition();
-		if (p.getValueIsCorrect()) {
-			return p.getValue();
-		} else {
-			return propmarkp(p);
-		}
+		return propmarkp(p);
 	}
 
 	private Set<GdlSentence> getNextStateContents(Set<GdlSentence> stateContents, List<GdlTerm> movesContents) {
@@ -388,11 +401,7 @@ public class PropNetStateMachine extends StateMachine {
 		Set<GdlSentence> nextState = new HashSet<GdlSentence>();
 		for (GdlSentence gs : bases.keySet()) {
 			Component cp = bases.get(gs).getSingleInput();
-			if (cp.getSingleInput() instanceof Proposition && cp.getSingleInput().getValueIsCorrect()) {
-				if (cp.getSingleInput().getValue()) nextState.add(gs);
-			} else {
-				if(propmarkp(cp.getSingleInput())) nextState.add(gs);
-			}
+			if(propmarkp(cp.getSingleInput())) nextState.add(gs);
 		}
 		return nextState;
 	}
@@ -414,11 +423,8 @@ public class PropNetStateMachine extends StateMachine {
 		Set<Proposition> legals = propNet.getLegalPropositions().get(role);
 		List<GdlTerm> actions = new ArrayList<GdlTerm>();
 		for (Proposition p : legals) {
-			if (p.getValueIsCorrect()) {
-				if (p.getValue()) actions.add(p.getName().get(1));
-			} else {
-				if (propmarkp(p)) actions.add(p.getName().get(1));
-			}
+			if (propmarkp(p)) actions.add(p.getName().get(1));
+
 		}
 		return actions;
 	}

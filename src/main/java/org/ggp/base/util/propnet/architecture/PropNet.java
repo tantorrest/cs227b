@@ -98,6 +98,12 @@ public final class PropNet
     /** A helper list of all of the roles. */
     private final List<Role> roles;
 
+    /** optimization from bertrand */
+    private final Map<Proposition, Boolean> valueIsCorrectMap;
+    private final Set<Component> nextPropositions;
+    private final Map<GdlSentence, Set<Component>> dependencyMap;
+    private final Map<GdlSentence, Set<Component>> consequencyMap;
+
     public void addComponent(Component c)
     {
         components.add(c);
@@ -123,17 +129,95 @@ public final class PropNet
         this.initProposition = recordInitProposition();
         this.terminalProposition = recordTerminalProposition();
         this.legalInputMap = makeLegalInputMap();
+
+        /* extensions */
+        this.valueIsCorrectMap = makeValueIsCorrectMap();
+        this.nextPropositions = recordNextPropositions();
+        this.dependencyMap = recordDependencyMap();
+        this.consequencyMap = recordConsequencyMap();
     }
 
-    public List<Role> getRoles()
-    {
-        return roles;
+    public List<Role> getRoles() { return roles; }
+
+    public Map<Proposition, Proposition> getLegalInputMap() { return legalInputMap; }
+
+    private Map<Proposition, Boolean> makeValueIsCorrectMap() {
+        Map<Proposition, Boolean> map = new HashMap<Proposition, Boolean>();
+        for (Proposition p : propositions) {
+            map.put(p, false);
+        }
+        return map;
     }
 
-    public Map<Proposition, Proposition> getLegalInputMap()
-    {
-        return legalInputMap;
+    private Set<Component> recordNextPropositions() {
+    	Set<Component> nexts = new HashSet<Component>();
+    	for (Proposition base : basePropositions.values()) {
+    		Component cp = base.getSingleInput().getSingleInput();
+    		nexts.add(cp);
+    	}
+    	System.out.println("nexts: " + nexts.toString());
+    	return nexts;
     }
+
+    private Map<GdlSentence, Set<Component>> recordConsequencyMap() {
+    	Map<GdlSentence, Set<Component>> map = new HashMap<GdlSentence, Set<Component>>();
+    	for (Proposition p : basePropositions.values()) {
+    		Set<Component> list = new HashSet<Component>();
+    		getConsequencies(p, list);
+    		map.put(p.getName(), list);
+    	}
+//    	System.out.println("c map: " + map.toString());
+    	return map;
+    }
+
+    private Map<GdlSentence, Set<Component>> recordDependencyMap() {
+    	Map<GdlSentence, Set<Component>> map = new HashMap<GdlSentence, Set<Component>>();
+    	for (Component p : propositions) {
+    		Set<Component> list = new HashSet<Component>();
+    		getDependencies(p, list);
+    		map.put(((Proposition) p).getName(), list);
+    	}
+//    	System.out.println("d map: " + map.toString());
+    	return map;
+    }
+
+    private void getDependencies(Component p, Set<Component> list) {
+    	if ((p.getInputs().size() == 1 && p.getSingleInput() instanceof Transition)) {
+    		list.add(p);
+    		return;
+    	}
+    	if (list.contains(p)) return;
+//    	list.add(p);
+    	for (Component cp : p.getInputs()) {
+    		getConsequencies(cp, list);
+    	}
+    }
+
+    private void getConsequencies(Component p, Set<Component> list) {
+    	if (list.contains(p)) return;
+    	list.add(p);
+    	if (p.getInputs().size() == 1 && p.getSingleInput() instanceof Transition) {
+    		String val = (((Proposition) p).getName()).getName().getValue();
+    		if (val.equals("goal") ||  val.equals("terminal")) return;
+    	}
+    	for (Component cp : p.getOutputs()) {
+    		getConsequencies(cp, list);
+    	}
+    }
+
+    public Map<GdlSentence, Set<Component>> getDependencyMap() {
+    	return dependencyMap;
+    }
+
+    public Map<GdlSentence, Set<Component>> getConsequencyMap() {
+    	return consequencyMap;
+    }
+
+    public Set<Component> getNextPropositions() {
+    	return nextPropositions;
+    }
+
+    public Map<Proposition, Boolean> getValueIsCorrectMap() { return valueIsCorrectMap; }
 
     private Map<Proposition, Proposition> makeLegalInputMap() {
         Map<Proposition, Proposition> legalInputMap = new HashMap<Proposition, Proposition>();
