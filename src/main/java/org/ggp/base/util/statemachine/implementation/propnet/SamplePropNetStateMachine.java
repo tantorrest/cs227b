@@ -33,7 +33,7 @@ import org.ggp.base.util.statemachine.implementation.prover.query.ProverQueryBui
 @SuppressWarnings("unused")
 public class SamplePropNetStateMachine extends StateMachine {
     /** The underlying proposition network  */
-    protected PropNet propNet;
+    private PropNet propNet;
     /** The topological ordering of the propositions */
     private List<Proposition> ordering;
     /** The player roles */
@@ -46,8 +46,8 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public void initialize(List<Gdl> description) {
         try {
-            propNet = OptimizingPropNetFactory.create(description);
-            roles = propNet.getRoles();
+            setPropNet(OptimizingPropNetFactory.create(description));
+            roles = getPropNet().getRoles();
             ordering = getOrdering();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -55,11 +55,11 @@ public class SamplePropNetStateMachine extends StateMachine {
     }
 
     private void reportStats() {
-    	p("Size: " + propNet.getSize());
-    	p("Num Ands: " + propNet.getNumAnds());
-    	p("Num Ors: " + propNet.getNumOrs());
-    	p("Num Nots: " + propNet.getNumNots());
-    	p("Num Links: " + propNet.getNumLinks());
+    	p("Size: " + getPropNet().getSize());
+    	p("Num Ands: " + getPropNet().getNumAnds());
+    	p("Num Ors: " + getPropNet().getNumOrs());
+    	p("Num Nots: " + getPropNet().getNumNots());
+    	p("Num Links: " + getPropNet().getNumLinks());
     }
 
     /**
@@ -68,8 +68,8 @@ public class SamplePropNetStateMachine extends StateMachine {
      */
     @Override
     public boolean isTerminal(MachineState state) {
-    	markbases(state, propNet);
-    	return propmarkp(propNet.getTerminalProposition());
+    	markbases(state, getPropNet());
+    	return propmarkp(getPropNet().getTerminalProposition());
     }
 
     /**
@@ -82,8 +82,8 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public int getGoal(MachineState state, Role role)
             throws GoalDefinitionException {
-    	markbases(state, propNet);
-    	Set<Proposition> rewards = propNet.getGoalPropositions().get(role);
+    	markbases(state, getPropNet());
+    	Set<Proposition> rewards = getPropNet().getGoalPropositions().get(role);
 //    	p("rewards: " + rewards.toString());
     	for (Proposition p : rewards) {
       		if (propmarkp(p)) {
@@ -101,7 +101,7 @@ public class SamplePropNetStateMachine extends StateMachine {
      */
     @Override
     public MachineState getInitialState() {
-    	propNet.setInitProposition(true);
+    	getPropNet().setInitProposition(true);
     	return getStateFromBase();
     }
 
@@ -110,7 +110,7 @@ public class SamplePropNetStateMachine extends StateMachine {
      */
     @Override
     public List<Move> findActions(Role role) throws MoveDefinitionException {
-    	Map<GdlSentence, Proposition> actionsMap = propNet.getInputPropositions();
+    	Map<GdlSentence, Proposition> actionsMap = getPropNet().getInputPropositions();
     	List<Move> actions = new ArrayList<Move>();
     	for (Proposition p : actionsMap.values()) {
     		actions.add(getMoveFromProposition(p));
@@ -124,8 +124,8 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public List<Move> getLegalMoves(MachineState state, Role role)
             throws MoveDefinitionException {
-        markbases(state, propNet);
-        Set<Proposition> legals = propNet.getLegalPropositions().get(role);
+        markbases(state, getPropNet());
+        Set<Proposition> legals = getPropNet().getLegalPropositions().get(role);
         List<Move> actions = new ArrayList<Move>();
         for (Proposition p : legals) {
         	if (propmarkp(p)) {
@@ -141,9 +141,9 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public MachineState getNextState(MachineState state, List<Move> moves)
             throws TransitionDefinitionException {
-        markactions(moves, propNet);
-        markbases(state, propNet);
-        Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
+        markactions(moves, getPropNet());
+        markbases(state, getPropNet());
+        Map<GdlSentence, Proposition> bases = getPropNet().getBasePropositions();
         Set<GdlSentence> nextState = new HashSet<GdlSentence>();
         for (GdlSentence gs : bases.keySet()) {
         	Component cp = bases.get(gs).getSingleInput();
@@ -174,10 +174,10 @@ public class SamplePropNetStateMachine extends StateMachine {
         List<Proposition> order = new LinkedList<Proposition>();
 
         // All of the components in the PropNet
-        List<Component> components = new ArrayList<Component>(propNet.getComponents());
+        List<Component> components = new ArrayList<Component>(getPropNet().getComponents());
 
         // All of the propositions in the PropNet.
-        List<Proposition> propositions = new ArrayList<Proposition>(propNet.getPropositions());
+        List<Proposition> propositions = new ArrayList<Proposition>(getPropNet().getPropositions());
 
         // TODO: Compute the topological ordering.
 
@@ -246,7 +246,7 @@ public class SamplePropNetStateMachine extends StateMachine {
     public MachineState getStateFromBase()
     {
         Set<GdlSentence> contents = new HashSet<GdlSentence>();
-        for (Proposition p : propNet.getBasePropositions().values())
+        for (Proposition p : getPropNet().getBasePropositions().values())
         {
             p.setValue(p.getSingleInput().getValue());
             if (p.getValue())
@@ -350,5 +350,13 @@ public class SamplePropNetStateMachine extends StateMachine {
 			if (propmarkp(source)) return true;
 		}
 		return false;
+	}
+
+	public PropNet getPropNet() {
+		return propNet;
+	}
+
+	public void setPropNet(PropNet propNet) {
+		this.propNet = propNet;
 	}
 }

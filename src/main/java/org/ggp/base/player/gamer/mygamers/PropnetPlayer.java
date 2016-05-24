@@ -25,7 +25,7 @@ public class PropnetPlayer extends SampleGamer {
     	StateMachine prover = getProverStateMachine();
         prover.initialize(getMatch().getGame().getRules());
 
-    	StateMachine propnet = getStateMachine();
+    	StateMachine propnet = getInitialStateMachine();
     	game = new DualStateMachine(prover, propnet);
     	role = getRole();
     	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
@@ -48,7 +48,7 @@ public class PropnetPlayer extends SampleGamer {
 	public StateMachine getInitialStateMachine() {
     	FactorPropNetStateMachine sm =  new FactorPropNetStateMachine();
     	sm.initialize(getMatch().getGame().getRules());
-    	sm.independentFactor();
+    	//sm.independentFactor();
     	return sm;
     }
 
