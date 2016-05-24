@@ -49,6 +49,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		role = getRole();
 		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
 		bestPathReversed = new ArrayList<Move>();
+		isFirstMove = true;
 		isSinglePlayer = false;
 		bestPathFound = false;
 		stepAfterFoundBestMove = 0;
@@ -73,12 +74,12 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		if (isSinglePlayer && bestPathFound) {
 			// we save time on reversing the loop and rather just work backwards instead
-			p("previous perfect move: " + bestMove);
+//			p("previous perfect move: " + bestMove);
 			stepAfterFoundBestMove++;
-			p("bestPath: " + bestPathReversed);
+//			p("bestPath: " + bestPathReversed);
 			p("step    : " + stepAfterFoundBestMove);
 			bestMove = bestPathReversed.get(bestPathReversed.size() - stepAfterFoundBestMove);
-			p("playing perfect move : " + bestMove);
+//			p("playing perfect move : " + bestMove);
 			return bestMove;
 		}
 		if (!isFirstMove) {
@@ -217,7 +218,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		if (useUCBTuned) {
 			double result = Math.log(node.parent.visits) / node.visits;
 			double factor = Math.min(0.25, adjustedVariance(node));
-			return Math.sqrt(result * factor);
+			return result * factor;
 		} else {
 			return 2 * Math.log(node.parent.visits) / node.visits;
 		}
@@ -253,7 +254,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 
 
 	/* game parameter data */
-	private double explorationFactor = Math.sqrt(2.3);
+	private double explorationFactor = 1.1;
 
 	public ArrayList<Move> reverse(List<Move> moves) {
 		p("moves: " + moves.toString());
