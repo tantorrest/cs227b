@@ -82,8 +82,11 @@ public class PropNetStateMachine extends StateMachine {
         	//markbases(initialMS, propNet);
         	Proposition theProposition = bases.get(gs);
         	p("Initial value is: " + theProposition.getValue());
+        	if(theProposition.getName().toString().toLowerCase().contains("control")) continue;
         	theProposition.setValue(true); //test for true latch
         	Component cp = theProposition.getSingleInput();
+        	Set<Component> setCP = theProposition.getInputs();
+        	p("Set CP size = " + setCP.size());
         	if (cp.getValueIsCorrect()) {
         		if (cp.getValue()) nextState.add(gs);
         	} else {
@@ -106,6 +109,7 @@ public class PropNetStateMachine extends StateMachine {
         	markbases(nextMachineState, propNet);
         	if(bases.get(gs).getValue() == true){
         		tLatchCount ++;
+        		p("component is " + theProposition.getSingleInput().toString());
         		p("FOUND A TRUE LATCH!!");
         		p("The latch is " + theProposition.toString() + "\n");
         		theProposition.setLatchValue(true);
