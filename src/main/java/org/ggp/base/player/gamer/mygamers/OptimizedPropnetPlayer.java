@@ -196,6 +196,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			p("playing perfect move : " + bestMove);
 		}
 		double bestUtility = 0;
+
 		for (MultiNode child : root.children) {
 			if (child.getAveUtility() > bestUtility) {
 				bestUtility = child.getAveUtility();
@@ -267,4 +268,5 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	}
 
 	private void p(String message) { System.out.println(message); }
+
 }

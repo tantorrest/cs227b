@@ -7,7 +7,7 @@ import org.ggp.base.util.propnet.architecture.Component;
  * The Proposition class is designed to represent named latches.
  */
 @SuppressWarnings("serial")
-public final class Proposition extends Component {
+public final class Proposition extends Component implements Comparable<Proposition> {
 	/** The name of the Proposition. */
 	private GdlSentence name;
 	/** The value of the Proposition. */
@@ -69,5 +69,10 @@ public final class Proposition extends Component {
 	@Override
 	public String toString() {
 		return toDot("circle", value ? "red" : "white", name.toString());
+	}
+
+	@Override
+	public int compareTo(Proposition prop) {
+		return this.name.toString().compareTo(prop.getName().toString());
 	}
 }

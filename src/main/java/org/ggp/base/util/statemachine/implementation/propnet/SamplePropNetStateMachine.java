@@ -34,6 +34,7 @@ import org.ggp.base.util.statemachine.implementation.prover.query.ProverQueryBui
 public class SamplePropNetStateMachine extends StateMachine {
     /** The underlying proposition network  */
     protected PropNet propNet;
+
     /** The topological ordering of the propositions */
     private List<Proposition> ordering;
     /** The player roles */

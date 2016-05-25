@@ -149,6 +149,7 @@ public class PropNetStateMachine extends StateMachine {
 		return new MachineState(nextState);
 	}
 
+
 	/**
 	 * This should compute the topological ordering of propositions.
 	 * Each component is either a proposition, logical gate, or transition.
