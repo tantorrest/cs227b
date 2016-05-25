@@ -1,0 +1,40 @@
+﻿Merge branch 'aaron-1' into aaron-2
+
+# Conflicts:
+#	( role robot ).dot
+#	src/main/java/org/ggp/base/apps/player/Player.java
+#	src/main/java/org/ggp/base/player/gamer/mygamers/OptimizedPropnetPlayer.java
+#	src/main/java/org/ggp/base/player/gamer/statemachine/sample/SampleGamer.java
+#	src/main/java/org/ggp/base/util/statemachine/implementation/propnet/PropNetStateMachine.java
+#	src/main/java/org/ggp/base/util/statemachine/implementation/propnet/SamplePropNetStateMachine.java
+#
+# It looks like you may be committing a merge.
+# If this is not correct, please remove the file
+#	.git/MERGE_HEAD
+# and try again.
+
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+# On branch aaron-2
+# Your branch is up-to-date with 'origin/aaron-2'.
+#
+# All conflicts fixed but you are still merging.
+#
+# Changes to be committed:
+#	new file:   ( role cricketer ).dot
+#	modified:   ( role robot ).dot
+#	new file:   ( role wrestlers ).dot
+#	modified:   .gitignore
+#	modified:   src/main/java/org/ggp/base/apps/player/Player.java
+#	modified:   src/main/java/org/ggp/base/player/gamer/mygamers/LegalPlayer.java
+#	modified:   src/main/java/org/ggp/base/player/gamer/mygamers/OptimizedPropnetPlayer.java
+#	new file:   src/main/java/org/ggp/base/player/gamer/mygamers/ProjectPlayer.java
+#	modified:   src/main/java/org/ggp/base/player/gamer/mygamers/WeightedHeuristicsBoundedDepthSearchPlayer.java
+#	modified:   src/main/java/org/ggp/base/player/gamer/statemachine/sample/SampleGamer.java
+#	modified:   src/main/java/org/ggp/base/util/propnet/architecture/PropNet.java
+#	modified:   src/main/java/org/ggp/base/util/propnet/architecture/components/Proposition.java
+#	modified:   src/main/java/org/ggp/base/util/statemachine/implementation/propnet/PropNetStateMachine.java
+#	modified:   src/main/java/org/ggp/base/util/statemachine/implementation/propnet/SamplePropNetStateMachine.java
+#
+
