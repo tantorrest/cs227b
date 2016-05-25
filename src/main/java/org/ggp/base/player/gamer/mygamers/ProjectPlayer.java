@@ -190,6 +190,7 @@ public class ProjectPlayer extends OptimizedPropnetPlayer {
     }
 
     private double learnedHeuristicValue(Role role, MachineState ms){
+    	System.out.println("Start heuristic");
     	SamplePropNetStateMachine sm = (SamplePropNetStateMachine) getStateMachine();
 		Set<GdlSentence> props = ms.getContents();
 		System.out.println("Final Propositions: " + props);
@@ -209,7 +210,7 @@ public class ProjectPlayer extends OptimizedPropnetPlayer {
 		}
 
 
-		int heuristic = 0;
+		double heuristic = 0;
 		for (int i = 0; i < featureVector.size(); i++){
 			Integer feature = featureVector.get(i);
 			int seenCount = 0;
@@ -223,6 +224,7 @@ public class ProjectPlayer extends OptimizedPropnetPlayer {
 				}
 			}
 			heuristic  += ((seenCount/winCount)*winProb)/(seenCount/dataset.size());
+			System.out.println(heuristic);
 		}
 		return heuristic;
     }

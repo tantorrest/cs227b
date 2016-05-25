@@ -107,7 +107,7 @@ public class WeightedHeuristicsBoundedDepthSearchPlayer extends SampleGamer {
 
 	private double weightedHeuristicValue(Role role, MachineState state)
 			throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException {
-		System.out.println((1.0/3) * mobility(role, state) + (1.0/3) * goal(role, state) + (1.0/3) * opponentMobility(role, state));
+		//System.out.println((1.0/3) * mobility(role, state) + (1.0/3) * goal(role, state) + (1.0/3) * opponentMobility(role, state));
 		return (1.0/2) * mobility(role, state) + (1.0/3) * goal(role, state) + (1.0/6) * opponentMobility(role, state);
 	}
 
@@ -127,7 +127,7 @@ public class WeightedHeuristicsBoundedDepthSearchPlayer extends SampleGamer {
 	public void stateMachineStop(){
 		MachineState ms = getCurrentState();
 		SamplePropNetStateMachine sm = (SamplePropNetStateMachine) getStateMachine();
-		System.out.println("Final Propositions: " + ms.getContents());
+		//System.out.println("Final Propositions: " + ms.getContents());
 		//System.out.println("All Propositions: " + sm.getPropositions());
 	}
 
