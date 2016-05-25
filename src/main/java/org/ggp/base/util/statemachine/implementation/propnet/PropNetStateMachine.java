@@ -34,12 +34,12 @@ import org.ggp.base.util.statemachine.implementation.prover.query.ProverQueryBui
 public class PropNetStateMachine extends StateMachine {
     /** The underlying proposition network  */
     private PropNet propNet;
+    /** The propnet to use for latches*/
+    private PropNet latchingPropNet;
     /** The topological ordering of the propositions */
     private List<Proposition> ordering;
     /** The player roles */
     private List<Role> roles;
-    /** Are we metagaming?*/
-    private boolean isMeta;
 
     /**
      * Initializes the PropNetStateMachine. You should compute the topological
@@ -50,10 +50,10 @@ public class PropNetStateMachine extends StateMachine {
     public void initialize(List<Gdl> description) {
         try {
             propNet = OptimizingPropNetFactory.create(description);
+            latchingPropNet = OptimizingPropNetFactory.create(description);
             roles = propNet.getRoles();
             ordering = getOrdering();
             propNet.renderToFile(description.get(0).toString() + ".dot");
-            isMeta = true;
             reportStats();
             findLatches();
         } catch (InterruptedException e) {
@@ -73,16 +73,15 @@ public class PropNetStateMachine extends StateMachine {
     	Integer tLatchCount = 0;
     	Integer fLatchCount = 0;
     	MachineState initialMS = getInitialState();
-    	markbases(initialMS, propNet);
-    	Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
+    	markbases(initialMS, latchingPropNet);
+    	Map<GdlSentence, Proposition> bases = latchingPropNet.getBasePropositions();
         System.out.println("bases size " + bases.size());;
         Set<GdlSentence> nextState = new HashSet<GdlSentence>();
         Integer i = 1;
         for (GdlSentence gs : bases.keySet()) {
-        	//markbases(initialMS, propNet);
+        	markbases(initialMS, latchingPropNet);
         	Proposition theProposition = bases.get(gs);
         	p("Initial value is: " + theProposition.getValue());
-        	if(theProposition.getName().toString().toLowerCase().contains("control")) continue;
         	theProposition.setValue(true); //test for true latch
         	Component cp = theProposition.getSingleInput();
         	Set<Component> setCP = theProposition.getInputs();
@@ -106,8 +105,8 @@ public class PropNetStateMachine extends StateMachine {
         		}
         	}
         	MachineState nextMachineState = new MachineState(nextState);
-        	markbases(nextMachineState, propNet);
-        	if(bases.get(gs).getValue() == true){
+        	markbases(nextMachineState, latchingPropNet);
+        	if(bases.get(gs).getValue() == true && !(theProposition.getName().toString().toLowerCase().contains("control"))){
         		tLatchCount ++;
         		p("component is " + theProposition.getSingleInput().toString());
         		p("FOUND A TRUE LATCH!!");
@@ -138,8 +137,8 @@ public class PropNetStateMachine extends StateMachine {
             		}
             	}
             	nextMachineState = new MachineState(nextState);
-            	markbases(nextMachineState, propNet);
-            	if(bases.get(gs).getValue() == false){
+            	markbases(nextMachineState, latchingPropNet);
+            	if(bases.get(gs).getValue() == false && !(theProposition.getName().toString().toLowerCase().contains("control"))){
             		fLatchCount ++;
             		p("FOUND A FALSE LATCH!!");
             		p("The latch is " + theProposition.toString() + "\n");
@@ -150,31 +149,8 @@ public class PropNetStateMachine extends StateMachine {
         }
     	p("tLatchCount = " + tLatchCount);
     	p("fLatchCount = " + fLatchCount + "\n");
+    	markbases(initialMS, latchingPropNet);
     }
-
-//    @Override
-//    public MachineState getNextState(MachineState state, List<Move> moves)
-//            throws TransitionDefinitionException {
-//        markactions(moves, propNet);
-//        markbases(state, propNet);
-//        Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
-//        System.out.println("bases size " + bases.size());;
-//        Set<GdlSentence> nextState = new HashSet<GdlSentence>();
-//        Integer i = 0;
-//        for (GdlSentence gs : bases.keySet()) {
-//        	p(i.toString());
-//        	Component cp = bases.get(gs).getSingleInput();
-//        	p(bases.get(gs).toString());
-//        	p(bases.get(gs).getValue() ? "true\n" : "false\n");
-//        	if (cp.getValueIsCorrect()) {
-//        		if (cp.getValue()) nextState.add(gs);
-//        	} else {
-//            	if(propmarkp(cp.getSingleInput())) nextState.add(gs);
-//        	}
-//        	i++;
-//        }
-//        return new MachineState(nextState);
-//    }
 
     /**
      * Computes if the state is terminal. Should return the value
@@ -266,17 +242,17 @@ public class PropNetStateMachine extends StateMachine {
         markactions(moves, propNet);
         markbases(state, propNet);
         Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
-        System.out.println("bases size " + bases.size());;
+//      System.out.println("bases size " + bases.size());;
         Set<GdlSentence> nextState = new HashSet<GdlSentence>();
         Integer i = 0;
         for (GdlSentence gs : bases.keySet()) {
-        	p(i.toString());
+//        	p(i.toString());
         	Component cp = bases.get(gs).getSingleInput();
-        	p("GDLSentence " + gs.toString());
-        	p("propostioin " + bases.get(gs).toString()); //poitns to multiple, @p -> @s; @p -> @ q
-        	p("component " + cp.toString()); //this points to proposition e.g. c -> p; @5 -> @ 4
-        	p("component.getSingle " + cp.getSingleInput().toString());
-        	p(bases.get(gs).getValue() ? "true\n" : "false\n");
+//        	p("GDLSentence " + gs.toString());
+//        	p("propostioin " + bases.get(gs).toString()); //poitns to multiple, @p -> @s; @p -> @ q
+//        	p("component " + cp.toString()); //this points to proposition e.g. c -> p; @5 -> @ 4
+//        	p("component.getSingle " + cp.getSingleInput().toString());
+//        	p(bases.get(gs).getValue() ? "true\n" : "false\n");
         	if (cp.getValueIsCorrect()) {
         		if (cp.getValue()) nextState.add(gs);
         	} else {
