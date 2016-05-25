@@ -60,7 +60,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
     	}
     	expand(root);
     	isFirstMove = false;
-    	performMCTS(root, timeout - 1000);
+    	performMCTS(root, timeout - 2000);
     	return getBestMove();
     }
 
