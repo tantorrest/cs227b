@@ -69,11 +69,48 @@ public class PropNetStateMachine extends StateMachine {
     	p("Num Links: " + propNet.getNumLinks());
     }
 
+    private Set<Component> findBases(Set<Component> theComponentSet){
+    	Set<Component> toReturn = new HashSet<Component>();
+    	for(Component cp : theComponentSet){
+    		if(cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition){
+    			toReturn.add(cp);
+    		}
+    		else{
+    			toReturn.addAll(findBases(cp.getInputs()));
+    		}
+    	}
+    	return toReturn;
+    }
+
+    //wildly inefficient
     private void findLatches(){
     	Integer tLatchCount = 0;
     	Integer fLatchCount = 0;
     	MachineState initialMS = getInitialState();
     	markbases(initialMS, latchingPropNet);
+//    	Map<GdlSentence, Proposition> bases = latchingPropNet.getBasePropositions();
+//    	Map<GdlSentence, Proposition> inputs = latchingPropNet.getInputPropositions();
+//    	Set<Proposition> allPropositions = latchingPropNet.getPropositions();
+//    	for(Proposition theProposition : allPropositions){
+//    		p("the proposition is " + theProposition.toString());
+//    		p("value is " + theProposition.getValue());
+//    		p("the proposition's inputs size " + theProposition.getInputs().size());
+//
+//    		//Set<Component> baseSet = new HashSet<Component>();
+//    		Set<Component> baseSet = findBases(theProposition.getInputs());
+//    		p("Found bases");
+//    		p(((Integer)baseSet.size()).toString());
+//    		theProposition.setValue(true);
+//    		for(Component cp : baseSet){
+//    			p(cp.toString());
+//    			p(" " + cp.getValue());
+//    			p("filler");
+//
+//    		}
+//    	}
+//    	p("done");
+
+
     	Map<GdlSentence, Proposition> bases = latchingPropNet.getBasePropositions();
         System.out.println("bases size " + bases.size());;
         Set<GdlSentence> nextState = new HashSet<GdlSentence>();
