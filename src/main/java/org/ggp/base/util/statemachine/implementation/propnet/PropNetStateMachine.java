@@ -54,7 +54,7 @@ public class PropNetStateMachine extends StateMachine {
             roles = propNet.getRoles();
             ordering = getOrdering();
             propNet.renderToFile(description.get(0).toString() + ".dot");
-            reportStats();
+            //reportStats();
             findLatches();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -118,19 +118,19 @@ public class PropNetStateMachine extends StateMachine {
         for (GdlSentence gs : bases.keySet()) {
         	markbases(initialMS, latchingPropNet);
         	Proposition theProposition = bases.get(gs);
-        	p("Initial value is: " + theProposition.getValue());
+//        	p("Initial value is: " + theProposition.getValue());
         	theProposition.setValue(true); //test for true latch
         	Component cp = theProposition.getSingleInput();
         	Set<Component> setCP = theProposition.getInputs();
-        	p("Set CP size = " + setCP.size());
+//        	p("Set CP size = " + setCP.size());
         	if (cp.getValueIsCorrect()) {
         		if (cp.getValue()) nextState.add(gs);
         	} else {
             	if(propmarkp(cp.getSingleInput())) nextState.add(gs);
         	}
-        	p(i.toString());
-        	p(bases.get(gs).toString());
-        	p(bases.get(gs).getValue() ? "true" : "false");
+//        	p(i.toString());
+//        	p(bases.get(gs).toString());
+//        	p(bases.get(gs).getValue() ? "true" : "false");
         	for (GdlSentence newGS : bases.keySet()) {
         		if(!theProposition.equals(bases.get(newGS))){
                 	Component newCP = bases.get(newGS).getSingleInput();
@@ -145,9 +145,9 @@ public class PropNetStateMachine extends StateMachine {
         	markbases(nextMachineState, latchingPropNet);
         	if(bases.get(gs).getValue() == true && !(theProposition.getName().toString().toLowerCase().contains("control"))){
         		tLatchCount ++;
-        		p("component is " + theProposition.getSingleInput().toString());
-        		p("FOUND A TRUE LATCH!!");
-        		p("The latch is " + theProposition.toString() + "\n");
+//        		p("component is " + theProposition.getSingleInput().toString());
+//        		p("FOUND A TRUE LATCH!!");
+        		p("The true latch is " + theProposition.getName());
         		theProposition.setLatchValue(true);
         	}
         	//test for "false" latches
@@ -160,9 +160,9 @@ public class PropNetStateMachine extends StateMachine {
             	} else {
                 	if(propmarkp(cp.getSingleInput())) nextState.add(gs);
             	}
-            	p(i.toString());
-            	p(bases.get(gs).toString());
-            	p(bases.get(gs).getValue() ? "true" : "false");
+//            	p(i.toString());
+//            	p(bases.get(gs).toString());
+//            	p(bases.get(gs).getValue() ? "true" : "false");
             	for (GdlSentence newGS : bases.keySet()) {
             		if(!theProposition.equals(bases.get(newGS))){
                     	Component newCP = bases.get(newGS).getSingleInput();
@@ -177,8 +177,8 @@ public class PropNetStateMachine extends StateMachine {
             	markbases(nextMachineState, latchingPropNet);
             	if(bases.get(gs).getValue() == false && !(theProposition.getName().toString().toLowerCase().contains("control"))){
             		fLatchCount ++;
-            		p("FOUND A FALSE LATCH!!");
-            		p("The latch is " + theProposition.toString() + "\n");
+//            		p("FOUND A FALSE LATCH!!");
+            		p("The false latch is " + theProposition.getName());
             		theProposition.setLatchValue(false);
             	}
         	}
