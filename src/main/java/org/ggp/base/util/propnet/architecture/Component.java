@@ -25,7 +25,7 @@ public abstract class Component implements Serializable
     	codeName = name;
     }
 
-    public String getCodeName(String name) {
+    public String getCodeName() {
     	return codeName;
     }
 

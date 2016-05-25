@@ -17,6 +17,7 @@ import org.ggp.base.util.gdl.grammar.GdlSentence;
 import org.ggp.base.util.gdl.grammar.GdlTerm;
 import org.ggp.base.util.logging.GamerLogger;
 import org.ggp.base.util.propnet.architecture.components.And;
+import org.ggp.base.util.propnet.architecture.components.Constant;
 import org.ggp.base.util.propnet.architecture.components.Not;
 import org.ggp.base.util.propnet.architecture.components.Or;
 import org.ggp.base.util.propnet.architecture.components.Proposition;
@@ -135,6 +136,39 @@ public final class PropNet
         this.nextPropositions = null; 	//recordNextPropositions();
         this.dependencyMap = null; 		// recordDependencyMap();
         this.consequencyMap = null; 	// recordConsequencyMap();
+//        markComponents();
+    }
+
+    private void markComponents() {
+    	for (Component cp : components) {
+    		if (cp instanceof Proposition) {
+    			Proposition p = (Proposition) cp;
+    			if (p.getInputs().size() == 1 && p.getSingleInput() instanceof Transition) {
+    				cp.setCodeName("base");
+    			} else if (p.getName().getName().getValue().equals("does")) {
+    				cp.setCodeName("input");
+    			} else if (p.getName().getName().getValue().toLowerCase().equals("init")) {
+    				cp.setCodeName("init");
+    			} else if (p.getInputs().size() == 1) {
+    				cp.setCodeName("view");
+    			} else {
+    				cp.setCodeName("false");
+    			}
+    		} else if (cp instanceof Not) { // negation
+    			cp.setCodeName("not");
+    		} else if (cp instanceof Or) { // disjunction
+    			cp.setCodeName("or");
+    		} else if (cp instanceof And) { // conjunction
+    			cp.setCodeName("and");
+    		} else if (cp instanceof Constant) { // constant
+    			cp.setCodeName("constant");
+    		} else if (cp.getInputs().size() == 1) { // view
+    			cp.setCodeName("view");
+    		} else {
+    			cp.setCodeName("false");
+    		}
+    	}
+    	System.out.println("done components");
     }
 
     public List<Role> getRoles() { return roles; }
@@ -384,6 +418,7 @@ public final class PropNet
 
             Component component = proposition.getSingleInput();
             if (component instanceof Transition) {
+            	proposition.setCodeName("base"); // sanya
                 basePropositions.put(proposition.getName(), proposition);
             }
         }

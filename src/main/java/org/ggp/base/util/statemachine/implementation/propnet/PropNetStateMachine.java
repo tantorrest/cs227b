@@ -289,7 +289,7 @@ public class PropNetStateMachine extends StateMachine {
 
 	/***************** propagating view **********************/
 	public boolean propmarkp (Component cp) {
-		boolean value = false;;
+		boolean value = false;
 		if (cp instanceof Proposition) {
 			Proposition p = (Proposition) cp;
 			if (propNet.getValueIsCorrectMap().get(p)) return p.getValue();
@@ -470,3 +470,23 @@ public class PropNetStateMachine extends StateMachine {
 //		}
 //		return value;
 //	}
+
+
+//String name = cp.getCodeName();
+//if (name.equals("does") || name.equals("input") || name.equals("init")) {
+//	Proposition p = (Proposition) cp;
+//	value = p.getValue();
+//} else if (name.equals("not")) {
+//	value = propmarknegation(cp);
+//} else if (name.equals("or")) {
+//	value = propmarkdisjunction(cp);
+//} else if (name.equals("and")) {
+//	value = propmarkconjunction(cp);
+//} else if (name.equals("constant")) {
+//	value = cp.getValue();
+//} else if (name.equals("view")) {
+//	value = propmarkp(cp.getSingleInput());
+//} else {
+//	value = false;
+//}
+//return value;

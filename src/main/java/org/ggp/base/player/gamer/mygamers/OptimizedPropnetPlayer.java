@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
+import org.ggp.base.util.statemachine.DualStateMachine;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
@@ -16,24 +17,24 @@ import org.ggp.base.util.statemachine.implementation.propnet.PropNetStateMachine
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class OptimizedPropnetPlayer extends SampleGamer {
-	//	@Override
-	//	public void stateMachineMetaGame(long timeout)
-	//			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-	//		p("Debug Metagaming Phase Propnet");
-	//		prover = getProverStateMachine();
-	//		prover.initialize(getMatch().getGame().getRules());
-	//
-	//		propnet = getPropNetStateMachine();
-	//		propnet.initialize(getMatch().getGame().getRules());
-	//
-	//		bestPathReversed = new ArrayList<Move>();
-	//		game = new DualStateMachine(prover, propnet);
-	//		role = getRole();
-	//		stepAfterFoundBestMove = 0;
-	//		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
-	//		expand(root);
-	//		performMCTS(root, timeout - 1000);
-	//	}
+//		@Override
+//		public void stateMachineMetaGame(long timeout)
+//				throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+//			p("Debug Metagaming Phase Propnet");
+//			prover = getProverStateMachine();
+//			prover.initialize(getMatch().getGame().getRules());
+//
+//			propnet = getPropNetStateMachine();
+//			propnet.initialize(getMatch().getGame().getRules());
+//
+//			bestPathReversed = new ArrayList<Move>();
+//			game = new DualStateMachine(prover, propnet);
+//			role = getRole();
+//			stepAfterFoundBestMove = 0;
+//			root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
+//			expand(root);
+//			performMCTS(root, timeout - 1000);
+//		}
 	@Override
 	public void stateMachineMetaGame(long timeout)
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {

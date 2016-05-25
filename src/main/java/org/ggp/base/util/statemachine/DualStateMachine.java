@@ -88,9 +88,10 @@ public class DualStateMachine extends StateMachine {
 	@Override
 	public MachineState getNextState(MachineState state, List<Move> moves) throws TransitionDefinitionException {
 
-		MachineState ms1 = propnetStateMachine.getNextState(state, moves);
+		MachineState ms1 = propnetStateMachine.getNextState(state.clone(), moves);
 		MachineState ms2 = proverStateMachine.getNextState(state, moves);
 		if (!ms1.equals(ms2)) {
+			p("different get next states");
 			Set<GdlSentence> propnet = ms1.getContents();
 			Set<GdlSentence> prover = ms2.getContents();
 			Set<GdlSentence> difference = diff(propnet, prover);
