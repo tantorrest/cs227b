@@ -3,11 +3,10 @@ package org.ggp.base.player.gamer.mygamers;
 import java.util.Set;
 
 import org.ggp.base.util.propnet.architecture.Component;
-import org.ggp.base.util.propnet.architecture.PropNet;
 import org.ggp.base.util.statemachine.StateMachine;
 import org.ggp.base.util.statemachine.implementation.propnet.FactorPropNetStateMachine;
 
-public class FactorPlayer extends PropnetPlayer {
+public class FactorPlayer extends OptimizedPropnetPlayer {
 	@Override
 	public StateMachine getInitialStateMachine(){
 		FactorPropNetStateMachine sm =  new FactorPropNetStateMachine();
@@ -31,10 +30,10 @@ public class FactorPlayer extends PropnetPlayer {
 //        sm.setPropNet(factoredPN);
     	Set<Component> usedComponents = sm.markFactors();
 
-    	PropNet factoredPN = new PropNet(sm.getRoles(), usedComponents);
-    	 p("FACTORED PROPNET!!!: ");
-       p(factoredPN.toString());
-       sm.setPropNet(factoredPN);
+//    	PropNet factoredPN = new PropNet(sm.getRoles(), usedComponents);
+//    	 p("FACTORED PROPNET!!!: ");
+//       p(factoredPN.toString());
+//       sm.setPropNet(factoredPN);
 
 
     	return sm;

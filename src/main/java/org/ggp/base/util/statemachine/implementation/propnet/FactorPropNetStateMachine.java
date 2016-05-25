@@ -1,126 +1,65 @@
 package org.ggp.base.util.statemachine.implementation.propnet;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.ggp.base.util.gdl.grammar.Gdl;
 import org.ggp.base.util.gdl.grammar.GdlSentence;
 import org.ggp.base.util.propnet.architecture.Component;
 import org.ggp.base.util.propnet.architecture.components.And;
 import org.ggp.base.util.propnet.architecture.components.Not;
 import org.ggp.base.util.propnet.architecture.components.Or;
 import org.ggp.base.util.propnet.architecture.components.Proposition;
-import org.ggp.base.util.propnet.architecture.components.Transition;
+import org.ggp.base.util.statemachine.MachineState;
+import org.ggp.base.util.statemachine.Move;
+import org.ggp.base.util.statemachine.Role;
+import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 
-public class FactorPropNetStateMachine extends SamplePropNetStateMachine {
+public class FactorPropNetStateMachine extends PropNetStateMachine {
 
+	private HashSet<Component> combinedFactors = new HashSet<Component>();
+	private Set<HashSet<Component>> subgames = new HashSet<HashSet<Component>>();
+	private Set<Component> inputProps = new HashSet<Component>();
+	private Set<HashSet<Component>> totalSubgameInputs = new HashSet<HashSet<Component>>();
+	private HashSet<Component> combinedInputs = new HashSet<Component>();
+	private Map<HashSet<Component>, HashSet<Component>> subgameToInputs = new HashMap<HashSet<Component>, HashSet<Component>>();
 
-
-	/*public List<List<Gdl>> independentFactor (){
-		System.out.println("v2.0");
-		List<Proposition> propositions = new ArrayList<Proposition>(propNet.getPropositions());
-		System.out.println("terminal:" + propositions.toString());
-		List<Set<Component>> subGames = new ArrayList<Set<Component>>();
-		List<List<Gdl>> subGameContents = new ArrayList<List<Gdl>>();
-		int counter = 0;
-		for(int i = 0; i < propositions.size(); i++){
-			Proposition proposition = propositions.get(i);
-			System.out.println("Prop: " + proposition);
-			List<Component> terms = new ArrayList<Component>(proposition.getInputs());
-			terms.addAll(proposition.getOutputs());
-			System.out.println("Term: " + terms);
-			List<Integer> subGameIndices = new ArrayList<Integer>();
-			for (int j = 0; j < terms.size(); j++){
-				Component term = terms.get(j);
-				//System.out.println("Term: " + term);
-				if (!(term instanceof Constant)){
-					continue;
-				}
-				for (int k = 0; k < subGames.size(); k++){
-					if (subGames.get(k).contains(term)){
-						//System.out.println("Term in Question: " + term.toString());
-						//System.out.println("Matching Set: " + subGames.get(k));
-						subGameIndices.add(new Integer(k));
-					}
-				}
-			}
-			System.out.println("Matching subgames: " + subGameIndices.size());
-			if (subGameIndices.size() == 0){
-				System.out.println("New: " + proposition.toString());
-				System.out.println("Old: " + subGames.toString());
-				Set<Component> newSubGame = new HashSet<Component>(terms);
-				for (int m = 0; m < terms.size(); m++){
-					newSubGame.add(terms.get(m));
-				}
-				subGames.add(newSubGame);
-				List<Gdl> newContents = new ArrayList<Gdl>();
-				newContents.add(proposition.getName());
-				subGameContents.add(newContents);
-				counter++;
-				if (counter >= 11){
-					break;
-				}
-			}
-			else{
-				for (Integer index : subGameIndices){
-					for (Component termToAdd : terms){
-						subGames.get(index).add(termToAdd);
-					}
-					subGameContents.get(index).add(proposition.getName());
-				}
-			}
-		}
-		System.out.println("SubGames: " + subGameContents.toString());
-		System.out.println(subGames.size());
-		List<Set<Component>> finalSubGames = new ArrayList<Set<Component>>();
-		List<List<Gdl>> finalSubGameContents = new ArrayList<List<Gdl>>();
-		for (int i  = 0; i < subGames.size(); i++){
-			Set<Component> cSet = subGames.get(i);
-			for (int j  = 0; j < subGames.size(); j++){
-				List<Component> cSet2 = new ArrayList<Component>(subGames.get(j));
-				for (int k = 0; k < cSet2.size(); k++){
-					Component c = cSet2.get(k);
-					if (cSet.contains(c)){
-						cSet.addAll(cSet2);
-						subGames.remove(j);
-						i = 0;
-						j = 0;
-						k = 0;
-					}
-				}
-
-			}
-		}
-		for (List<Gdl> subgame : subGameContents){
-			System.out.println(subgame.toString());
-		}
-		return subGameContents;
-	}*/
 
 //	int numComponentsMarked = 0; // just something I put to keep track of whether or not we have marked every node
 
 	// this function just marks the factors
 	public Set<Component> markFactors() {
-		p("PRINTING WHOLE PROPNET");
-		p(getPropNet().toString());
+		Map<GdlSentence, Proposition> inputs = getPropNet().getInputPropositions();
+		 for (GdlSentence gs : inputs.keySet()) {
+			 Proposition input = inputs.get(gs);
+			 inputProps.add(input);
+		 }
+//		p("PRINTING WHOLE PROPNET");
+//		p(getPropNet().toString());
 		int[] numComponentsMarked = { 0 };
 		List<HashSet<Component>> factoredComponents = new ArrayList<HashSet<Component>>();
+		List<HashSet<Component>> allSubgameInputs = new ArrayList<HashSet<Component>>();
+
 		p(" " + getPropNet().getComponents().size());
 		while (numComponentsMarked[0] < getPropNet().getComponents().size()) { // keep factoring until we have marked all the components in the propnet
 			HashSet<Component> factor = new HashSet<Component>();
+			HashSet<Component> subgameInputs = new HashSet<Component>();
 			Proposition base = getUnmarkedBase(factoredComponents); // start with one base proposition that hasn't been marked yet
 			// get a new sub-factor
 			if (base == null) break;
 
-			getDependencies(base, factor, numComponentsMarked);
+			getDependencies(base, factor, numComponentsMarked, subgameInputs);
 			// add a new sub-factor
 			factoredComponents.add(factor);
+			allSubgameInputs.add(subgameInputs);
+			subgameToInputs.put(factor, subgameInputs);
 		}
 		Component terminal = (Component) getPropNet().getTerminalProposition();
-		p("MARKING FACTORS DONE AND SEPARATED: #FACTORS = " + factoredComponents.size());
+//		p("MARKING FACTORS DONE AND SEPARATED: #FACTORS = " + factoredComponents.size());
 		Set<Component> preterminalInputs = new HashSet<Component>();
 		Set<Component> gatesToAdd = new HashSet<Component>();
 		if (terminal.getInputs().size() == 1) {
@@ -131,53 +70,50 @@ public class FactorPropNetStateMachine extends SamplePropNetStateMachine {
 
 
 
-		Set<Component> combinedFactors = new HashSet<Component>();
+
 
 		if (terminal.getInputs().size() == 1) {
 //			Component inp = terminal.getSingleInput();
 			combinedFactors.addAll(gatesToAdd);
 			for (Component i : preterminalInputs) {
 				p("INPUTS TO PENULTIMATE #: " + i);
-				for (HashSet<Component> subfactor : factoredComponents){
-					if (subfactor.contains(i)) {
-						combinedFactors.addAll(subfactor);
+				Iterator<HashSet<Component>> factoredComponentsIt = factoredComponents.iterator();
+				Iterator<HashSet<Component>> subgameInputsIt = allSubgameInputs.iterator();
+			     while(factoredComponentsIt.hasNext() && subgameInputsIt.hasNext()){
+			    	 HashSet<Component> subfactor = factoredComponentsIt.next();
+			    	 HashSet<Component> subgameInput = subgameInputsIt.next();
+//			    	 p("SUBGAME: " + subfactor);
+//			    	 p("SUBGAME INPUT: " + subgameInput);
+			    	 if (subfactor.contains(i)) {
+							subgames.add(subfactor);
+							totalSubgameInputs.add(subgameInput);
+							combinedInputs.addAll(subgameInput);
+							combinedFactors.addAll(subfactor);
 					}
-				}
+			     }
+//			     p("SUBGAMES: " + subgames);
+//			     p("totalSubgameInputs: " + totalSubgameInputs);
+
 			}
+
 		} else {
 			p("AWWW MULTIPLE INPUTS TO TERMINAL!!!");
 		}
+		p("#subgames: " + subgames.size());
+		p("#subgameInputs: " + totalSubgameInputs.size());
 		combinedFactors.add(terminal);
+		subgameToInputs.put(combinedFactors, combinedInputs);
 		p("COMBINED FACTORING DONE!!!");
-//		StringBuilder sb = new StringBuilder();
-//		sb.append("digraph factoredPropNet\n{\n");
-//		for (Component cp : combinedFactors) {
-//
-//	            sb.append("\t" + cp.toString() + "\n");
-//
-//		}
-//		 sb.append("}");
-//		 p(sb.toString());
-//		 p("COMBINED FACTORING DONE!!!");
-//
-//
-//		int in = 0;
-//		for (HashSet<Component> subfactor : factoredComponents){
-//			in++;
-//			StringBuilder s = new StringBuilder();
-//			p("SUBFACTOR: " + in);
-//			s.append("digraph propNet\n{\n");
-//			for (Component cp : subfactor) {
-//
-//		            s.append("\t" + cp.toString() + "\n");
-//
-//
-//			}
-//			 s.append("}");
-//			 p(s.toString());
-//		}
-		// we have separated the propnet into the various factors
-		// most of what is left is being able to explore each of these components
+		StringBuilder sb = new StringBuilder();
+		sb.append("digraph factoredPropNet\n{\n");
+		for (Component cp : combinedFactors) {
+
+	            sb.append("\t" + cp.toString() + "\n");
+
+		}
+		 sb.append("}");
+		 p(sb.toString());
+		 p("COMBINED FACTORING DONE!!!");
 		return combinedFactors;
 	}
 
@@ -206,8 +142,8 @@ public class FactorPropNetStateMachine extends SamplePropNetStateMachine {
 				}
 			}
 			if (!marked){
-				p("BASE PROP!!");
-				p(prop.toString());
+//				p("BASE PROP!!");
+//				p(prop.toString());
 				return prop;
 			}
 		}
@@ -221,119 +157,69 @@ public class FactorPropNetStateMachine extends SamplePropNetStateMachine {
 
 	// this is not perfect
 	// it assumes that no two potential factors can share the same component
-	private void getDependencies(Component base, Set<Component> factor, int[] numComponentsMarked) {
+	private void getDependencies(Component base, Set<Component> factor, int[] numComponentsMarked, Set<Component> subgameInputs) {
 		if (factor.contains(base)) return;
 		factor.add(base);
 		increment(numComponentsMarked);
+		if (isInputProp(base)) {
+			subgameInputs.add(base);
+		}
 		for (Component input : base.getInputs()) { // recursively add all the dependencies
 //			factor.add(input);
-			getDependencies(input, factor, numComponentsMarked);
+			getDependencies(input, factor, numComponentsMarked, subgameInputs);
 		}
 	}
 
-	public void backtrackPrint(Component cp, int increment, int inputindex){
-		if (increment > 10) return;
-		if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) { // base
-			   p("Level: " + increment + " InputIndex: " + inputindex + " base");
-				p(cp.toString());
-		   }else {
-			   p("Level: " + increment + " InputIndex: " + inputindex);
-			   p(cp.toString());
-		   }
-		p("NUM CHILDREN: " + cp.getInputs().size());
-		int i = 0;
-		for (Component c : cp.getInputs()) {
-			i++;
-			backtrackPrint(c, increment+1, i);
-		}
-		return;
+
+
+	private boolean isInputProp(Component base) {
+//		 p("COMPONENT: " + base);
+//		 p("INPUT ? " + inputProps.contains(base));
+		return inputProps.contains(base);
 	}
 
-	public Set<Component> componentFactoring(){
-		Set<Component> cmpnts = new HashSet<Component>();
-		Proposition terminal = getPropNet().getTerminalProposition();
-		cmpnts.add((Component)terminal);
-		p("STARTING RECURSIVE COMPONENT FACTORING");
-		cmpnts = recursiveComponentFactoring((Component) terminal, cmpnts, 0);
-		p("DONE RECURSIVE COMPONENT FACTORING");
-		return cmpnts;
-	}
+	/**
+     * Computes the legal moves for role in state.
+     */
+    @Override
+    public List<Move> getLegalMoves(MachineState state, Role role)
+            throws MoveDefinitionException {
 
-	public Set<Component> recursiveComponentFactoring(Component cp, Set<Component> used, int increment){
-		if (increment > 50) return used;
-		if (cp.getInputs().size() == 0) {
-			return used;
-		}
-		for (Component c: cp.getInputs()) {
-			p(c.toString());
-			if (!used.contains(c)) used.add(c);
-		}
-		for (Component c: cp.getInputs()) {
-			Set<Component> branch_cmpnts = new HashSet<Component>();
-			used.addAll(recursiveComponentFactoring(c, branch_cmpnts, increment+1));
-		}
-		return used;
-	}
+        markbases(state, getPropNet());
+        Set<Proposition> legals = getPropNet().getLegalPropositions().get(role);
+        List<Move> actions = new ArrayList<Move>();
+        for (Proposition p : legals) {
+        	boolean inSubgame = inSubgame(p, combinedFactors);
+//        	p("LEGAL PROP: " + (Component)p + "INPUT PROP: " + (Component)getPropNet().getLegalInputMap().get(p) +  " IN SUBGAME ? " + inSubgame);
+        	if (p.getValueIsCorrect() ) {
+        		if (p.getValue() && inSubgame) actions.add(getMoveFromProposition(p));
+        	} else {
+        		if (propmarkp(p) && inSubgame) actions.add(getMoveFromProposition(p));
+        	}
+        }
+        return actions;
+    }
 
-	public Set<Proposition> independentFactor(){
-		p("{PROPNET}");
-		p(getPropNet().toString());
-		Proposition terminal = getPropNet().getTerminalProposition();
-		Set<Proposition> usedProps = new HashSet<Proposition>();
 
-		usedProps.add(terminal);
-		System.out.println("starting recursive factoring");
-		p("TERMINAL" + terminal.toString());
-		p(terminal.getInputs().size());
+
+	private boolean inSubgame(Proposition p, Set<Component> subgame) {
+		HashSet<Component> subgameInputs = subgameToInputs.get(subgame);
+//		p("SUBGAMEINPUTS : " + subgameInputs);
 		Map<Proposition, Proposition> legalInputMap = getPropNet().getLegalInputMap();
-		System.out.println("LEGAL INPUT MAP:");
-		System.out.println(legalInputMap);
-		p("BACKTRACKPRINTING");
-		backtrackPrint((Component)terminal, 0, 0);
-		p("BRACKTRACKPRINTING DONE");
-		for (Component cp : terminal.getInputs()) {
-			p(cp.toString());
-		}
+		Proposition input = legalInputMap.get(p);
+//		p(subgameContainsInput(subgameInputs, input) + "INPUT COMPONENT: " + input);
 
-		p(terminal.getInputs().toString());
-		p(terminal.getOutputs().toString());
-		usedProps = recursiveFactor(terminal, usedProps);
+		return subgameContainsInput(subgameInputs, input);
+}
 
-		List<Gdl> factored = new ArrayList<Gdl>();
-		for (Proposition p : usedProps){
-			factored.add(p.getName());
+	private boolean subgameContainsInput(HashSet<Component> subgameInputs, Proposition input) {
+		for (Component cp : subgameInputs) {
+			String compName = ((Proposition) cp).getName().toString();
+//			p("INPUT NAME IN subgameInputs: " + compName + " input name in input: " + input.getName().toString());
+			if (compName.equals(input.getName().toString())) return true;
 		}
-		//return factored;
-		return usedProps;
+		return false;
 	}
-
-	private void p(int x) {
-		System.out.println(x);
-	}
-
-	public Set<Proposition> recursiveFactor(Proposition prop, Set<Proposition> seen){
-		if (prop.equals(getPropNet().getInitProposition())){
-			if (!seen.contains(prop)){
-				seen.add(prop);
-			}
-
-			System.out.println("done");
-			return seen;
-		}
-		Map<Proposition, Proposition> legalInputMap = getPropNet().getLegalInputMap();
-		System.out.println("LEGAL INPUT MAP:");
-		System.out.println(legalInputMap);
-		for (Proposition input : legalInputMap.keySet()){
-			if (prop.equals(legalInputMap.get(input))){
-				if (!seen.contains(input)){
-					seen.add(input);
-					seen = recursiveFactor(input, seen);
-				}
-			}
-		}
-		return seen;
-	}
-
 
 	public void p(String x){ System.out.println(x);}
 }

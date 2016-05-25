@@ -45,22 +45,25 @@ public class PropNetStateMachine extends StateMachine {
      */
     @Override
     public void initialize(List<Gdl> description) {
+//    	System.out.println("PRINTIN INITIAL PROP NET DESCRIPTION IN GDL");
+//    	System.out.println(description);
         try {
-            propNet = OptimizingPropNetFactory.create(description);
-            roles = propNet.getRoles();
+            setPropNet(OptimizingPropNetFactory.create(description));
+            roles = getPropNet().getRoles();
             ordering = getOrdering();
-            propNet.renderToFile(description.get(0).toString() + ".dot");
+            getPropNet().renderToFile(description.get(0).toString() + ".dot");
+            System.out.println(description.get(0).toString() + ".dot");
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
     private void reportStats() {
-    	p("Size: " + propNet.getSize());
-    	p("Num Ands: " + propNet.getNumAnds());
-    	p("Num Ors: " + propNet.getNumOrs());
-    	p("Num Nots: " + propNet.getNumNots());
-    	p("Num Links: " + propNet.getNumLinks());
+    	p("Size: " + getPropNet().getSize());
+    	p("Num Ands: " + getPropNet().getNumAnds());
+    	p("Num Ors: " + getPropNet().getNumOrs());
+    	p("Num Nots: " + getPropNet().getNumNots());
+    	p("Num Links: " + getPropNet().getNumLinks());
     }
 
     /**
@@ -69,8 +72,8 @@ public class PropNetStateMachine extends StateMachine {
      */
     @Override
     public boolean isTerminal(MachineState state) {
-    	markbases(state, propNet);
-    	Proposition p = propNet.getTerminalProposition();
+    	markbases(state, getPropNet());
+    	Proposition p = getPropNet().getTerminalProposition();
     	if (p.getValueIsCorrect()) {
     		return p.getValue();
     	} else {
@@ -88,8 +91,8 @@ public class PropNetStateMachine extends StateMachine {
     @Override
     public int getGoal(MachineState state, Role role)
             throws GoalDefinitionException {
-    	markbases(state, propNet);
-    	Set<Proposition> rewards = propNet.getGoalPropositions().get(role);
+    	markbases(state, getPropNet());
+    	Set<Proposition> rewards = getPropNet().getGoalPropositions().get(role);
     	for (Proposition p : rewards) {
     		// this uses a tagged node
     		if (p.getValueIsCorrect()) {
@@ -108,7 +111,7 @@ public class PropNetStateMachine extends StateMachine {
      */
     @Override
     public MachineState getInitialState() {
-    	propNet.setInitProposition(true);
+    	getPropNet().setInitProposition(true);
     	return getStateFromBase();
     }
 
@@ -117,7 +120,7 @@ public class PropNetStateMachine extends StateMachine {
      */
     @Override
     public List<Move> findActions(Role role) throws MoveDefinitionException {
-    	Map<GdlSentence, Proposition> actionsMap = propNet.getInputPropositions();
+    	Map<GdlSentence, Proposition> actionsMap = getPropNet().getInputPropositions();
     	List<Move> actions = new ArrayList<Move>();
     	for (Proposition p : actionsMap.values()) {
     		actions.add(getMoveFromProposition(p));
@@ -131,8 +134,8 @@ public class PropNetStateMachine extends StateMachine {
     @Override
     public List<Move> getLegalMoves(MachineState state, Role role)
             throws MoveDefinitionException {
-        markbases(state, propNet);
-        Set<Proposition> legals = propNet.getLegalPropositions().get(role);
+        markbases(state, getPropNet());
+        Set<Proposition> legals = getPropNet().getLegalPropositions().get(role);
         List<Move> actions = new ArrayList<Move>();
         for (Proposition p : legals) {
         	if (p.getValueIsCorrect()) {
@@ -150,9 +153,9 @@ public class PropNetStateMachine extends StateMachine {
     @Override
     public MachineState getNextState(MachineState state, List<Move> moves)
             throws TransitionDefinitionException {
-        markactions(moves, propNet);
-        markbases(state, propNet);
-        Map<GdlSentence, Proposition> bases = propNet.getBasePropositions();
+        markactions(moves, getPropNet());
+        markbases(state, getPropNet());
+        Map<GdlSentence, Proposition> bases = getPropNet().getBasePropositions();
         Set<GdlSentence> nextState = new HashSet<GdlSentence>();
         for (GdlSentence gs : bases.keySet()) {
         	Component cp = bases.get(gs).getSingleInput();
@@ -185,10 +188,10 @@ public class PropNetStateMachine extends StateMachine {
         List<Proposition> order = new LinkedList<Proposition>();
 
         // All of the components in the PropNet
-        List<Component> components = new ArrayList<Component>(propNet.getComponents());
+        List<Component> components = new ArrayList<Component>(getPropNet().getComponents());
 
         // All of the propositions in the PropNet.
-        List<Proposition> propositions = new ArrayList<Proposition>(propNet.getPropositions());
+        List<Proposition> propositions = new ArrayList<Proposition>(getPropNet().getPropositions());
 
         // TODO: Compute the topological ordering.
 
@@ -259,7 +262,7 @@ public class PropNetStateMachine extends StateMachine {
     public MachineState getStateFromBase()
     {
         Set<GdlSentence> contents = new HashSet<GdlSentence>();
-        for (Proposition p : propNet.getBasePropositions().values())
+        for (Proposition p : getPropNet().getBasePropositions().values())
         {
             p.setValue(p.getSingleInput().getValue());
             if (p.getValue())
@@ -273,7 +276,7 @@ public class PropNetStateMachine extends StateMachine {
 	private void p(String word) { System.out.println(word); }
 
 	/************** marking functions ********************/
-    private void markbases (MachineState state, PropNet propNet) {
+    protected void markbases (MachineState state, PropNet propNet) {
     	clearpropnet(propNet); // sets everything to false
     	Map<GdlSentence, Proposition> props = propNet.getBasePropositions();
     	Set<GdlSentence> stateContents = state.getContents();
@@ -344,5 +347,13 @@ public class PropNetStateMachine extends StateMachine {
 			if (propmarkp(source)) return true;
 		}
 		return false;
+	}
+
+	public PropNet getPropNet() {
+		return propNet;
+	}
+
+	public void setPropNet(PropNet propNet) {
+		this.propNet = propNet;
 	}
 }
