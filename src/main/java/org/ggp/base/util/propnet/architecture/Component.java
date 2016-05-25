@@ -20,6 +20,7 @@ public abstract class Component implements Serializable
     private final Set<Component> outputs;
     /** The value of the component is correct. */
     private boolean valueIsCorrect = false;
+	public boolean visited;
 
     /**
      * Creates a new Component with no inputs or outputs.
@@ -28,6 +29,7 @@ public abstract class Component implements Serializable
     {
         this.inputs = new HashSet<Component>();
         this.outputs = new HashSet<Component>();
+        this.visited = false;
     }
 
     /**
