@@ -34,6 +34,7 @@ public class ProjectPlayer extends OptimizedPropnetPlayer {
     	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
 		expand(root);
 		dataset = new ArrayList<List<Integer>>();
+		dataSetClasses = new ArrayList<Integer>();
 		performMCTSLearn(root, timeout - 2000);
 		System.out.println("Dataset: ");
 		System.out.println(dataset.toString());
@@ -99,7 +100,21 @@ public class ProjectPlayer extends OptimizedPropnetPlayer {
     			}
     			System.out.println(featureVector);
     			dataset.add(featureVector);
-    			if (){
+    			boolean won = true;
+    			int ourScore = sm.findReward(role, ms);
+    			if (sm.getRoles().size() > 1){
+    				for (Role r : game.getRoles()){
+    					if (sm.findReward(r, getCurrentState()) > ourScore){
+    						won = false;
+    					}
+    				}
+    			}
+    			else{
+    				if (ourScore < 70){
+    					won = false;
+    				}
+    			}
+    			if (won){
     				dataSetClasses.add(1);
     			}
     			else{
@@ -209,6 +224,7 @@ public class ProjectPlayer extends OptimizedPropnetPlayer {
 			}
 			heuristic  += ((seenCount/winCount)*winProb)/(seenCount/dataset.size());
 		}
+		return heuristic;
     }
 
 }
