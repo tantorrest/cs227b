@@ -61,13 +61,19 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			bestMove = bestPathReversed.get(bestPathReversed.size() - stepAfterFoundBestMove);
 			return bestMove;
 		}
-		if (!isFirstMove) {
-			root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
+
+		MachineState state = getCurrentState();
+		if (game.getLegalMoves(state, role).size() == 1) { // either noop or obvious move
+			return game.getLegalMoves(state, role).get(0);
+		} else {
+			if (!isFirstMove) {
+				root = new MultiNode(state, null, null, 1, 0, true);
+			}
+			expand(root);
+			isFirstMove = false;
+			performMCTS(root, timeout - 2000);
+			return getBestMove();
 		}
-		expand(root);
-		isFirstMove = false;
-		performMCTS(root, timeout - 2000);
-		return getBestMove();
 	}
 
 	/************* major helper functions *********/
