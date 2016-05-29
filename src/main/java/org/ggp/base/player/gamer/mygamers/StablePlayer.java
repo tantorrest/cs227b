@@ -15,7 +15,7 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.propnet.PropNetStateMachine;
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
-public class OptimizedPropnetPlayer extends SampleGamer {
+public class StablePlayer extends SampleGamer {
 	@Override
 	public void stateMachineMetaGame(long timeout)
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
@@ -35,7 +35,6 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		isSinglePlayer = false;
 		bestPathFound = false;
 		stepAfterFoundBestMove = 0;
-		prevNumMoves = 0;
 		isSinglePlayer = (game.getRoles().size() == 1);
 	}
 
@@ -63,18 +62,11 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			return bestMove;
 		}
 
-		MachineState state = getCurrentState();
-		// last move was a noop so we can use opponent's moves
-		if (prevNumMoves == 1 && !isSinglePlayer) {
-			root = getRoot(state); // not yet tested this function
-		} else {
-			if (!isFirstMove) {
-				root = new MultiNode(state, null, null, 1, 0, true);
-			}
-			isFirstMove = false;
+		if (!isFirstMove) {
+			root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
 		}
-		if (root.children.size() == 0) expand(root);
-		prevNumMoves = game.getLegalMoves(getCurrentState(), role).size();
+		expand(root);
+		isFirstMove = false;
 		performMCTS(root, timeout - 2000);
 		return getBestMove();
 	}
@@ -163,7 +155,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			}
 			backPropagate(selected, score);
 		}
-		p("Num Depth Charges OP: " + numDepthCharges);
+		p("Num Depth Charges SP: " + numDepthCharges);
 	}
 
 	private void backPropagate(MultiNode node, double score) {
@@ -217,7 +209,6 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	private StateMachine game = null;
 	private Role role = null;
 	private MultiNode root = null;
-	private int prevNumMoves = 0;
 
 	/***************** single player games **************/
 	private boolean isSinglePlayer = false;
