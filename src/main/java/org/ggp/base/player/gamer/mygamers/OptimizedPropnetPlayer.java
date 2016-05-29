@@ -154,8 +154,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			p("adding move: " + node.jointMoves.get(0));
 			bestPathReversed.add(node.jointMoves.get(0));
 		}
-		node.utility += score;
-		node.visits++;
+		node.updateUtilityAndVisits(score);
 		if (node.parent != null) {
 			backPropagate(node.parent, score);
 		}

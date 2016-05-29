@@ -14,8 +14,9 @@ public class MultiNode {
     public double utility = 0;
     public Move move = null;
     public boolean isMax = true;
-    public ArrayList<Double> utilities = new ArrayList<Double>();
     public List<Move> jointMoves = new ArrayList<Move>();
+    public double aveUtility = 0;
+
 
     public MultiNode(MachineState state, Move move, List<Move> jointMoves, int visits, double utility, boolean isMax) {
     	this.visits = visits;
@@ -39,9 +40,10 @@ public class MultiNode {
     public void updateUtilityAndVisits(double score) {
     	this.utility += score;
     	this.visits++;
+    	this.aveUtility = this.utility / this.visits;
     }
 
     public double getAveUtility() {
-    	return (this.visits != 0) ? this.utility / this.visits : 0;
+    	return aveUtility;
     }
 }
