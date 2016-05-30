@@ -16,10 +16,12 @@ import org.ggp.base.util.statemachine.implementation.propnet.PropNetStateMachine
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class OptimizedPropnetPlayer extends SampleGamer {
+	private int prevDepthCharges;
+
 	@Override
 	public void stateMachineMetaGame(long timeout)
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-		p("Metagaming Phase Optimized Propnet");
+		p("Metagaming Phase Optimized Propnet: " + getMatch().getMatchId());
 		init();
 		expand(root);
 		performMCTS(root, timeout - 1000);
@@ -63,29 +65,30 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			return bestMove;
 		}
 
-		MachineState state = getCurrentState();
 		// last move was a noop so we can use opponent's moves
-		if (prevNumMoves == 1 && !isSinglePlayer) {
-			root = getRoot(state); // not yet tested this function
-		} else {
-			if (!isFirstMove) {
-				root = new MultiNode(state, null, null, 1, 0, true);
-			}
-			isFirstMove = false;
-		}
+		root = getRoot();
 		if (root.children.size() == 0) expand(root);
 		prevNumMoves = game.getLegalMoves(getCurrentState(), role).size();
 		performMCTS(root, timeout - 2000);
 		return getBestMove();
 	}
 
-	private MultiNode getRoot(MachineState curr) {
-		MultiNode child = root.children.get(0); // we played a noop
-		for (MultiNode next : child.children) {
-			if (next.state.equals(curr)) return next;
+	private MultiNode getRoot() {
+		MachineState state = getCurrentState();
+		if (prevNumMoves == 1 && !isSinglePlayer) {
+			MultiNode child = root.children.get(0); // we played a noop
+			for (MultiNode next : child.children) {
+				if (next.state.equals(state)) return next;
+			}
+			System.err.println("Could not find state in getRoot. Returning new root");
+			return new MultiNode(state, null, null, 1, 0, true);
+		} else {
+			if (!isFirstMove) {
+				return new MultiNode(state, null, null, 1, 0, true);
+			}
+			isFirstMove = false;
 		}
-		p("ERR: could not find state in getRoot");
-		return null;
+		return root;
 	}
 
 	/************* major helper functions *********/
@@ -163,7 +166,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			}
 			backPropagate(selected, score);
 		}
-		p("Num Depth Charges OP: " + numDepthCharges);
+		p("Num Depth Charges OP: " + prevDepthCharges + numDepthCharges);
 	}
 
 	private void backPropagate(MultiNode node, double score) {

@@ -16,10 +16,12 @@ import org.ggp.base.util.statemachine.implementation.propnet.PropNetStateMachine
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class StablePlayer extends SampleGamer {
+	private int prevDepthCharges;
+
 	@Override
 	public void stateMachineMetaGame(long timeout)
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-		p("Metagaming Phase Optimized Propnet");
+		p("Metagaming Phase Optimized Propnet: " + getMatch().getMatchId());
 		init();
 		expand(root);
 		performMCTS(root, timeout - 1000);
@@ -35,6 +37,7 @@ public class StablePlayer extends SampleGamer {
 		isSinglePlayer = false;
 		bestPathFound = false;
 		stepAfterFoundBestMove = 0;
+		prevNumMoves = 0;
 		isSinglePlayer = (game.getRoles().size() == 1);
 	}
 
@@ -62,22 +65,30 @@ public class StablePlayer extends SampleGamer {
 			return bestMove;
 		}
 
-		if (!isFirstMove) {
-			root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
-		}
-		expand(root);
-		isFirstMove = false;
+		// last move was a noop so we can use opponent's moves
+		root = getRoot();
+		if (root.children.size() == 0) expand(root);
+		prevNumMoves = game.getLegalMoves(getCurrentState(), role).size();
 		performMCTS(root, timeout - 2000);
 		return getBestMove();
 	}
 
-	private MultiNode getRoot(MachineState curr) {
-		MultiNode child = root.children.get(0); // we played a noop
-		for (MultiNode next : child.children) {
-			if (next.state.equals(curr)) return next;
+	private MultiNode getRoot() {
+		MachineState state = getCurrentState();
+		if (prevNumMoves == 1 && !isSinglePlayer) {
+			MultiNode child = root.children.get(0); // we played a noop
+			for (MultiNode next : child.children) {
+				if (next.state.equals(state)) return next;
+			}
+			System.err.println("Could not find state in getRoot. Returning new root");
+			return new MultiNode(state, null, null, 1, 0, true);
+		} else {
+			if (!isFirstMove) {
+				return new MultiNode(state, null, null, 1, 0, true);
+			}
+			isFirstMove = false;
 		}
-		p("ERR: could not find state in getRoot");
-		return null;
+		return root;
 	}
 
 	/************* major helper functions *********/
@@ -155,7 +166,7 @@ public class StablePlayer extends SampleGamer {
 			}
 			backPropagate(selected, score);
 		}
-		p("Num Depth Charges SP: " + numDepthCharges);
+		p("Num Depth Charges SP: " + prevDepthCharges + numDepthCharges);
 	}
 
 	private void backPropagate(MultiNode node, double score) {
@@ -209,6 +220,7 @@ public class StablePlayer extends SampleGamer {
 	private StateMachine game = null;
 	private Role role = null;
 	private MultiNode root = null;
+	private int prevNumMoves = 0;
 
 	/***************** single player games **************/
 	private boolean isSinglePlayer = false;
@@ -233,53 +245,4 @@ public class StablePlayer extends SampleGamer {
 	}
 
 	private void p(String message) { System.out.println(message); }
-
-	//	private StateMachine prover;
-	//	private StateMachine propnet;
-	//	@Override
-	//	public void stateMachineMetaGame(long timeout)
-	//			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-	//		p("Debug Metagaming Phase Propnet");
-	//		prover = getProverStateMachine();
-	//		prover.initialize(getMatch().getGame().getRules());
-	//
-	//		propnet = getPropNetStateMachine();
-	//		propnet.initialize(getMatch().getGame().getRules());
-	//
-	//		bestPathReversed = new ArrayList<Move>();
-	//		game = new DualStateMachine(prover, propnet);
-	//		role = getRole();
-	//		stepAfterFoundBestMove = 0;
-	//		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
-	//		expand(root);
-	//		performMCTS(root, timeout - 1000);
-	//	}
-
-	//	UCBTuned functions
-	//	private double tunedFunction(MultiNode node) {
-	//		if (useUCBTuned) {
-	//			double result = Math.log(node.parent.visits) / node.visits;
-	//			double factor = Math.min(0.25, adjustedVariance(node));
-	//			return result * factor;
-	//		} else {
-	//			return 2 * Math.log(node.parent.visits) / node.visits;
-	//		}
-	//	}
-	//
-	//	private double adjustedVariance(MultiNode node) {
-	//		double result = 0;
-	//		for (double utility : node.utilities) {
-	//			result += Math.pow(utility, 2);
-	//		}
-	//		return (0.5 * result) - (Math.pow(node.getAveUtility(), 2)) + (Math.sqrt(2 * Math.log(node.parent.visits) / node.visits));
-	//	}
-
-	//		private double adjustedVariance(MultiNode node) {
-	//			double result = 0;
-	//			for (double utility : node.utilities) {
-	//				result += Math.pow(utility, 2);
-	//			}
-	//			return (0.5 * result) - (Math.pow(node.getAveUtility(), 2)) + (Math.sqrt(2 * Math.log(node.parent.visits) / node.visits));
-	//		}
-	//	private boolean useUCBTuned = false;
 }
