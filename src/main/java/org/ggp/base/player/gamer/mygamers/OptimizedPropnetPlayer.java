@@ -74,8 +74,10 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	}
 
 	private MultiNode getRoot() {
+
 		MachineState state = getCurrentState();
 		if (prevNumMoves == 1 && !isSinglePlayer) {
+			p("getting root which children: " + root.children.size());
 			MultiNode child = root.children.get(0); // we played a noop
 			for (MultiNode next : child.children) {
 				if (next.state.equals(state)) return next;

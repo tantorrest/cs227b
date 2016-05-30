@@ -49,7 +49,6 @@ public class SamplePropNetStateMachine extends StateMachine {
             propNet = OptimizingPropNetFactory.create(description);
             roles = propNet.getRoles();
             ordering = getOrdering();
-            propNet.renderToFile(description.get(0).toString() + ".dot");
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
