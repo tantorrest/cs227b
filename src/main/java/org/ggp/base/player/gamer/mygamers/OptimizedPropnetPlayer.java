@@ -24,7 +24,9 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		p("Metagaming Phase Optimized Propnet: " + getMatch().getMatchId());
 		init();
 		expand(root);
-		performMCTS(root, timeout - 1000);
+		long start = System.currentTimeMillis();
+		performMCTS(root, timeout - 5000);
+		timeToDepthCharge = (System.currentTimeMillis() - start) / numDepthCharges;
 	}
 
 	// does the initialization
@@ -38,6 +40,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		bestPathFound = false;
 		stepAfterFoundBestMove = 0;
 		prevNumMoves = 0;
+		numDepthCharges = 0;
 		isSinglePlayer = (game.getRoles().size() == 1);
 	}
 
@@ -60,7 +63,6 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		if (isSinglePlayer && bestPathFound) {
 			// we save time on reversing the loop and rather just work backwards instead
 			stepAfterFoundBestMove++;
-			p("step    : " + stepAfterFoundBestMove);
 			bestMove = bestPathReversed.get(bestPathReversed.size() - stepAfterFoundBestMove);
 			return bestMove;
 		}
@@ -69,15 +71,14 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		root = getRoot();
 		if (root.children.size() == 0) expand(root);
 		prevNumMoves = game.getLegalMoves(getCurrentState(), role).size();
-		performMCTS(root, timeout - 2000);
+		performMCTS(root, timeout - 1000 - timeToDepthCharge);
 		return getBestMove();
 	}
 
 	private MultiNode getRoot() {
 
-		MachineState state = getCurrentState();
+		state = getCurrentState();
 		if (prevNumMoves == 1 && !isSinglePlayer) {
-			p("getting root which children: " + root.children.size());
 			MultiNode child = root.children.get(0); // we played a noop
 			for (MultiNode next : child.children) {
 				if (next.state.equals(state)) return next;
@@ -147,7 +148,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	/************* minor helper functions *****************/
 	private void performMCTS(MultiNode root, long timeout)
 			throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
-		int numDepthCharges = 0;
+		numDepthCharges = 0;
 		while (System.currentTimeMillis() < timeout && !bestPathFound) {
 			double score = 0;
 			MachineState terminal = null;
@@ -223,6 +224,10 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	private Role role = null;
 	private MultiNode root = null;
 	private int prevNumMoves = 0;
+
+	private long timeToDepthCharge = 0;
+	private int numDepthCharges = 0;
+	private MachineState state = null;
 
 	/***************** single player games **************/
 	private boolean isSinglePlayer = false;
