@@ -432,13 +432,41 @@ public class FailsafeStateMachine extends StateMachine
 	@Override
 	public MachineState performPropNetDepthCharge(MachineState state, int[] theDepth)
 			throws TransitionDefinitionException, MoveDefinitionException {
-		// TODO Auto-generated method stub
+		if(theBackingMachine == null)
+            return null;
+
+        try {
+            MachineState ms = theBackingMachine.performPropNetDepthCharge(state, theDepth);
+            return ms;
+        } catch(Exception e) {
+            failGracefully(e, null);
+        } catch(ThreadDeath d) {
+            throw d;
+        } catch(OutOfMemoryError e) {
+            throw e;
+        } catch(Error e) {
+            failGracefully(null, e);
+        }
 		return null;
 	}
 
 	@Override
 	public List<Move> getBestMoves() {
-		// TODO Auto-generated method stub
+		if(theBackingMachine == null)
+            return null;
+
+        try {
+            List<Move> best = theBackingMachine.getBestMoves();
+            return best;
+        } catch(Exception e) {
+            failGracefully(e, null);
+        } catch(ThreadDeath d) {
+            throw d;
+        } catch(OutOfMemoryError e) {
+            throw e;
+        } catch(Error e) {
+            failGracefully(null, e);
+        }
 		return null;
 	}
 }

@@ -124,7 +124,7 @@ public class StablePlayer extends SampleGamer {
 		}
 	}
 
-	private void expand(MultiNode node)
+	protected void expand(MultiNode node)
 			throws MoveDefinitionException, TransitionDefinitionException {
 		if (node.isMax) {
 			List<Move> moves = game.getLegalMoves(node.state, role);
@@ -143,7 +143,7 @@ public class StablePlayer extends SampleGamer {
 	}
 
 	/************* minor helper functions *****************/
-	private void performMCTS(MultiNode root)
+	protected void performMCTS(MultiNode root)
 			throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
 		numDepthCharges = 0;
 		while (System.currentTimeMillis() < finishBy && !bestPathFound) {
@@ -216,24 +216,24 @@ public class StablePlayer extends SampleGamer {
 	/*********************** variables *******************/
 	/* dynamic game state data */
 	private Move bestMove = null;
-	private StateMachine game = null;
-	private Role role = null;
-	private MultiNode root = null;
-	private int prevNumMoves = 0;
+	protected StateMachine game = null;
+	protected Role role = null;
+	protected MultiNode root = null;
+	protected int prevNumMoves = 0;
 
-	private long timeToDepthCharge = 0;
-	private int numDepthCharges = 0;
+	protected long timeToDepthCharge = 0;
+	protected int numDepthCharges = 0;
 	private MachineState state = null;
-	private long finishBy = 0;
+	protected long finishBy = 0;
 
 	/***************** single player games **************/
-	private boolean isSinglePlayer = false;
-	private boolean bestPathFound = false;
-	private ArrayList<Move> bestPathReversed = null;
-	private int stepAfterFoundBestMove = 0;
+	protected boolean isSinglePlayer = false;
+	protected boolean bestPathFound = false;
+	protected ArrayList<Move> bestPathReversed = null;
+	protected int stepAfterFoundBestMove = 0;
 
 	/* game information data */
-	private boolean isFirstMove = true;
+	protected boolean isFirstMove = true;
 
 	/* game parameter data */
 	private double explorationFactor = 141;
@@ -248,5 +248,5 @@ public class StablePlayer extends SampleGamer {
 		return (ArrayList<Move>) moves;
 	}
 
-	private void p(String message) { System.out.println(message); }
+	protected void p(String message) { System.out.println(message); }
 }

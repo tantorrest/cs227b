@@ -33,8 +33,8 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 
 	// does the initialization
 	private void init() {
-		game = getInitialStateMachine();
-		game.initialize(getMatch().getGame().getRules());
+		game = getStateMachine();
+		//game.initialize(getMatch().getGame().getRules());
 		role = getRole();
 		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
 		bestPathReversed = new ArrayList<Move>();
