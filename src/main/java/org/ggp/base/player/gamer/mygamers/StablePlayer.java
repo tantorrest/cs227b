@@ -192,6 +192,7 @@ public class StablePlayer extends SampleGamer {
 		}
 		double bestUtility = 0;
 		for (MultiNode child : root.children) {
+			p("visited node: " + child.visits + " value: " + child.aveUtility);
 			if (child.getAveUtility() > bestUtility) {
 				bestUtility = child.getAveUtility();
 				bestMove = child.move;
@@ -211,7 +212,6 @@ public class StablePlayer extends SampleGamer {
 
 	private double tunedFunction(MultiNode node) {
 		return Math.log(node.parent.visits) / node.visits;
-//		2 *
 	}
 
 	/*********************** variables *******************/
@@ -237,7 +237,7 @@ public class StablePlayer extends SampleGamer {
 	private boolean isFirstMove = true;
 
 	/* game parameter data */
-	private double explorationFactor = 110;
+	private double explorationFactor = 125;
 
 	public ArrayList<Move> reverse(List<Move> moves) {
 		p("moves: " + moves.toString());
