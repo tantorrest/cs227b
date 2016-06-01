@@ -27,6 +27,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		long start = System.currentTimeMillis();
 		performMCTS(root, timeout - 5000);
 		timeToDepthCharge = (System.currentTimeMillis() - start) / numDepthCharges;
+		p("time to depth charge: " + timeToDepthCharge);
 	}
 
 	// does the initialization
@@ -169,7 +170,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			}
 			backPropagate(selected, score);
 		}
-		p("Num Depth Charges OP: " + prevDepthCharges + numDepthCharges);
+		p("Num Depth Charges OP: " + numDepthCharges);
 	}
 
 	private void backPropagate(MultiNode node, double score) {
