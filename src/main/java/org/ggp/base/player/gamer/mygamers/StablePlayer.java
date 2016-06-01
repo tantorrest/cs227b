@@ -25,7 +25,7 @@ public class StablePlayer extends SampleGamer {
 		long start = System.currentTimeMillis();
 		finishBy = timeout - 5000;
 		performMCTS(root);
-		timeToDepthCharge = (System.currentTimeMillis() - start) / numDepthCharges;
+		timeToDepthCharge = (System.currentTimeMillis() - start) / (numDepthCharges + 1);
 		p("time to depth charge: " + timeToDepthCharge);
 	}
 

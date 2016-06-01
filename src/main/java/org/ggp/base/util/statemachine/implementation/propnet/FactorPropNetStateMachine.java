@@ -37,6 +37,9 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
 
 	// this function just marks the factors
 	public boolean markFactors() {
+		if (getRoles().size() > 1){
+			return false;
+		}
 		Map<GdlSentence, Proposition> inputs = getPropNet().getInputPropositions();
 		 for (GdlSentence gs : inputs.keySet()) {
 			 Proposition input = inputs.get(gs);
