@@ -152,7 +152,7 @@ public class StablePlayer extends SampleGamer {
 			MultiNode selected = select(root);
 			if (!game.findTerminalp(selected.state)) {
 				expand(selected);
-				terminal = game.performPropNetDepthCharge(selected.state, null);
+				terminal = game.performDepthCharge(selected.state, null);
 			} else {
 				terminal = selected.state;
 			}
@@ -210,7 +210,7 @@ public class StablePlayer extends SampleGamer {
 	}
 
 	private double tunedFunction(MultiNode node) {
-		return 2 * Math.log(node.parent.visits) / node.visits;
+		return Math.log(node.parent.visits) / node.visits;
 	}
 
 	/*********************** variables *******************/
@@ -236,7 +236,7 @@ public class StablePlayer extends SampleGamer {
 	private boolean isFirstMove = true;
 
 	/* game parameter data */
-	private double explorationFactor = 110;
+	private double explorationFactor = 125;
 
 	public ArrayList<Move> reverse(List<Move> moves) {
 		p("moves: " + moves.toString());

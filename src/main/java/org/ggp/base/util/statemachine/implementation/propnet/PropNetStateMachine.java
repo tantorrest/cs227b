@@ -69,7 +69,6 @@ public class PropNetStateMachine extends StateMachine {
 	 */
 	@Override
 	public boolean isTerminal(MachineState state) {
-		//		p("state:"+ state.toString());
 		return isTerminalContents(state.getContents());
 	}
 
@@ -195,9 +194,6 @@ public class PropNetStateMachine extends StateMachine {
         return new Move(p.getName().get(1));
     }
 
-
-
-
 	/* Helper methods */
 	/**
 	 * The Input propositions are indexed by (does ?player ?action).
@@ -267,7 +263,7 @@ public class PropNetStateMachine extends StateMachine {
    }
 
    /***************** propagating view **********************/
-	private void markbases (Set<GdlSentence> stateContents, PropNet propNet) {
+	protected void markbases (Set<GdlSentence> stateContents, PropNet propNet) {
 		// clear boolean tagging
 		propNet.setInitProposition(false); // necessary?
 		for (Proposition p : propNet.getPropositions()) {
@@ -351,7 +347,7 @@ public class PropNetStateMachine extends StateMachine {
 	}
 
 	public PropNet getPropNet() {
-		return propNet;
+		return this.propNet;
 	}
 
 	public void setPropNet(PropNet propNet) {

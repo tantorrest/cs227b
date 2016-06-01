@@ -104,11 +104,7 @@ public final class Player extends JPanel
                 gamers.remove(gamer);
             }
         }
-<<<<<<< HEAD
-        typeComboBox.setSelectedItem("PropnetPlayer");
-=======
-        typeComboBox.setSelectedItem("OptimizedPropnetPlayer");
->>>>>>> optimized-propnet-oluwasanya
+        typeComboBox.setSelectedItem("StablePlayer");
 
         JPanel managerPanel = new JPanel(new GridBagLayout());
         managerPanel.setBorder(new TitledBorder("Manager"));
