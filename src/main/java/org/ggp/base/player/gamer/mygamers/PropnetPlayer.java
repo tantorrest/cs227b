@@ -133,10 +133,13 @@ public class PropnetPlayer extends SampleGamer {
     }
 
     private void backPropagate(MultiNode node, double score, int depth) {
+<<<<<<< HEAD
     	if (depth <= 1 && score == 0) {
     		//p("spotted forced loss");
     	}
 
+=======
+>>>>>>> optimized-propnet-oluwasanya
     	node.utility += score;
     	node.visits++;
     	node.utilities.add(node.utility);

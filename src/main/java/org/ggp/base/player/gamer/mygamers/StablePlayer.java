@@ -15,9 +15,7 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.propnet.PropNetStateMachine;
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
-public class OptimizedPropnetPlayer extends SampleGamer {
-	private int prevDepthCharges;
-
+public class StablePlayer extends SampleGamer {
 	@Override
 	public void stateMachineMetaGame(long timeout)
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
@@ -25,7 +23,8 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		init();
 		expand(root);
 		long start = System.currentTimeMillis();
-		performMCTS(root, timeout - 5000);
+		finishBy = timeout - 5000;
+		performMCTS(root);
 		timeToDepthCharge = (System.currentTimeMillis() - start) / numDepthCharges;
 		p("time to depth charge: " + timeToDepthCharge);
 	}
@@ -41,7 +40,6 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		bestPathFound = false;
 		stepAfterFoundBestMove = 0;
 		prevNumMoves = 0;
-		numDepthCharges = 0;
 		isSinglePlayer = (game.getRoles().size() == 1);
 	}
 
@@ -68,19 +66,18 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			return bestMove;
 		}
 
-		// last move was a noop so we can use opponent's moves
 		root = getRoot();
 		if (root.children.size() == 0) expand(root);
 		prevNumMoves = game.getLegalMoves(getCurrentState(), role).size();
-		performMCTS(root, timeout - 1000 - timeToDepthCharge);
+		finishBy = timeout - 1500 - timeToDepthCharge;
+		performMCTS(root);
 		return getBestMove();
 	}
 
 	private MultiNode getRoot() {
-
 		state = getCurrentState();
 		if (prevNumMoves == 1 && !isSinglePlayer) {
-			MultiNode child = root.children.get(0); // we played a noop
+			MultiNode child = root.children.get(0);
 			for (MultiNode next : child.children) {
 				if (next.state.equals(state)) return next;
 			}
@@ -129,7 +126,6 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 
 	private void expand(MultiNode node)
 			throws MoveDefinitionException, TransitionDefinitionException {
-
 		if (node.isMax) {
 			List<Move> moves = game.getLegalMoves(node.state, role);
 			for (Move move : moves) {
@@ -147,10 +143,10 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	}
 
 	/************* minor helper functions *****************/
-	private void performMCTS(MultiNode root, long timeout)
+	private void performMCTS(MultiNode root)
 			throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
 		numDepthCharges = 0;
-		while (System.currentTimeMillis() < timeout && !bestPathFound) {
+		while (System.currentTimeMillis() < finishBy && !bestPathFound) {
 			double score = 0;
 			MachineState terminal = null;
 			MultiNode selected = select(root);
@@ -161,7 +157,6 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 				terminal = selected.state;
 			}
 			numDepthCharges++;
-			// informs us that we have found a sure line of attack
 			score = game.findReward(role, terminal);
 			if (score == 100 && isSinglePlayer) {
 				p("found forced win");
@@ -170,7 +165,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			}
 			backPropagate(selected, score);
 		}
-		p("Num Depth Charges OP: " + numDepthCharges);
+		p("Num Depth Charges SP: " + numDepthCharges);
 	}
 
 	private void backPropagate(MultiNode node, double score) {
@@ -202,7 +197,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 				bestMove = child.move;
 			}
 		}
-		p("utility OP: " + bestUtility);
+		p("utility SP: " + bestUtility);
 		return (bestUtility != 0) ? bestMove : game.getRandomMove(getCurrentState(), role);
 	}
 
@@ -229,6 +224,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	private long timeToDepthCharge = 0;
 	private int numDepthCharges = 0;
 	private MachineState state = null;
+	private long finishBy = 0;
 
 	/***************** single player games **************/
 	private boolean isSinglePlayer = false;
@@ -240,7 +236,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	private boolean isFirstMove = true;
 
 	/* game parameter data */
-	private double explorationFactor = 110;
+	private double explorationFactor = 141;
 
 	public ArrayList<Move> reverse(List<Move> moves) {
 		p("moves: " + moves.toString());
@@ -253,53 +249,4 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	}
 
 	private void p(String message) { System.out.println(message); }
-
-	//	private StateMachine prover;
-	//	private StateMachine propnet;
-	//	@Override
-	//	public void stateMachineMetaGame(long timeout)
-	//			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-	//		p("Debug Metagaming Phase Propnet");
-	//		prover = getProverStateMachine();
-	//		prover.initialize(getMatch().getGame().getRules());
-	//
-	//		propnet = getPropNetStateMachine();
-	//		propnet.initialize(getMatch().getGame().getRules());
-	//
-	//		bestPathReversed = new ArrayList<Move>();
-	//		game = new DualStateMachine(prover, propnet);
-	//		role = getRole();
-	//		stepAfterFoundBestMove = 0;
-	//		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
-	//		expand(root);
-	//		performMCTS(root, timeout - 1000);
-	//	}
-
-	//	UCBTuned functions
-	//	private double tunedFunction(MultiNode node) {
-	//		if (useUCBTuned) {
-	//			double result = Math.log(node.parent.visits) / node.visits;
-	//			double factor = Math.min(0.25, adjustedVariance(node));
-	//			return result * factor;
-	//		} else {
-	//			return 2 * Math.log(node.parent.visits) / node.visits;
-	//		}
-	//	}
-	//
-	//	private double adjustedVariance(MultiNode node) {
-	//		double result = 0;
-	//		for (double utility : node.utilities) {
-	//			result += Math.pow(utility, 2);
-	//		}
-	//		return (0.5 * result) - (Math.pow(node.getAveUtility(), 2)) + (Math.sqrt(2 * Math.log(node.parent.visits) / node.visits));
-	//	}
-
-	//		private double adjustedVariance(MultiNode node) {
-	//			double result = 0;
-	//			for (double utility : node.utilities) {
-	//				result += Math.pow(utility, 2);
-	//			}
-	//			return (0.5 * result) - (Math.pow(node.getAveUtility(), 2)) + (Math.sqrt(2 * Math.log(node.parent.visits) / node.visits));
-	//		}
-	//	private boolean useUCBTuned = false;
 }

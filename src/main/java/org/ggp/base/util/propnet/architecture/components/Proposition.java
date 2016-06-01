@@ -13,6 +13,12 @@ public final class Proposition extends Component {
 	/** The value of the Proposition. */
 	private boolean value;
 
+	private boolean valueIsCorrect;
+
+	public boolean getValueIsCorrect() { return valueIsCorrect; }
+
+	public void setValueIsCorrect(boolean flag) { valueIsCorrect = flag; }
+
 	/**
 	 * Creates a new Proposition with name <tt>name</tt>.
 	 *

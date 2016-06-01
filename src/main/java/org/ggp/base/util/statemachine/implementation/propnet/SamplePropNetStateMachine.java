@@ -33,7 +33,7 @@ import org.ggp.base.util.statemachine.implementation.prover.query.ProverQueryBui
 @SuppressWarnings("unused")
 public class SamplePropNetStateMachine extends StateMachine {
     /** The underlying proposition network  */
-    private PropNet propNet;
+    protected PropNet propNet;
     /** The topological ordering of the propositions */
     private List<Proposition> ordering;
     /** The player roles */
@@ -49,7 +49,6 @@ public class SamplePropNetStateMachine extends StateMachine {
             setPropNet(OptimizingPropNetFactory.create(description));
             roles = getPropNet().getRoles();
             ordering = getOrdering();
-            propNet.renderToFile(description.get(0).toString() + ".dot");
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -353,11 +352,24 @@ public class SamplePropNetStateMachine extends StateMachine {
 		return false;
 	}
 
+<<<<<<< HEAD
 	public PropNet getPropNet() {
 		return propNet;
 	}
 
 	public void setPropNet(PropNet propNet) {
 		this.propNet = propNet;
+=======
+	@Override
+	public MachineState performPropNetDepthCharge(MachineState state,
+			int[] theDepth) throws TransitionDefinitionException,
+			MoveDefinitionException {
+		return performDepthCharge(state, theDepth);
+	}
+
+	@Override
+	public List<Move> getBestMoves() {
+		return null;
+>>>>>>> optimized-propnet-oluwasanya
 	}
 }

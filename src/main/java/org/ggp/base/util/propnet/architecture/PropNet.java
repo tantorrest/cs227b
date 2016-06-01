@@ -98,6 +98,9 @@ public final class PropNet
     /** A helper list of all of the roles. */
     private final List<Role> roles;
 
+    /** optimization from bertrand */
+    private final Map<Proposition, Boolean> valueIsCorrectMap;
+
     public void addComponent(Component c)
     {
         components.add(c);
@@ -123,17 +126,24 @@ public final class PropNet
         this.initProposition = recordInitProposition();
         this.terminalProposition = recordTerminalProposition();
         this.legalInputMap = makeLegalInputMap();
+
+        /* extensions */
+        this.valueIsCorrectMap = makeValueIsCorrectMap();
     }
 
-    public List<Role> getRoles()
-    {
-        return roles;
+    public List<Role> getRoles() { return roles; }
+
+    public Map<Proposition, Proposition> getLegalInputMap() { return legalInputMap; }
+
+    private Map<Proposition, Boolean> makeValueIsCorrectMap() {
+        Map<Proposition, Boolean> map = new HashMap<Proposition, Boolean>();
+        for (Proposition p : propositions) {
+            map.put(p, false);
+        }
+        return map;
     }
 
-    public Map<Proposition, Proposition> getLegalInputMap()
-    {
-        return legalInputMap;
-    }
+    public Map<Proposition, Boolean> getValueIsCorrectMap() { return valueIsCorrectMap; }
 
     private Map<Proposition, Proposition> makeLegalInputMap() {
         Map<Proposition, Proposition> legalInputMap = new HashMap<Proposition, Proposition>();
@@ -300,6 +310,7 @@ public final class PropNet
 
             Component component = proposition.getSingleInput();
             if (component instanceof Transition) {
+            	proposition.setCodeName("base"); // sanya
                 basePropositions.put(proposition.getName(), proposition);
             }
         }
@@ -551,6 +562,8 @@ public final class PropNet
 
     //TODO: oluwasanya edits from here
     public void setInitProposition(boolean flag) {
-    	initProposition.setValue(flag);
+    	if (initProposition != null) {
+        	initProposition.setValue(flag);
+    	}
     }
 }
