@@ -18,11 +18,9 @@ public abstract class Component implements Serializable
     private final Set<Component> inputs;
     /** The outputs of the component. */
     private final Set<Component> outputs;
-<<<<<<< HEAD
     /** The value of the component is correct. */
     private boolean valueIsCorrect = false;
 	public boolean visited;
-=======
 
     private String codeName;
 
@@ -33,7 +31,6 @@ public abstract class Component implements Serializable
     public String getCodeName() {
     	return codeName;
     }
->>>>>>> optimized-propnet-oluwasanya
 
     /**
      * Creates a new Component with no inputs or outputs.

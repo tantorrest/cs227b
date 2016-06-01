@@ -352,14 +352,14 @@ public class SamplePropNetStateMachine extends StateMachine {
 		return false;
 	}
 
-<<<<<<< HEAD
 	public PropNet getPropNet() {
 		return propNet;
 	}
 
 	public void setPropNet(PropNet propNet) {
 		this.propNet = propNet;
-=======
+	}
+
 	@Override
 	public MachineState performPropNetDepthCharge(MachineState state,
 			int[] theDepth) throws TransitionDefinitionException,
@@ -370,6 +370,5 @@ public class SamplePropNetStateMachine extends StateMachine {
 	@Override
 	public List<Move> getBestMoves() {
 		return null;
->>>>>>> optimized-propnet-oluwasanya
 	}
 }

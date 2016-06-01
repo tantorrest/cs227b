@@ -428,4 +428,17 @@ public class FailsafeStateMachine extends StateMachine
     public StateMachine getBackingMachine() {
         return theBackingMachine;
     }
+
+	@Override
+	public MachineState performPropNetDepthCharge(MachineState state, int[] theDepth)
+			throws TransitionDefinitionException, MoveDefinitionException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Move> getBestMoves() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
