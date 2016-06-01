@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
+import org.ggp.base.util.statemachine.FailsafeStateMachine;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
@@ -45,7 +46,7 @@ public class StablePlayer extends SampleGamer {
 
 	@Override
 	public StateMachine getInitialStateMachine() {
-		return new CachedStateMachine(new PropNetStateMachine());
+		return new CachedStateMachine(new FailsafeStateMachine(new PropNetStateMachine()));
 	}
 
 	public StateMachine getProverStateMachine() {
