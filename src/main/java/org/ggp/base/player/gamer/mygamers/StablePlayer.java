@@ -152,7 +152,7 @@ public class StablePlayer extends SampleGamer {
 			MultiNode selected = select(root);
 			if (!game.findTerminalp(selected.state)) {
 				expand(selected);
-				terminal = game.performPropNetDepthCharge(selected.state, null);
+				terminal = game.performDepthCharge(selected.state, null);
 			} else {
 				terminal = selected.state;
 			}
@@ -192,7 +192,6 @@ public class StablePlayer extends SampleGamer {
 		}
 		double bestUtility = 0;
 		for (MultiNode child : root.children) {
-			p("visited node: " + child.visits + " value: " + child.aveUtility);
 			if (child.getAveUtility() > bestUtility) {
 				bestUtility = child.getAveUtility();
 				bestMove = child.move;

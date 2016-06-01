@@ -5,7 +5,7 @@ import org.ggp.base.util.statemachine.cache.CachedStateMachine;
 import org.ggp.base.util.statemachine.implementation.propnet.FactorPropNetStateMachine;
 import org.ggp.base.util.statemachine.implementation.propnet.PropNetStateMachine;
 
-public class FactorPlayer extends OptimizedPropnetPlayer {
+public class FactorPlayer extends StablePlayer {
 	@Override
 	public StateMachine getInitialStateMachine(){
 		FactorPropNetStateMachine sm =  new FactorPropNetStateMachine();

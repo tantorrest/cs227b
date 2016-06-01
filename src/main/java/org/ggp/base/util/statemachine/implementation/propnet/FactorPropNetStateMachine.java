@@ -344,19 +344,12 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
 
 	}
 
-
-
-
-
 	private Component getVisitedChildNode(Component node) {
 		for (Component child : node.getOutputs()) {
     		if (child.visited) return child;
     	}
 		return null;
 	}
-
-
-
 
 
 	private Component getUnvisitedChildNode(Component node) {
@@ -380,9 +373,6 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
     	}
 		return null;
 	}
-
-
-
 
 
 	private void getPreterminalInputs(Component singleInput, Set<Component> preterminalInputs, Set<Component> gatesToAdd, List<HashSet<Component>> factoredComponents) {
