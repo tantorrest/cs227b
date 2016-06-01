@@ -10,8 +10,12 @@ import org.ggp.base.util.propnet.architecture.Component;
 public final class Proposition extends Component {
 	/** The name of the Proposition. */
 	private GdlSentence name;
-	/** The value of the Proposition. */
-	private boolean value;
+
+	private boolean valueIsCorrect;
+
+	public boolean getValueIsCorrect() { return valueIsCorrect; }
+
+	public void setValueIsCorrect(boolean flag) { valueIsCorrect = flag; }
 
 	/**
 	 * Creates a new Proposition with name <tt>name</tt>.

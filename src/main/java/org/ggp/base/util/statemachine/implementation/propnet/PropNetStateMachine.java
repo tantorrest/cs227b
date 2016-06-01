@@ -260,8 +260,8 @@ public class PropNetStateMachine extends StateMachine {
 	private void markbases (Set<GdlSentence> stateContents, PropNet propNet) {
 		// clear boolean tagging
 		propNet.setInitProposition(false); // necessary?
-		for (Proposition p : propNet.getValueIsCorrectMap().keySet()) {
-			propNet.getValueIsCorrectMap().put(p, false);
+		for (Proposition p : propNet.getPropositions()) {
+			p.setValueIsCorrect(false);
 		}
 
 		// clear the current state
@@ -292,8 +292,7 @@ public class PropNetStateMachine extends StateMachine {
 		boolean value = false;
 		if (cp instanceof Proposition) {
 			Proposition p = (Proposition) cp;
-			if (propNet.getValueIsCorrectMap().get(p)) return p.getValue();
-
+			if (p.getValueIsCorrect()) return p.getValue();
 			if (p.getInputs().size() == 1 && p.getSingleInput() instanceof Transition ||
 					p.getName().getName().getValue().equals("does") ||
 					p.getName().getName().getValue().toLowerCase().equals("init")) {
@@ -303,7 +302,7 @@ public class PropNetStateMachine extends StateMachine {
 			} else {
 				value = false;
 			}
-			propNet.getValueIsCorrectMap().put(p, true);
+			p.setValueIsCorrect(true);
 			p.setValue(value);
 		} else if (cp instanceof Not) { // negation
 			value = propmarknegation(cp);
@@ -415,78 +414,3 @@ public class PropNetStateMachine extends StateMachine {
 	private List<GdlTerm> jointMoves = null;
 	private boolean isSinglePlayer = false;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	/**************************************
-	 * scrp
-	 * ************************************/
-
-//	public boolean propmarkp (Component cp) {
-//		boolean value;
-//		if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) { // base
-//			value = cp.getValue();
-//			((Proposition) cp).setValue(value);
-//			propNet.getValueIsCorrectMap().put((Proposition) cp, true);
-//		} else if (cp instanceof Not) { // negation
-//			value = propmarknegation(cp);
-//		} else if (cp instanceof Or) { // disjunction
-//			value = propmarkdisjunction(cp);
-//		} else if (cp instanceof And) { // conjunction
-//			value = propmarkconjunction(cp);
-//		} else if (cp instanceof Constant) { // constant
-//			value = cp.getValue();
-//		} else if (((Proposition) cp).getName().getName().getValue().equals("does")) { // input
-//			value = cp.getValue();
-//			((Proposition) cp).setValue(value);
-//			propNet.getValueIsCorrectMap().put((Proposition) cp, true);
-//		} else if((((Proposition) cp).getName().getName().getValue().toUpperCase().equals("INIT"))) { // init
-//			value = cp.getValue();
-//			((Proposition) cp).setValue(value);
-//			propNet.getValueIsCorrectMap().put((Proposition) cp, true);
-//		} else if (cp.getInputs().size() == 1) { // view
-//			value = propmarkp(cp.getSingleInput());
-//		} else {
-//			value =  false;
-//		}
-//		return value;
-//	}
-
-
-//String name = cp.getCodeName();
-//if (name.equals("does") || name.equals("input") || name.equals("init")) {
-//	Proposition p = (Proposition) cp;
-//	value = p.getValue();
-//} else if (name.equals("not")) {
-//	value = propmarknegation(cp);
-//} else if (name.equals("or")) {
-//	value = propmarkdisjunction(cp);
-//} else if (name.equals("and")) {
-//	value = propmarkconjunction(cp);
-//} else if (name.equals("constant")) {
-//	value = cp.getValue();
-//} else if (name.equals("view")) {
-//	value = propmarkp(cp.getSingleInput());
-//} else {
-//	value = false;
-//}
-//return value;

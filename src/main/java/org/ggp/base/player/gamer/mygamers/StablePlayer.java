@@ -16,15 +16,17 @@ import org.ggp.base.util.statemachine.implementation.propnet.PropNetStateMachine
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class StablePlayer extends SampleGamer {
-	private int prevDepthCharges;
-
 	@Override
 	public void stateMachineMetaGame(long timeout)
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		p("Metagaming Phase Optimized Propnet: " + getMatch().getMatchId());
 		init();
 		expand(root);
-		performMCTS(root, timeout - 1000);
+		long start = System.currentTimeMillis();
+		finishBy = timeout - 5000;
+		performMCTS(root);
+		timeToDepthCharge = (System.currentTimeMillis() - start) / numDepthCharges;
+		p("time to depth charge: " + timeToDepthCharge);
 	}
 
 	// does the initialization
@@ -60,23 +62,22 @@ public class StablePlayer extends SampleGamer {
 		if (isSinglePlayer && bestPathFound) {
 			// we save time on reversing the loop and rather just work backwards instead
 			stepAfterFoundBestMove++;
-			p("step    : " + stepAfterFoundBestMove);
 			bestMove = bestPathReversed.get(bestPathReversed.size() - stepAfterFoundBestMove);
 			return bestMove;
 		}
 
-		// last move was a noop so we can use opponent's moves
 		root = getRoot();
 		if (root.children.size() == 0) expand(root);
 		prevNumMoves = game.getLegalMoves(getCurrentState(), role).size();
-		performMCTS(root, timeout - 2000);
+		finishBy = timeout - 1500 - timeToDepthCharge;
+		performMCTS(root);
 		return getBestMove();
 	}
 
 	private MultiNode getRoot() {
-		MachineState state = getCurrentState();
+		state = getCurrentState();
 		if (prevNumMoves == 1 && !isSinglePlayer) {
-			MultiNode child = root.children.get(0); // we played a noop
+			MultiNode child = root.children.get(0);
 			for (MultiNode next : child.children) {
 				if (next.state.equals(state)) return next;
 			}
@@ -125,7 +126,6 @@ public class StablePlayer extends SampleGamer {
 
 	private void expand(MultiNode node)
 			throws MoveDefinitionException, TransitionDefinitionException {
-
 		if (node.isMax) {
 			List<Move> moves = game.getLegalMoves(node.state, role);
 			for (Move move : moves) {
@@ -143,10 +143,10 @@ public class StablePlayer extends SampleGamer {
 	}
 
 	/************* minor helper functions *****************/
-	private void performMCTS(MultiNode root, long timeout)
+	private void performMCTS(MultiNode root)
 			throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
-		int numDepthCharges = 0;
-		while (System.currentTimeMillis() < timeout && !bestPathFound) {
+		numDepthCharges = 0;
+		while (System.currentTimeMillis() < finishBy && !bestPathFound) {
 			double score = 0;
 			MachineState terminal = null;
 			MultiNode selected = select(root);
@@ -157,7 +157,6 @@ public class StablePlayer extends SampleGamer {
 				terminal = selected.state;
 			}
 			numDepthCharges++;
-			// informs us that we have found a sure line of attack
 			score = game.findReward(role, terminal);
 			if (score == 100 && isSinglePlayer) {
 				p("found forced win");
@@ -166,7 +165,7 @@ public class StablePlayer extends SampleGamer {
 			}
 			backPropagate(selected, score);
 		}
-		p("Num Depth Charges SP: " + prevDepthCharges + numDepthCharges);
+		p("Num Depth Charges SP: " + numDepthCharges);
 	}
 
 	private void backPropagate(MultiNode node, double score) {
@@ -198,7 +197,7 @@ public class StablePlayer extends SampleGamer {
 				bestMove = child.move;
 			}
 		}
-		p("utility OP: " + bestUtility);
+		p("utility SP: " + bestUtility);
 		return (bestUtility != 0) ? bestMove : game.getRandomMove(getCurrentState(), role);
 	}
 
@@ -222,6 +221,11 @@ public class StablePlayer extends SampleGamer {
 	private MultiNode root = null;
 	private int prevNumMoves = 0;
 
+	private long timeToDepthCharge = 0;
+	private int numDepthCharges = 0;
+	private MachineState state = null;
+	private long finishBy = 0;
+
 	/***************** single player games **************/
 	private boolean isSinglePlayer = false;
 	private boolean bestPathFound = false;
@@ -232,7 +236,7 @@ public class StablePlayer extends SampleGamer {
 	private boolean isFirstMove = true;
 
 	/* game parameter data */
-	private double explorationFactor = 110;
+	private double explorationFactor = 141;
 
 	public ArrayList<Move> reverse(List<Move> moves) {
 		p("moves: " + moves.toString());

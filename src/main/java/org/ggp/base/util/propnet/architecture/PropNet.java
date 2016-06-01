@@ -17,7 +17,6 @@ import org.ggp.base.util.gdl.grammar.GdlSentence;
 import org.ggp.base.util.gdl.grammar.GdlTerm;
 import org.ggp.base.util.logging.GamerLogger;
 import org.ggp.base.util.propnet.architecture.components.And;
-import org.ggp.base.util.propnet.architecture.components.Constant;
 import org.ggp.base.util.propnet.architecture.components.Not;
 import org.ggp.base.util.propnet.architecture.components.Or;
 import org.ggp.base.util.propnet.architecture.components.Proposition;
@@ -101,9 +100,6 @@ public final class PropNet
 
     /** optimization from bertrand */
     private final Map<Proposition, Boolean> valueIsCorrectMap;
-    private final Set<Component> nextPropositions;
-    private final Map<GdlSentence, Set<Component>> dependencyMap;
-    private final Map<GdlSentence, Set<Component>> consequencyMap;
 
     public void addComponent(Component c)
     {
@@ -133,42 +129,6 @@ public final class PropNet
 
         /* extensions */
         this.valueIsCorrectMap = makeValueIsCorrectMap();
-        this.nextPropositions = null; 	//recordNextPropositions();
-        this.dependencyMap = null; 		// recordDependencyMap();
-        this.consequencyMap = null; 	// recordConsequencyMap();
-//        markComponents();
-    }
-
-    private void markComponents() {
-    	for (Component cp : components) {
-    		if (cp instanceof Proposition) {
-    			Proposition p = (Proposition) cp;
-    			if (p.getInputs().size() == 1 && p.getSingleInput() instanceof Transition) {
-    				cp.setCodeName("base");
-    			} else if (p.getName().getName().getValue().equals("does")) {
-    				cp.setCodeName("input");
-    			} else if (p.getName().getName().getValue().toLowerCase().equals("init")) {
-    				cp.setCodeName("init");
-    			} else if (p.getInputs().size() == 1) {
-    				cp.setCodeName("view");
-    			} else {
-    				cp.setCodeName("false");
-    			}
-    		} else if (cp instanceof Not) { // negation
-    			cp.setCodeName("not");
-    		} else if (cp instanceof Or) { // disjunction
-    			cp.setCodeName("or");
-    		} else if (cp instanceof And) { // conjunction
-    			cp.setCodeName("and");
-    		} else if (cp instanceof Constant) { // constant
-    			cp.setCodeName("constant");
-    		} else if (cp.getInputs().size() == 1) { // view
-    			cp.setCodeName("view");
-    		} else {
-    			cp.setCodeName("false");
-    		}
-    	}
-    	System.out.println("done components");
     }
 
     public List<Role> getRoles() { return roles; }
@@ -181,74 +141,6 @@ public final class PropNet
             map.put(p, false);
         }
         return map;
-    }
-
-    private Set<Component> recordNextPropositions() {
-    	Set<Component> nexts = new HashSet<Component>();
-    	for (Proposition base : basePropositions.values()) {
-    		Component cp = base.getSingleInput().getSingleInput();
-    		nexts.add(cp);
-    	}
-//    	System.out.println("nexts: " + nexts.toString());
-    	return nexts;
-    }
-
-    private Map<GdlSentence, Set<Component>> recordConsequencyMap() {
-    	Map<GdlSentence, Set<Component>> map = new HashMap<GdlSentence, Set<Component>>();
-    	for (Proposition p : basePropositions.values()) {
-    		Set<Component> list = new HashSet<Component>();
-    		getConsequencies(p, list);
-    		map.put(p.getName(), list);
-    	}
-//    	System.out.println("c map: " + map.toString());
-    	return map;
-    }
-
-    private Map<GdlSentence, Set<Component>> recordDependencyMap() {
-    	Map<GdlSentence, Set<Component>> map = new HashMap<GdlSentence, Set<Component>>();
-    	for (Component p : propositions) {
-    		Set<Component> list = new HashSet<Component>();
-    		getDependencies(p, list);
-    		map.put(((Proposition) p).getName(), list);
-    	}
-//    	System.out.println("d map: " + map.toString());
-    	return map;
-    }
-
-    private void getDependencies(Component p, Set<Component> list) {
-    	if ((p.getInputs().size() == 1 && p.getSingleInput() instanceof Transition)) {
-    		list.add(p);
-    		return;
-    	}
-    	if (list.contains(p)) return;
-//    	list.add(p);
-    	for (Component cp : p.getInputs()) {
-    		getConsequencies(cp, list);
-    	}
-    }
-
-    private void getConsequencies(Component p, Set<Component> list) {
-    	if (list.contains(p)) return;
-    	list.add(p);
-    	if (p.getInputs().size() == 1 && p.getSingleInput() instanceof Transition) {
-    		String val = (((Proposition) p).getName()).getName().getValue();
-    		if (val.equals("goal") ||  val.equals("terminal")) return;
-    	}
-    	for (Component cp : p.getOutputs()) {
-    		getConsequencies(cp, list);
-    	}
-    }
-
-    public Map<GdlSentence, Set<Component>> getDependencyMap() {
-    	return dependencyMap;
-    }
-
-    public Map<GdlSentence, Set<Component>> getConsequencyMap() {
-    	return consequencyMap;
-    }
-
-    public Set<Component> getNextPropositions() {
-    	return nextPropositions;
     }
 
     public Map<Proposition, Boolean> getValueIsCorrectMap() { return valueIsCorrectMap; }
