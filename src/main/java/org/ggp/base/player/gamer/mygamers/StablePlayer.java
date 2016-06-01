@@ -210,7 +210,8 @@ public class StablePlayer extends SampleGamer {
 	}
 
 	private double tunedFunction(MultiNode node) {
-		return 2 * Math.log(node.parent.visits) / node.visits;
+		return Math.log(node.parent.visits) / node.visits;
+//		2 *
 	}
 
 	/*********************** variables *******************/
