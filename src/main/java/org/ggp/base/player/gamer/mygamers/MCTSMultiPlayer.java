@@ -65,23 +65,25 @@ public class MCTSMultiPlayer extends SampleGamer {
     	return (node.getAveUtility()) + explorationFactor * Math.sqrt(2 * Math.log(node.parent.visits) / node.visits);
     }
 
-    private double selectfn2(MultiNode node) {
-    	return (node.getAveUtility()) + explorationFactor * Math.sqrt(tunedFunction(node));
-    }
+//    private double selectfn2(MultiNode node) {
+//    	return (node.getAveUtility()) + explorationFactor * Math.sqrt(tunedFunction(node));
+//    }
 
-    private double tunedFunction(MultiNode node) {
-    	double result = Math.log(node.parent.visits) / node.visits;
-    	double factor = Math.min(0.25, adjustedVariance(node));
-    	return Math.sqrt(result * factor);
-    }
+//    removed utilities functionality from here
+//    private double tunedFunction(MultiNode node) {
+//    	double result = Math.log(node.parent.visits) / node.visits;
+//    	double factor = Math.min(0.25, adjustedVariance(node));
+//    	return Math.sqrt(result * factor);
+//    }
+//
+//    private double adjustedVariance(MultiNode node) {
+//    	double result = 0;
+//    	for (double utility : node.utilities) {
+//    		result += Math.pow(utility, 2);
+//    	}
+//    	return (0.5 * result) - (Math.pow(node.getAveUtility(), 2)) + (Math.sqrt(2 * Math.log(node.parent.visits) / node.visits));
+//    }
 
-    private double adjustedVariance(MultiNode node) {
-    	double result = 0;
-    	for (double utility : node.utilities) {
-    		result += Math.pow(utility, 2);
-    	}
-    	return (0.5 * result) - (Math.pow(node.getAveUtility(), 2)) + (Math.sqrt(2 * Math.log(node.parent.visits) / node.visits));
-    }
 
     // pretty sure this function does what it's meant to do
     private void backPropagate(MultiNode node, double score) {
@@ -90,7 +92,6 @@ public class MCTSMultiPlayer extends SampleGamer {
     	} else {
     		node.utility -= score;
     	}
-    	node.utilities.add(node.utility);
     	node.visits++;
     	if (node.parent != null) {
     		backPropagate(node.parent, score);

@@ -310,7 +310,6 @@ public final class PropNet
 
             Component component = proposition.getSingleInput();
             if (component instanceof Transition) {
-            	proposition.setCodeName("base"); // sanya
                 basePropositions.put(proposition.getName(), proposition);
             }
         }

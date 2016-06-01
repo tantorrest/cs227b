@@ -291,7 +291,6 @@ public class SamplePropNetStateMachine extends StateMachine {
 
    /***************** propagating view **********************/
    public boolean propmarkp (Component cp) {
-	   cp.setValueIsCorrect(true);// optimized
 	   if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) { // base
 //		   p("base");
 		   return cp.getValue();
@@ -310,20 +309,7 @@ public class SamplePropNetStateMachine extends StateMachine {
 	   } else if((((Proposition) cp).getName().getName().getValue().toUpperCase().equals("INIT"))) { // init
 //		   p("init");
 		   return cp.getValue();
-	   }
-//	   else if(((Proposition) cp).getName().getName().getValue().equals("legal")) { // legal
-//		   p("legal");
-//		   return propmarkp(cp.getSingleInput());
-//	   }
-//	   else if(((Proposition) cp).getName().getName().getValue().equals("terminal")) {
-//		   p("terminal");
-//		   return propmarkp(cp.getSingleInput());
-//	   }
-//	   else if (((Proposition) cp).getName().getName().getValue().equals("goal")) {
-//		   p("goal");
-//		  return propmarkp(cp.getSingleInput());
-//	   }
-	   else if (cp.getInputs().size() == 1) { // view
+	   } else if (cp.getInputs().size() == 1) { // view
 //		   p("view");
 		   return propmarkp(cp.getSingleInput());
 	   } else {
@@ -352,14 +338,14 @@ public class SamplePropNetStateMachine extends StateMachine {
 		return false;
 	}
 
-<<<<<<< HEAD
 	public PropNet getPropNet() {
 		return propNet;
 	}
 
 	public void setPropNet(PropNet propNet) {
 		this.propNet = propNet;
-=======
+	}
+
 	@Override
 	public MachineState performPropNetDepthCharge(MachineState state,
 			int[] theDepth) throws TransitionDefinitionException,
@@ -370,6 +356,5 @@ public class SamplePropNetStateMachine extends StateMachine {
 	@Override
 	public List<Move> getBestMoves() {
 		return null;
->>>>>>> optimized-propnet-oluwasanya
 	}
 }

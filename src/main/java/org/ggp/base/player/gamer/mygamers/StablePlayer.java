@@ -236,7 +236,7 @@ public class StablePlayer extends SampleGamer {
 	private boolean isFirstMove = true;
 
 	/* game parameter data */
-	private double explorationFactor = 141;
+	private double explorationFactor = 110;
 
 	public ArrayList<Move> reverse(List<Move> moves) {
 		p("moves: " + moves.toString());
