@@ -18,8 +18,6 @@ public class FactorPlayer extends StablePlayer {
 			return sm;
 		}
 	}
-
-
 	public void p(String x){ System.out.println(x);}
 }
 

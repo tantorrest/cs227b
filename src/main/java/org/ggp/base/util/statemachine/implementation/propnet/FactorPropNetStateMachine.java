@@ -95,9 +95,6 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
 			     while(factoredComponentsIt.hasNext() && subgameInputsIt.hasNext()){
 			    	 HashSet<Component> subfactor = factoredComponentsIt.next();
 			    	 HashSet<Component> subgameInput = subgameInputsIt.next();
-//			    	 p("SUBGAME: " + subfactor);
-//			    	 p("SUBGAME INPUT: " + subgameInput);
-//			    	 p("COMPONENT: " + i + " SUBFACTOR CONTAINS I: " + subfactor.contains(i) + " subgameInput? " + !subgameInput.isEmpty());
 			    	 if (subfactor.contains(i) && !subgameInput.isEmpty()) {
 			    		 Set<Component> pathToTerminal = getPath(i);
 			    		 if (pathToTerminal != null) {
@@ -111,30 +108,12 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
 			    		 }
 					}
 			     }
-//			     p("SUBGAMES: " + subgames);
-//			     p("totalSubgameInputs: " + totalSubgameInputs);
-
 			}
 
 		} else {
 			p("AWWW MULTIPLE INPUTS TO TERMINAL!!!");
 		}
-//		for(Set<Component> subgame : subgames){
-//			Set<Component> needToAdd = new HashSet<Component>();
-//			connectSubgameToTerminal(subgame, terminal, needToAdd);
-//		}
-//		for(Set<Component> subgame : subgames){
-//			p("SUBGAMEEEE");
-//			 StringBuilder sb = new StringBuilder();
-//
-//		        sb.append("digraph propNet\n{\n");
-//		        for ( Component component : subgame )
-//		        {
-//		            sb.append("\t" + component.toString() + "\n");
-//		        }
-//		        sb.append("}");
-//		        p(sb.toString());
-//		}
+
 		p("#subgames: " + subgames.size());
 		p("#subgameInputs: " + totalSubgameInputs.size());
 		combinedFactors.add(terminal);
@@ -202,7 +181,6 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
 			}
 			if (!marked){
 				p("BASE PROP!! " + prop.toString());
-//				p(prop.toString());
 				return prop;
 			}
 		}
@@ -224,7 +202,6 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
 			subgameInputs.add(base);
 		}
 		for (Component input : base.getInputs()) { // recursively add all the dependencies
-//			factor.add(input);
 			getDependencies(input, factor, numComponentsMarked, subgameInputs);
 		}
 	}
@@ -232,8 +209,6 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
 
 
 	private boolean isInputProp(Component base) {
-//		 p("COMPONENT: " + base);
-//		 p("INPUT ? " + inputProps.contains(base));
 		return inputProps.contains(base);
 	}
 
@@ -249,7 +224,6 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
         List<Move> actions = new ArrayList<Move>();
         for (Proposition p : legals) {
         	boolean inSubgame = inputInSubgame(p, combinedFactors);
-//        	p("LEGAL PROP: " + (Component)p + "INPUT PROP: " + (Component)getPropNet().getLegalInputMap().get(p) +  " IN SUBGAME ? " + inSubgame);
         	if (p.getValueIsCorrect() ) {
         		if (p.getValue() && inSubgame) actions.add(getMoveFromProposition(p));
         	} else {
@@ -264,7 +238,6 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
     	for (Set<Component> factor : factoredComponents) {
     		if (factor.contains(singleInput)) {
     			in = true;
-//    			getPath(singleInput);
     			return in;
     		}
     	}
@@ -278,13 +251,11 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
     	List<Component> way = new ArrayList<Component>();
     	way.add(inp);
 		queue.add(way);
-//		printNode(this.rootNode);
 		inp.visited = true;
 		while(!queue.isEmpty()) {
 			List<Component> pth = (List<Component>)queue.remove();
 			Component node = pth.get(pth.size() - 1);
 			if (node ==  (Component) getPropNet().getTerminalProposition()){
-//				p("TERMINAL REACHED: " + pth.toString());
 				Set<Component> path = new HashSet<Component>(pth);
 				clearVisited(inp);
 				return path;
@@ -296,23 +267,11 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
 				new_pth.add(child);
 				if (child ==  (Component) getPropNet().getTerminalProposition()) {
 
-//					p("REACHED TERMINAL!!");
 				}
 				queue.add(new_pth);
 			}
 		}
 		return null;
-//    	Component terminal = (Component) getPropNet().getTerminalProposition();
-//    	if(terminal.equals(inp)) {
-//    		return path;
-//    	} else {
-//    		for (Component out : inp.getOutputs()) {
-//    			Set<Component> pth = new HashSet<Component>(path);
-//    			pth.add(inp);
-//    			return getPath(out, pth);
-//    		}
-//    		return null;
-//    	}
     }
 
     private void clearVisited(Component inp) {
@@ -389,18 +348,10 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
 					if (inFactoredComponents(child, factoredComponents)) {
 						preterminalInputs.add(child);
 					} else {
-//						Set<Component> needToAdd = new HashSet<Component>();
-//			    		needToAdd.add(singleInput);
-//			    		matchToSubgame(singleInput, needToAdd, factoredComponents);
 						gatesToAdd.add(child);
 						queue.add(child);
-//						for (Component in : singleInput.getInputs()){
-//							getPreterminalInputs(in, preterminalInputs, gatesToAdd, factoredComponents);
-//						}
 					}
-//		    		preterminalInputs.add(singleInput);
-//					return;
-//					return;
+
 
 				} else {
 					gatesToAdd.add(child);
@@ -411,32 +362,6 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
 		// Clear visited property of nodes
 		clearVisitedInput(singleInput);
 		return;
-
-//		if(!(singleInput instanceof Not || singleInput instanceof Or || singleInput instanceof And)){
-//
-//			if (inFactoredComponents(singleInput, factoredComponents)) {
-//				preterminalInputs.add(singleInput);
-//				return;
-//			} else {
-////				Set<Component> needToAdd = new HashSet<Component>();
-////	    		needToAdd.add(singleInput);
-////	    		matchToSubgame(singleInput, needToAdd, factoredComponents);
-//				gatesToAdd.add(singleInput);
-//				for (Component in : singleInput.getInputs()){
-//					getPreterminalInputs(in, preterminalInputs, gatesToAdd, factoredComponents);
-//				}
-//			}
-////    		preterminalInputs.add(singleInput);
-//			return;
-////			return;
-//
-//		} else {
-//			gatesToAdd.add(singleInput);
-//			for (Component in : singleInput.getInputs()){
-//				getPreterminalInputs(in, preterminalInputs, gatesToAdd, factoredComponents);
-//			}
-//
-//		}
 
 	}
 
@@ -458,10 +383,9 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
 
 	private boolean inputInSubgame(Proposition p, Set<Component> subgame) {
 		HashSet<Component> subgameInputs = subgameToInputs.get(subgame);
-//		p("SUBGAMEINPUTS : " + subgameInputs);
 		Map<Proposition, Proposition> legalInputMap = getPropNet().getLegalInputMap();
 		Proposition input = legalInputMap.get(p);
-//		p(subgameContainsInput(subgameInputs, input) + "INPUT COMPONENT: " + input);
+
 
 		return subgameContainsInput(subgameInputs, input);
 }
@@ -469,7 +393,6 @@ public class FactorPropNetStateMachine extends PropNetStateMachine {
 	private boolean subgameContainsInput(HashSet<Component> subgameInputs, Proposition input) {
 		for (Component cp : subgameInputs) {
 			String compName = ((Proposition) cp).getName().toString();
-//			p("INPUT NAME IN subgameInputs: " + compName + " input name in input: " + input.getName().toString());
 			if (compName.equals(input.getName().toString())) return true;
 		}
 		return false;
