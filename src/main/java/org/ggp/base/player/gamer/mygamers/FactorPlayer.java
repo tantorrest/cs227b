@@ -1,10 +1,9 @@
 package org.ggp.base.player.gamer.mygamers;
 
-import java.util.Set;
-
-import org.ggp.base.util.propnet.architecture.Component;
 import org.ggp.base.util.statemachine.StateMachine;
+import org.ggp.base.util.statemachine.cache.CachedStateMachine;
 import org.ggp.base.util.statemachine.implementation.propnet.FactorPropNetStateMachine;
+import org.ggp.base.util.statemachine.implementation.propnet.PropNetStateMachine;
 
 public class FactorPlayer extends OptimizedPropnetPlayer {
 	@Override
@@ -28,15 +27,18 @@ public class FactorPlayer extends OptimizedPropnetPlayer {
 //        p("FACTORED PROPNET!!!: ");
 //        p(factoredPN.toString());
 //        sm.setPropNet(factoredPN);
-    	Set<Component> usedComponents = sm.markFactors();
+    	boolean factorable = sm.markFactors();
+    	p("FACTORABLE? " + factorable);
+    	if (!factorable) {
+    		return new CachedStateMachine(new PropNetStateMachine());
+    	} else {
+    		return sm;
+    	}
 
 //    	PropNet factoredPN = new PropNet(sm.getRoles(), usedComponents);
 //    	 p("FACTORED PROPNET!!!: ");
 //       p(factoredPN.toString());
-//       sm.setPropNet(factoredPN);
-
-
-    	return sm;
+//       sm.setPropNet(factoredPN)
 	}
 
 
