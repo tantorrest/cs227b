@@ -34,6 +34,7 @@ import org.ggp.base.util.statemachine.implementation.prover.query.ProverQueryBui
 
 @SuppressWarnings("unused")
 public class PropNetStateMachine extends StateMachine {
+
 	/** The underlying proposition network  */
 	private PropNet propNet;
 	/** The topological ordering of the propositions */
@@ -82,6 +83,12 @@ public class PropNetStateMachine extends StateMachine {
 	@Override
 	public int getGoal(MachineState state, Role role)
 			throws GoalDefinitionException {
+		if (state == null){
+			System.out.println("your mom is a lobster");
+		}
+		if (propNet == null){
+			System.out.println("your mom is a rock lobster");
+		}
 		markbases(state.getContents(), propNet);
 		Set<Proposition> rewards = propNet.getGoalPropositions().get(role);
 		for (Proposition p : rewards) {
@@ -254,6 +261,7 @@ public class PropNetStateMachine extends StateMachine {
 
 	private void p(String word) { System.out.println(word); }
 
+
    private void clearpropnet (PropNet propNet) {
 	   propNet.setInitProposition(false);
 	   Map<GdlSentence, Proposition> props = propNet.getBasePropositions();
@@ -353,7 +361,6 @@ public class PropNetStateMachine extends StateMachine {
 	public void setPropNet(PropNet propNet) {
 		this.propNet = propNet;
 	}
-
 	/********************* TODO optimize propnet functions *************************/
 	@Override
 	public MachineState performPropNetDepthCharge(MachineState state, final int[] theDepth)

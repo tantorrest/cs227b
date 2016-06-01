@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
+import org.ggp.base.util.statemachine.FailsafeStateMachine;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
@@ -33,6 +34,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	// does the initialization
 	private void init() {
 		game = getStateMachine();
+		//game.initialize(getMatch().getGame().getRules());
 		role = getRole();
 		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
 		bestPathReversed = new ArrayList<Move>();
@@ -47,7 +49,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 
 	@Override
 	public StateMachine getInitialStateMachine() {
-		return new CachedStateMachine(new PropNetStateMachine());
+		return new CachedStateMachine(new FailsafeStateMachine(new PropNetStateMachine()));
 	}
 
 	public StateMachine getProverStateMachine() {
@@ -162,7 +164,13 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 			}
 			numDepthCharges++;
 			// informs us that we have found a sure line of attack
-			score = game.findReward(role, terminal);
+			if (terminal == null){
+				score = 0;
+				System.out.println("AGGGh terminal sucks");
+			}
+			else{
+				score = game.findReward(role, terminal);
+			}
 			if (score == 100 && isSinglePlayer) {
 				p("found forced win");
 				bestPathReversed = reverse(game.getBestMoves());

@@ -18,8 +18,19 @@ public abstract class Component implements Serializable
     private final Set<Component> inputs;
     /** The outputs of the component. */
     private final Set<Component> outputs;
-
+    /** The value of the component is correct. */
+    private boolean valueIsCorrect = false;
 	public boolean visited;
+
+    private String codeName;
+
+    public void setCodeName(String name) {
+    	codeName = name;
+    }
+
+    public String getCodeName() {
+    	return codeName;
+    }
 
     /**
      * Creates a new Component with no inputs or outputs.

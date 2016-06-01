@@ -28,6 +28,9 @@ public class MachineState {
      */
     public Set<GdlSentence> getContents()
     {
+    	if (contents == null){
+    		System.out.println("RUH ROH!!!!!!!!!!!!!!!!!!!");
+    	}
         return contents;
     }
 

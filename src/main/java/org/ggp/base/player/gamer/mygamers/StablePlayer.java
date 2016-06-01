@@ -59,12 +59,6 @@ public class StablePlayer extends SampleGamer {
 	@Override
 	public Move stateMachineSelectMove(long timeout)
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-		if (isSinglePlayer && bestPathFound) {
-			// we save time on reversing the loop and rather just work backwards instead
-			stepAfterFoundBestMove++;
-			bestMove = bestPathReversed.get(bestPathReversed.size() - stepAfterFoundBestMove);
-			return bestMove;
-		}
 
 		root = getRoot();
 		if (root.children.size() == 0) expand(root);
@@ -76,19 +70,11 @@ public class StablePlayer extends SampleGamer {
 
 	private MultiNode getRoot() {
 		state = getCurrentState();
-		if (prevNumMoves == 1 && !isSinglePlayer) {
-			MultiNode child = root.children.get(0);
-			for (MultiNode next : child.children) {
-				if (next.state.equals(state)) return next;
-			}
-			System.err.println("Could not find state in getRoot. Returning new root");
-			return new MultiNode(state, null, null, 1, 0, true);
-		} else {
 			if (!isFirstMove) {
 				return new MultiNode(state, null, null, 1, 0, true);
 			}
 			isFirstMove = false;
-		}
+
 		return root;
 	}
 
@@ -124,7 +110,7 @@ public class StablePlayer extends SampleGamer {
 		}
 	}
 
-	private void expand(MultiNode node)
+	protected void expand(MultiNode node)
 			throws MoveDefinitionException, TransitionDefinitionException {
 		if (node.isMax) {
 			List<Move> moves = game.getLegalMoves(node.state, role);
@@ -143,10 +129,10 @@ public class StablePlayer extends SampleGamer {
 	}
 
 	/************* minor helper functions *****************/
-	private void performMCTS(MultiNode root)
+	protected void performMCTS(MultiNode root)
 			throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
 		numDepthCharges = 0;
-		while (System.currentTimeMillis() < finishBy && !bestPathFound) {
+		while (System.currentTimeMillis() < finishBy) {
 			double score = 0;
 			MachineState terminal = null;
 			MultiNode selected = select(root);
@@ -158,22 +144,12 @@ public class StablePlayer extends SampleGamer {
 			}
 			numDepthCharges++;
 			score = game.findReward(role, terminal);
-			if (score == 100 && isSinglePlayer) {
-				p("found forced win");
-				bestPathReversed = reverse(game.getBestMoves());
-				bestPathFound = true;
-			}
 			backPropagate(selected, score);
 		}
 		p("Num Depth Charges SP: " + numDepthCharges);
 	}
 
 	private void backPropagate(MultiNode node, double score) {
-		// the move it gets at a max node
-		if (bestPathFound && node.isMax && node.parent != null) {
-			p("adding move: " + node.jointMoves.get(0));
-			bestPathReversed.add(node.jointMoves.get(0));
-		}
 		node.updateUtilityAndVisits(score);
 		if (node.parent != null) {
 			backPropagate(node.parent, score);
@@ -181,15 +157,7 @@ public class StablePlayer extends SampleGamer {
 	}
 
 	private Move getBestMove() throws MoveDefinitionException {
-		if (bestPathFound) {
-			// we save time on reversing the loop and rather just work backwards instead
-			p("previous perfect move: " + bestMove);
-			stepAfterFoundBestMove++;
-			p("bestPath: " + bestPathReversed);
-			p("step    : " + stepAfterFoundBestMove);
-			bestMove = bestPathReversed.get(bestPathReversed.size() - stepAfterFoundBestMove);
-			p("playing perfect move : " + bestMove);
-		}
+
 		double bestUtility = 0;
 		for (MultiNode child : root.children) {
 			if (child.getAveUtility() > bestUtility) {
@@ -216,24 +184,24 @@ public class StablePlayer extends SampleGamer {
 	/*********************** variables *******************/
 	/* dynamic game state data */
 	private Move bestMove = null;
-	private StateMachine game = null;
-	private Role role = null;
-	private MultiNode root = null;
-	private int prevNumMoves = 0;
+	protected StateMachine game = null;
+	protected Role role = null;
+	protected MultiNode root = null;
+	protected int prevNumMoves = 0;
 
-	private long timeToDepthCharge = 0;
-	private int numDepthCharges = 0;
+	protected long timeToDepthCharge = 0;
+	protected int numDepthCharges = 0;
 	private MachineState state = null;
-	private long finishBy = 0;
+	protected long finishBy = 0;
 
 	/***************** single player games **************/
-	private boolean isSinglePlayer = false;
-	private boolean bestPathFound = false;
-	private ArrayList<Move> bestPathReversed = null;
-	private int stepAfterFoundBestMove = 0;
+	protected boolean isSinglePlayer = false;
+	protected boolean bestPathFound = false;
+	protected ArrayList<Move> bestPathReversed = null;
+	protected int stepAfterFoundBestMove = 0;
 
 	/* game information data */
-	private boolean isFirstMove = true;
+	protected boolean isFirstMove = true;
 
 	/* game parameter data */
 	private double explorationFactor = 125;
@@ -248,5 +216,5 @@ public class StablePlayer extends SampleGamer {
 		return (ArrayList<Move>) moves;
 	}
 
-	private void p(String message) { System.out.println(message); }
+	protected void p(String message) { System.out.println(message); }
 }
