@@ -25,7 +25,7 @@ public class StablePlayer extends SampleGamer {
 		long start = System.currentTimeMillis();
 		finishBy = timeout - 5000;
 		performMCTS(root);
-		timeToDepthCharge = (System.currentTimeMillis() - start) / numDepthCharges;
+		timeToDepthCharge = (numDepthCharges == 0) ? 5000 : (System.currentTimeMillis() - start) / (numDepthCharges);
 		p("time to depth charge: " + timeToDepthCharge);
 	}
 
@@ -69,7 +69,7 @@ public class StablePlayer extends SampleGamer {
 		root = getRoot();
 		if (root.children.size() == 0) expand(root);
 		prevNumMoves = game.getLegalMoves(getCurrentState(), role).size();
-		finishBy = timeout - 1500 - timeToDepthCharge;
+		finishBy = timeout - 2000 - timeToDepthCharge;
 		performMCTS(root);
 		return getBestMove();
 	}
@@ -152,7 +152,12 @@ public class StablePlayer extends SampleGamer {
 			MultiNode selected = select(root);
 			if (!game.findTerminalp(selected.state)) {
 				expand(selected);
-				terminal = game.performPropNetDepthCharge(selected.state, null);
+				if(isSinglePlayer) {
+					terminal = game.performPropNetDepthCharge(selected.state, null);
+				} else {
+					terminal = game.performDepthCharge(selected.state, null);
+				}
+
 			} else {
 				terminal = selected.state;
 			}
