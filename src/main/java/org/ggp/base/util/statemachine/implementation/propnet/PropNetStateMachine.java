@@ -51,7 +51,7 @@ public class PropNetStateMachine extends StateMachine {
 		try {
 			propNet = OptimizingPropNetFactory.create(description);
 			roles = propNet.getRoles();
-			ordering = getOrdering();
+//			ordering = getOrdering();
 			isSinglePlayer = (roles.size() == 1);
 			jointMoves = new ArrayList<GdlTerm>();
 			if (isSinglePlayer) {
@@ -70,7 +70,6 @@ public class PropNetStateMachine extends StateMachine {
 	 */
 	@Override
 	public boolean isTerminal(MachineState state) {
-		//		p("state:"+ state.toString());
 		return isTerminalContents(state.getContents());
 	}
 
@@ -97,30 +96,6 @@ public class PropNetStateMachine extends StateMachine {
 
 		}
 		throw new GoalDefinitionException(state, role);
-	}
-
-	/**
-	 * Returns the initial state. The initial state can be computed
-	 * by only setting the truth value of the INIT proposition to true,
-	 * and then computing the resulting state.
-	 */
-	@Override
-	public MachineState getInitialState() {
-		propNet.setInitProposition(true);
-		return getStateFromBase();
-	}
-
-	/**
-	 * Computes all possible actions for role.
-	 */
-	@Override
-	public List<Move> findActions(Role role) throws MoveDefinitionException {
-		Map<GdlSentence, Proposition> actionsMap = propNet.getInputPropositions();
-		List<Move> actions = new ArrayList<Move>();
-		for (Proposition p : actionsMap.values()) {
-			actions.add(getMoveFromProposition(p));
-		}
-		return actions;
 	}
 
 	/**
@@ -156,41 +131,75 @@ public class PropNetStateMachine extends StateMachine {
 		return new MachineState(nextState);
 	}
 
+    /**
+     * Returns the initial state. The initial state can be computed
+     * by only setting the truth value of the INIT proposition to true,
+     * and then computing the resulting state.
+     */
+    @Override
+    public MachineState getInitialState() {
+    	getPropNet().setInitProposition(true);
+    	return getStateFromBase();
+    }
+
+    /**
+     * Computes all possible actions for role.
+     */
+    @Override
+    public List<Move> findActions(Role role) throws MoveDefinitionException {
+    	Map<GdlSentence, Proposition> actionsMap = getPropNet().getInputPropositions();
+    	List<Move> actions = new ArrayList<Move>();
+    	for (Proposition p : actionsMap.values()) {
+    		actions.add(getMoveFromProposition(p));
+    	}
+        return actions;
+    }
+
 	/**
-	 * This should compute the topological ordering of propositions.
-	 * Each component is either a proposition, logical gate, or transition.
-	 * Logical gates and transitions only have propositions as inputs.
-	 *
-	 * The base propositions and input propositions should always be exempt
-	 * from this ordering.
-	 *
-	 * The base propositions values are set from the MachineState that
-	 * operations are performed on and the input propositions are set from
-	 * the Moves that operations are performed on as well (if any).
-	 *
-	 * @return The order in which the truth values of propositions need to be set.
-	 */
-	public List<Proposition> getOrdering()
-	{
-		// List to contain the topological ordering.
-		List<Proposition> order = new LinkedList<Proposition>();
+     * This should compute the topological ordering of propositions.
+     * Each component is either a proposition, logical gate, or transition.
+     * Logical gates and transitions only have propositions as inputs.
+     *
+     * The base propositions and input propositions should always be exempt
+     * from this ordering.
+     *
+     * The base propositions values are set from the MachineState that
+     * operations are performed on and the input propositions are set from
+     * the Moves that operations are performed on as well (if any).
+     *
+     * @return The order in which the truth values of propositions need to be set.
+     */
+    public List<Proposition> getOrdering()
+    {
+        // List to contain the topological ordering.
+        List<Proposition> order = new LinkedList<Proposition>();
 
-		// All of the components in the PropNet
-		List<Component> components = new ArrayList<Component>(propNet.getComponents());
+        // All of the components in the PropNet
+        List<Component> components = new ArrayList<Component>(getPropNet().getComponents());
 
-		// All of the propositions in the PropNet.
-		List<Proposition> propositions = new ArrayList<Proposition>(propNet.getPropositions());
+        // All of the propositions in the PropNet.
+        List<Proposition> propositions = new ArrayList<Proposition>(getPropNet().getPropositions());
 
-		// TODO: Compute the topological ordering.
+        // TODO: Compute the topological ordering.
 
-		return order;
-	}
+        return order;
+    }
 
-	/* Already implemented for you */
-	@Override
-	public List<Role> getRoles() {
-		return roles;
-	}
+    /* Already implemented for you */
+    @Override
+    public List<Role> getRoles() {
+        return roles;
+    }
+
+    /**
+     * Takes in a Legal Proposition and returns the appropriate corresponding Move
+     * @param p
+     * @return a PropNetMove
+     */
+    public static Move getMoveFromProposition(Proposition p)
+    {
+        return new Move(p.getName().get(1));
+    }
 
 	/* Helper methods */
 	/**
@@ -220,16 +229,6 @@ public class PropNetStateMachine extends StateMachine {
 	}
 
 	/**
-	 * Takes in a Legal Proposition and returns the appropriate corresponding Move
-	 * @param p
-	 * @return a PropNetMove
-	 */
-	public static Move getMoveFromProposition(Proposition p)
-	{
-		return new Move(p.getName().get(1));
-	}
-
-	/**
 	 * Helper method for parsing the value of a goal proposition
 	 * @param goalProposition
 	 * @return the integer value of the goal proposition
@@ -247,8 +246,7 @@ public class PropNetStateMachine extends StateMachine {
 	 * You need not use this method!
 	 * @return PropNetMachineState
 	 */
-	public MachineState getStateFromBase()
-	{
+	public MachineState getStateFromBase() {
 		Set<GdlSentence> contents = new HashSet<GdlSentence>();
 		for (Proposition p : propNet.getBasePropositions().values())
 		{
@@ -263,9 +261,17 @@ public class PropNetStateMachine extends StateMachine {
 
 	private void p(String word) { System.out.println(word); }
 
-	/************** marking functions ********************/
 
-	private void markbases (Set<GdlSentence> stateContents, PropNet propNet) {
+   private void clearpropnet (PropNet propNet) {
+	   propNet.setInitProposition(false);
+	   Map<GdlSentence, Proposition> props = propNet.getBasePropositions();
+	   for (GdlSentence gs : props.keySet()) {
+		   props.get(gs).setValue(false);
+	   }
+   }
+
+   /***************** propagating view **********************/
+	protected void markbases (Set<GdlSentence> stateContents, PropNet propNet) {
 		// clear boolean tagging
 		propNet.setInitProposition(false); // necessary?
 		for (Proposition p : propNet.getPropositions()) {
@@ -349,7 +355,7 @@ public class PropNetStateMachine extends StateMachine {
 	}
 
 	public PropNet getPropNet() {
-		return propNet;
+		return this.propNet;
 	}
 
 	public void setPropNet(PropNet propNet) {
