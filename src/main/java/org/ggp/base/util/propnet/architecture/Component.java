@@ -18,8 +18,6 @@ public abstract class Component implements Serializable
     private final Set<Component> inputs;
     /** The outputs of the component. */
     private final Set<Component> outputs;
-    /** The value of the component is correct. Oluwasanya. */
-    private boolean valueIsCorrect = false;
 
     /**
      * Creates a new Component with no inputs or outputs.
@@ -130,14 +128,6 @@ public abstract class Component implements Serializable
      */
     @Override
     public abstract String toString();
-
-    public boolean getValueIsCorrect() {
-    	return valueIsCorrect;
-    }
-
-    public void setValueIsCorrect(boolean flag) {
-    	valueIsCorrect = flag;
-    }
 
     /**
      * Returns a configurable representation of the Component in .dot format.

@@ -3,6 +3,7 @@ package org.ggp.base.player.gamer.mygamers;
 import java.util.List;
 
 import org.ggp.base.player.gamer.statemachine.sample.SampleGamer;
+import org.ggp.base.util.statemachine.DualStateMachine;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
@@ -11,34 +12,45 @@ import org.ggp.base.util.statemachine.cache.CachedStateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
-import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
+import org.ggp.base.util.statemachine.implementation.propnet.FactorPropNetStateMachine;
+import org.ggp.base.util.statemachine.implementation.propnet.SamplePropNetStateMachine;
 
-public class MCTSMiniMaxPlayer extends SampleGamer {
+public class FactorPropnetPlayer extends SampleGamer {
 
     @Override
     public void stateMachineMetaGame(long timeout)
     		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-    	p("Metagaming Phase");
-    	game = getStateMachine();
+
+    	p("Debug Metagaming Phase Propnet");
+    	StateMachine prover = getProverStateMachine();
+        prover.initialize(getMatch().getGame().getRules());
+
+    	StateMachine propnet = getStateMachine();
+    	game = new DualStateMachine(prover, propnet);
     	role = getRole();
     	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
 		expand(root);
 		performMCTS(root, timeout - 1000);
     }
 
-	@Override
-    public StateMachine getInitialStateMachine() {
-		return new CachedStateMachine(new ProverStateMachine());
-	}
-
     @Override
-	public Move stateMachineSelectMove(long timeout)
+	public StateMachine getInitialStateMachine() {
+    	FactorPropNetStateMachine sm =  new FactorPropNetStateMachine();
+    	sm.initialize(getMatch().getGame().getRules());
+    	sm.independentFactor();
+    	return sm;
+    }
+
+	public StateMachine getProverStateMachine() {
+    	return new CachedStateMachine(new SamplePropNetStateMachine());
+    }
+
+
+	@Override
+    public Move stateMachineSelectMove(long timeout)
             throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-    	if (!isFirstMove) {
-    		root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
-    		expand(root);
-    	}
-    	isFirstMove = false;
+    	root = new MultiNode(getCurrentState(), null, null, 1, 0, true);
+    	expand(root);
     	performMCTS(root, timeout - 1000);
     	return getBestMove();
     }
@@ -76,6 +88,7 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
 
     private void expand(MultiNode node)
     		throws MoveDefinitionException, TransitionDefinitionException {
+
     	if (node.isMax) {
     		List<Move> moves = game.getLegalMoves(node.state, role);
     		for (Move move : moves) {
@@ -93,6 +106,10 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     }
 
     private void backPropagate(MultiNode node, double score, int depth) {
+    	if (depth <= 1 && score == 0) {
+    		//p("spotted forced loss");
+    	}
+
     	node.utility += score;
     	node.visits++;
     	node.utilities.add(node.utility);
@@ -113,14 +130,14 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     		if (!game.findTerminalp(selected.state)) {
     			expand(selected);
         		terminal = game.performDepthCharge(selected.state, depth);
+        		numDepthCharges++;
     		} else {
     			terminal = selected.state;
     		}
-    		numDepthCharges++;
     		score = game.findReward(role, terminal) / 100.0;
     		backPropagate(selected, score, depth[0]);
     	}
-    	p("Num Depth Charges MM: " + numDepthCharges);
+    	p("Num Depth Charges PP: " + numDepthCharges);
     }
 
     private Move getBestMove() throws MoveDefinitionException {
@@ -131,7 +148,7 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     			bestMove = child.move;
     		}
     	}
-		p("utility MM: " + bestUtility);
+		p("utility PP: " + bestUtility);
 		return (bestUtility != 0) ? bestMove : game.getRandomMove(getCurrentState(), role);
     }
 
@@ -169,11 +186,10 @@ public class MCTSMiniMaxPlayer extends SampleGamer {
     private MultiNode root = null;
 
     /* game information data */
-    private boolean isFirstMove = true;
     private boolean useUCBTuned = false;
 
     /* game paramter data */
-    private double explorationFactor = Math.sqrt(2);
+    private double explorationFactor = Math.sqrt(2.1);
 
     private void p(String message) { System.out.println(message); }
 }
