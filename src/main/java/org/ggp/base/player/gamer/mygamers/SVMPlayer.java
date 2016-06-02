@@ -43,7 +43,7 @@ public class SVMPlayer extends OptimizedPropnetPlayer {
 		expand(root);
 		dataset = new ArrayList<List<Integer>>();
 		dataSetClasses = new ArrayList<Integer>();
-		performMCTSLearn(root, timeout - 2000);
+		performMCTSLearn(root, timeout - 20000);
 		avgAlpha = svmTrain();
 		System.out.println("Avg alpha: " + avgAlpha.toString());
 		System.out.println("Dataset: ");
@@ -123,7 +123,7 @@ public class SVMPlayer extends OptimizedPropnetPlayer {
 			List<Double> row_vec = new ArrayList<Double>();
 			for (int j = 0; j < mTrain; j++) {
 				double squaredNorm = 0;
-				for (int k = 0; k < mTrain; k++) {
+				for (int k = 0; k < dataset.get(0).size(); k++) {
 					double diff = dataset.get(i).get(k) - dataset.get(j).get(k);
 					squaredNorm += Math.pow(diff, 2);
 				}

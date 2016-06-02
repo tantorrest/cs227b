@@ -33,7 +33,7 @@ import org.ggp.base.util.statemachine.implementation.prover.query.ProverQueryBui
 @SuppressWarnings("unused")
 public class SamplePropNetStateMachine extends StateMachine {
     /** The underlying proposition network  */
-    protected PropNet propNet;
+    public PropNet propNet;
 
     /** The topological ordering of the propositions */
     private List<Proposition> ordering;

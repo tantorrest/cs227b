@@ -95,7 +95,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	 * @throws TransitionDefinitionException
 	 * @throws MoveDefinitionException *****************/
 	// added node.isMax to this function
-	private MultiNode select(MultiNode node) throws MoveDefinitionException, TransitionDefinitionException {
+	protected MultiNode select(MultiNode node) throws MoveDefinitionException, TransitionDefinitionException {
 		if (node.isMax) {
 			if ((node.visits == 0 || game.findTerminalp(node.state))) return node;
 			double score = selectfnMax(node.children.get(0));
@@ -126,7 +126,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		}
 	}
 
-	private void expand(MultiNode node)
+	protected void expand(MultiNode node)
 			throws MoveDefinitionException, TransitionDefinitionException {
 
 		if (node.isMax) {
@@ -145,7 +145,7 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		}
 	}
 
-	private void backPropagate(MultiNode node, double score) {
+	protected void backPropagate(MultiNode node, double score) {
 		if (isSinglePlayer && bestPathFound && node.isMax && node.parent != null) { // the move it gets at a max node
 			p("adding move: " + node.jointMoves.get(0));
 			bestPathReversed.add(node.jointMoves.get(0));
@@ -236,9 +236,9 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 	/*********************** variables *******************/
 	/* dynamic game state data */
 	private Move bestMove = null;
-	private StateMachine game = null;
-	private Role role = null;
-	private MultiNode root = null;
+	protected StateMachine game = null;
+	protected Role role = null;
+	protected MultiNode root = null;
 
 	/***************** single player games **************/
 	private boolean isSinglePlayer = false;
@@ -267,6 +267,6 @@ public class OptimizedPropnetPlayer extends SampleGamer {
 		return (ArrayList<Move>) moves;
 	}
 
-	private void p(String message) { System.out.println(message); }
+	protected void p(String message) { System.out.println(message); }
 
 }
