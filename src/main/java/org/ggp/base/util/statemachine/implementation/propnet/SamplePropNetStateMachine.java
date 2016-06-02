@@ -292,7 +292,7 @@ public class SamplePropNetStateMachine extends StateMachine {
 
    /***************** propagating view **********************/
    public boolean propmarkp (Component cp) {
-	   cp.setValueIsCorrect(true);// optimized
+	   //cp.setValueIsCorrect(true);// optimized
 	   if (cp.getInputs().size() == 1 && cp.getSingleInput() instanceof Transition) { // base
 //		   p("base");
 		   return cp.getValue();
